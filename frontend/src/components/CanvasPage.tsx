@@ -13,7 +13,6 @@ import { optimisticUpdateManager } from '../services/optimisticUpdateManager'
 import { loadingStateManager } from '../services/loadingStateManager'
 import { stateSyncManager, StateConflict } from '../services/stateSyncManager'
 import { updateQueueManager, QueueStats } from '../services/updateQueueManager'
-import OptimisticUpdateIndicator from './OptimisticUpdateIndicator'
 import UpdateSuccessAnimation from './UpdateSuccessAnimation'
 import EnhancedLoadingIndicator from './EnhancedLoadingIndicator'
 import ConflictResolutionDialog from './ConflictResolutionDialog'
@@ -304,15 +303,11 @@ const CanvasPage: React.FC = () => {
       // Show user-friendly error message
       const errorMessage = data.message || 'Failed to update object position'
       toast.error(`${errorMessage}. Fallback mechanism will handle retry.`, { 
-        duration: 4000,
-        action: {
-          label: 'View Details',
-          onClick: () => {
-            console.log('Object update failed details:', data)
-            toast('Check console for details', { duration: 2000 })
-          }
-        }
+        duration: 4000
       })
+      
+      // Log details to console for debugging
+      console.log('Object update failed details:', data)
     })
 
     socketService.on('object_create_failed', (data: { object_type: string; error: any; message?: string }) => {
@@ -345,12 +340,11 @@ const CanvasPage: React.FC = () => {
       
       if (conflicts.length > 0) {
         toast.error(`${conflicts.length} state conflicts detected`, {
-          duration: 5000,
-          action: {
-            label: 'Resolve',
-            onClick: () => setShowConflictDialog(true)
-          }
+          duration: 5000
         })
+        
+        // Automatically show conflict dialog
+        setShowConflictDialog(true)
       }
     })
 
