@@ -10,11 +10,17 @@ export const validateEnvironment = () => {
   console.log('- NODE_ENV:', import.meta.env.NODE_ENV);
   console.log('- MODE:', import.meta.env.MODE);
   
-  // Temporary hardcoded fallback for production
+  // Production mode should use environment variable
   if (import.meta.env.MODE === 'production') {
-    const hardcodedUrl = 'https://gauntlet-collab-canvas-24hr-production.up.railway.app';
-    console.log('Production mode detected, using hardcoded URL:', hardcodedUrl);
-    return hardcodedUrl;
+    if (!apiUrl) {
+      console.error('VITE_API_URL is required in production mode!');
+      console.error('Please set VITE_API_URL environment variable in Vercel dashboard');
+      // Don't throw error in production to prevent app crash
+      // Return a placeholder that will show an error in the UI instead
+      return 'https://api-not-configured.vercel.app';
+    }
+    console.log('Production mode detected, using environment variable:', apiUrl);
+    return apiUrl;
   }
   
   if (!apiUrl) {

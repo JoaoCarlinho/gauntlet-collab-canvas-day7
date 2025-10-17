@@ -39,6 +39,10 @@ export default defineConfig({
         entryFileNames: 'assets/[name]-[hash].js',
       },
     },
+    // Exclude test files from build
+    commonjsOptions: {
+      exclude: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**']
+    }
   },
   test: {
     globals: true,

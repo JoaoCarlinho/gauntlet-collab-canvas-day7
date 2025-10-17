@@ -14,18 +14,19 @@ def create_app(config_class=Config):
     # Initialize extensions
     db.init_app(app)
     
-    # Configure CORS for production
-    allowed_origins = [
+    # Configure CORS using environment variables
+    cors_origins = app.config.get('CORS_ORIGINS', [])
+    if isinstance(cors_origins, str):
+        cors_origins = [origin.strip() for origin in cors_origins.split(',')]
+    
+    # Default allowed origins for development
+    default_origins = [
         "http://localhost:3000",
-        "http://localhost:5173", 
-        "https://gauntlet-collab-canvas-24hr.vercel.app",
-        "https://gauntlet-collab-canvas-24hr-h7jvqmw9s-j-skeetes-projects.vercel.app",
-        "https://gauntlet-collab-canvas-24hr-6l0tp5fsf-j-skeetes-projects.vercel.app",
-        "https://gauntlet-collab-canvas-24hr-72qpaeq3m-j-skeetes-projects.vercel.app",
-        "https://gauntlet-collab-canvas-24hr-git-impro-7d472f-j-skeetes-projects.vercel.app",
-        "https://gauntlet-collab-canvas-24hr-git-*.vercel.app",  # Wildcard for all branch previews
-        "https://*.vercel.app"
+        "http://localhost:5173"
     ]
+    
+    # Add wildcard for Vercel preview deployments
+    allowed_origins = default_origins + cors_origins + ["https://*.vercel.app"]
     
     # Initialize CORS with comprehensive configuration
     cors.init_app(

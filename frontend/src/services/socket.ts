@@ -1,26 +1,31 @@
 import { io, Socket } from 'socket.io-client'
 import { CursorData } from '../types'
 import { errorLogger, ErrorContext } from '../utils/errorLogger'
+import { socketEventOptimizer } from '../utils/socketOptimizer'
 
 class SocketService {
   private socket: Socket | null = null
   private listeners: Map<string, Function[]> = new Map()
   private debugMode = import.meta.env.VITE_DEBUG_SOCKET === 'true'
 
-  connect(idToken: string) {
+  connect(idToken?: string) {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+    
+    // Check if we're in development mode
+    const isDevelopment = import.meta.env.DEV || 
+                         import.meta.env.VITE_DEBUG_MODE === 'true' ||
+                         window.location.hostname === 'localhost' ||
+                         window.location.hostname === '127.0.0.1'
     
     // Only log in debug mode
     if (this.debugMode) {
       console.log('=== Socket.IO Connection Debug ===')
       console.log('API URL:', API_URL)
-      console.log('Token length:', idToken.length)
+      console.log('Development mode:', isDevelopment)
+      console.log('Token length:', idToken?.length || 0)
     }
     
-    this.socket = io(API_URL, {
-      auth: {
-        token: idToken
-      },
+    const socketConfig: any = {
       transports: ['polling', 'websocket'],
       upgrade: true,
       rememberUpgrade: true,
@@ -29,13 +34,30 @@ class SocketService {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5
-    })
+    }
+    
+    // Only add auth token if not in development mode
+    if (!isDevelopment && idToken) {
+      socketConfig.auth = {
+        token: idToken
+      }
+    } else if (isDevelopment) {
+      console.log('Development mode: Connecting without authentication')
+    }
+    
+    this.socket = io(API_URL, socketConfig)
 
     this.socket.on('connect', () => {
       if (this.debugMode) {
         console.log('=== Socket.IO Connected Successfully ===')
         console.log('Socket ID:', this.socket?.id)
       }
+      
+      // Notify connection monitor of successful connection
+      this.emit('connection_restored', {
+        socketId: this.socket?.id,
+        timestamp: Date.now()
+      })
     })
 
     this.socket.on('disconnect', (reason) => {
@@ -43,6 +65,55 @@ class SocketService {
         console.log('=== Socket.IO Disconnected ===')
         console.log('Reason:', reason)
       }
+      
+      // Notify connection monitor of disconnection
+      this.emit('connection_lost', {
+        reason,
+        timestamp: Date.now()
+      })
+    })
+
+    // Track reconnection attempts
+    this.socket.on('reconnect_attempt', (attemptNumber) => {
+      if (this.debugMode) {
+        console.log('=== Socket.IO Reconnection Attempt ===')
+        console.log('Attempt:', attemptNumber)
+      }
+      
+      this.emit('reconnection_attempt', {
+        attempt: attemptNumber,
+        timestamp: Date.now()
+      })
+    })
+
+    this.socket.on('reconnect', (attemptNumber) => {
+      if (this.debugMode) {
+        console.log('=== Socket.IO Reconnected ===')
+        console.log('Attempt:', attemptNumber)
+      }
+      
+      this.emit('reconnection_success', {
+        attempt: attemptNumber,
+        timestamp: Date.now()
+      })
+    })
+
+    this.socket.on('reconnect_error', (error) => {
+      console.error('=== Socket.IO Reconnection Error ===')
+      console.error('Error:', error)
+      
+      this.emit('reconnection_failed', {
+        error: error.message,
+        timestamp: Date.now()
+      })
+    })
+
+    this.socket.on('reconnect_failed', () => {
+      console.error('=== Socket.IO Reconnection Failed - Max Attempts Reached ===')
+      
+      this.emit('reconnection_exhausted', {
+        timestamp: Date.now()
+      })
     })
 
     // Always log errors, regardless of debug mode
@@ -359,6 +430,60 @@ class SocketService {
   // Get error statistics
   getErrorStats() {
     return errorLogger.getErrorStats()
+  }
+
+  // Socket optimization methods
+  optimizeEmit(event: string, data: any, priority: 'low' | 'normal' | 'high' | 'critical' = 'normal') {
+    if (!this.socket) {
+      console.warn('Socket not connected, cannot emit event:', event)
+      return
+    }
+
+    // Use socket optimizer for non-critical events
+    if (priority !== 'critical') {
+      const eventId = socketEventOptimizer.optimizeEvent({
+        type: event,
+        data,
+        priority,
+        maxRetries: 3
+      })
+      
+      if (this.debugMode) {
+        console.log(`Optimized event ${eventId} queued:`, event, data)
+      }
+      return eventId
+    }
+
+    // Emit critical events immediately
+    this.socket.emit(event, data)
+    if (this.debugMode) {
+      console.log(`Critical event emitted immediately:`, event, data)
+    }
+  }
+
+  // Get socket optimization statistics
+  getOptimizationStats() {
+    return socketEventOptimizer.getStats()
+  }
+
+  // Get socket optimization queue status
+  getOptimizationQueueStatus() {
+    return socketEventOptimizer.getQueueStatus()
+  }
+
+  // Flush optimization queue
+  async flushOptimizationQueue() {
+    return socketEventOptimizer.flushQueue()
+  }
+
+  // Clear optimization queue
+  clearOptimizationQueue() {
+    socketEventOptimizer.clearQueue()
+  }
+
+  // Update optimization configuration
+  updateOptimizationConfig(config: any) {
+    socketEventOptimizer.updateConfig(config)
   }
 }
 
