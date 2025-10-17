@@ -13,6 +13,7 @@ canvas_service = CanvasService()
 @canvas_bp.route('/', methods=['GET'])
 @canvas_bp.route('', methods=['GET'])
 @require_auth
+@canvas_rate_limit('get_all')
 @swag_from({
     'tags': ['Canvas'],
     'summary': 'Get all canvases',
@@ -56,14 +57,24 @@ canvas_service = CanvasService()
     }
 })
 def get_canvases(current_user):
-    """Get all canvases accessible to the current user."""
+    """Get all canvases accessible to the current user with comprehensive security validation."""
     try:
-        canvases = canvas_service.get_user_canvases(current_user.id)
+        # Validate user ID format
+        from app.utils.validators import InputValidator
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
+        canvases = canvas_service.get_user_canvases(user_id)
         return jsonify({
             'canvases': [canvas.to_dict() for canvas in canvases]
         }), 200
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @canvas_bp.route('/', methods=['POST'])
 @canvas_bp.route('', methods=['POST'])
@@ -225,6 +236,7 @@ def create_canvas(current_user):
 
 @canvas_bp.route('/<canvas_id>', methods=['GET'])
 @require_auth
+@canvas_rate_limit('get')
 @swag_from({
     'tags': ['Canvas'],
     'summary': 'Get a specific canvas',
@@ -283,35 +295,39 @@ def create_canvas(current_user):
     }
 })
 def get_canvas(current_user, canvas_id):
-    """Get a specific canvas."""
+    """Get a specific canvas with comprehensive security validation."""
     try:
-        print(f"=== Canvas Access Debug ===")
-        print(f"Canvas ID: {canvas_id}")
-        print(f"Current user ID: {current_user.id}")
-        print(f"Current user email: {current_user.email}")
+        # Validate canvas ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            canvas_id = InputValidator.validate_canvas_id(canvas_id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid canvas ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
         
         canvas = canvas_service.get_canvas_by_id(canvas_id)
         if not canvas:
-            print("Canvas not found")
             return jsonify({'error': 'Canvas not found'}), 404
         
-        print(f"Canvas found - Owner ID: {canvas.owner_id}")
-        print(f"Canvas is public: {canvas.is_public}")
-        
         # Check permission
-        has_permission = canvas_service.check_canvas_permission(canvas_id, current_user.id)
-        print(f"User has permission: {has_permission}")
-        
+        has_permission = canvas_service.check_canvas_permission(canvas_id, user_id)
         if not has_permission:
-            print("Access denied - user does not have permission")
             return jsonify({'error': 'Access denied'}), 403
         
         return jsonify({
             'canvas': canvas.to_dict()
         }), 200
         
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @canvas_bp.route('/<canvas_id>', methods=['PUT'])
 @require_auth
@@ -389,15 +405,29 @@ def update_canvas(current_user, canvas_id):
 
 @canvas_bp.route('/<canvas_id>', methods=['DELETE'])
 @require_auth
+@canvas_rate_limit('delete')
 def delete_canvas(current_user, canvas_id):
-    """Delete a canvas."""
+    """Delete a canvas with comprehensive security validation."""
     try:
+        # Validate canvas ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            canvas_id = InputValidator.validate_canvas_id(canvas_id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid canvas ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
         canvas = canvas_service.get_canvas_by_id(canvas_id)
         if not canvas:
             return jsonify({'error': 'Canvas not found'}), 404
         
         # Check if user is owner
-        if canvas.owner_id != current_user.id:
+        if canvas.owner_id != user_id:
             return jsonify({'error': 'Only the owner can delete the canvas'}), 403
         
         success = canvas_service.delete_canvas(canvas_id)
@@ -406,16 +436,33 @@ def delete_canvas(current_user, canvas_id):
         else:
             return jsonify({'error': 'Failed to delete canvas'}), 500
         
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @canvas_bp.route('/<canvas_id>/objects', methods=['GET'])
 @require_auth
+@canvas_rate_limit('get_objects')
 def get_canvas_objects(current_user, canvas_id):
-    """Get all objects for a canvas."""
+    """Get all objects for a canvas with comprehensive security validation."""
     try:
+        # Validate canvas ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            canvas_id = InputValidator.validate_canvas_id(canvas_id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid canvas ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
         # Check permission
-        if not canvas_service.check_canvas_permission(canvas_id, current_user.id):
+        if not canvas_service.check_canvas_permission(canvas_id, user_id):
             return jsonify({'error': 'Access denied'}), 403
         
         objects = canvas_service.get_canvas_objects(canvas_id)
@@ -423,5 +470,8 @@ def get_canvas_objects(current_user, canvas_id):
             'objects': [obj.to_dict() for obj in objects]
         }), 200
         
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500

@@ -184,24 +184,41 @@ def create_object(current_user):
 
 @objects_bp.route('/<object_id>', methods=['GET'])
 @require_auth
+@object_rate_limit('get')
 def get_object(current_user, object_id):
-    """Get a specific canvas object."""
+    """Get a specific canvas object with comprehensive security validation."""
     try:
+        # Validate object ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            object_id = InputValidator.validate_string_length(object_id, 'object_id', 1, 100)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid object ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
         from app.models import CanvasObject
         canvas_object = CanvasObject.query.filter_by(id=object_id).first()
         if not canvas_object:
             return jsonify({'error': 'Object not found'}), 404
         
         # Check permission
-        if not canvas_service.check_canvas_permission(canvas_object.canvas_id, current_user.id):
+        if not canvas_service.check_canvas_permission(canvas_object.canvas_id, user_id):
             return jsonify({'error': 'Access denied'}), 403
         
         return jsonify({
             'object': canvas_object.to_dict()
         }), 200
         
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @objects_bp.route('/<object_id>', methods=['PUT'])
 @require_auth
@@ -273,16 +290,30 @@ def update_object(current_user, object_id):
 
 @objects_bp.route('/<object_id>', methods=['DELETE'])
 @require_auth
+@object_rate_limit('delete')
 def delete_object(current_user, object_id):
-    """Delete a canvas object."""
+    """Delete a canvas object with comprehensive security validation."""
     try:
+        # Validate object ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            object_id = InputValidator.validate_string_length(object_id, 'object_id', 1, 100)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid object ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
         from app.models import CanvasObject
         canvas_object = CanvasObject.query.filter_by(id=object_id).first()
         if not canvas_object:
             return jsonify({'error': 'Object not found'}), 404
         
         # Check permission
-        if not canvas_service.check_canvas_permission(canvas_object.canvas_id, current_user.id, 'edit'):
+        if not canvas_service.check_canvas_permission(canvas_object.canvas_id, user_id, 'edit'):
             return jsonify({'error': 'Edit permission required'}), 403
         
         success = canvas_service.delete_canvas_object(object_id)
@@ -291,5 +322,8 @@ def delete_object(current_user, object_id):
         else:
             return jsonify({'error': 'Failed to delete object'}), 500
         
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
