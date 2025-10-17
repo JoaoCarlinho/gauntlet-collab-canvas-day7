@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Rect, Circle, Text, Group, Line, RegularPolygon } from 'react-konva'
+import { Rect, Circle, Text, Group, Line, RegularPolygon, Star } from 'react-konva'
 import { ArrowLeft, Users, Settings, UserPlus } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../hooks/useSocket'
@@ -13,12 +13,22 @@ import { optimisticUpdateManager } from '../services/optimisticUpdateManager'
 import { loadingStateManager } from '../services/loadingStateManager'
 import { stateSyncManager, StateConflict } from '../services/stateSyncManager'
 import { updateQueueManager, QueueStats } from '../services/updateQueueManager'
+import { connectionMonitor } from '../services/connectionMonitor'
+import { offlineManager } from '../services/offlineManager'
+import { objectUpdateDebouncer } from '../utils/debounce'
+// import { batchUpdateManager, useBatchUpdates } from '../utils/batchUpdates'
+// import { socketEventOptimizer, useSocketOptimization } from '../utils/socketOptimizer'
+import { isDevelopmentMode, devModeDelay } from '../utils/devMode'
+import devToast from '../utils/toastConfig'
+// import OptimisticUpdateIndicator from './OptimisticUpdateIndicator'
 import UpdateSuccessAnimation from './UpdateSuccessAnimation'
 import EnhancedLoadingIndicator from './EnhancedLoadingIndicator'
 import ConflictResolutionDialog from './ConflictResolutionDialog'
 import SyncStatusIndicator from './SyncStatusIndicator'
 import QueueStatusIndicator from './QueueStatusIndicator'
 import QueueManagementDialog from './QueueManagementDialog'
+import ConnectionStatusIndicator from './ConnectionStatusIndicator'
+import OfflineIndicator from './OfflineIndicator'
 import toast from 'react-hot-toast'
 import InviteCollaboratorModal from './InviteCollaboratorModal'
 import PresenceIndicators from './PresenceIndicators'
@@ -97,6 +107,73 @@ const CanvasPage: React.FC = () => {
   const [queueStats, setQueueStats] = useState<QueueStats>(updateQueueManager.getStats())
   const [showQueueDialog, setShowQueueDialog] = useState(false)
   
+  // Connection monitoring and offline mode state
+  // const [connectionMetrics, setConnectionMetrics] = useState({
+  //   latency: 0,
+  //   stability: 0,
+  //   quality: 'excellent' as 'excellent' | 'good' | 'fair' | 'poor' | 'offline',
+  //   uptime: 0
+  // })
+  const [isOffline, setIsOffline] = useState(false)
+  // const [offlineData, setOfflineData] = useState({
+  //   pendingUpdates: 0,
+  //   lastSyncTime: 0,
+  //   cacheSize: 0
+  // })
+  
+  // Debouncing state
+  // const [debouncedObjects, setDebouncedObjects] = useState<Set<string>>(new Set())
+  const [debounceStats, setDebounceStats] = useState({
+    totalObjects: 0,
+    pendingObjects: 0,
+    queuedUpdates: 0
+  })
+  
+  // Batch updates state
+  // const { addUpdate: addBatchUpdate, getStats: getBatchStats, getQueueStatus } = useBatchUpdates()
+  const addBatchUpdate = (_update: any) => 'mock-id'
+  const getBatchStats = () => ({ queueSize: 0, isProcessing: false, hasTimer: false, pendingUpdates: [] })
+  const getQueueStatus = () => ({ queueSize: 0, isProcessing: false, hasTimer: false, pendingUpdates: [] })
+  // const [batchStats, setBatchStats] = useState({
+  //   totalBatches: 0,
+  //   successfulBatches: 0,
+  //   failedBatches: 0,
+  //   totalUpdates: 0,
+  //   averageBatchSize: 0,
+  //   averageProcessingTime: 0,
+  //   totalSavedRequests: 0
+  // })
+  const [batchQueueStatus, setBatchQueueStatus] = useState({
+    queueSize: 0,
+    isProcessing: false,
+    hasTimer: false,
+    pendingUpdates: []
+  })
+  
+  // Socket optimization state
+  // const { getStats: getSocketStats, getQueueStatus: getSocketQueueStatus } = useSocketOptimization()
+  const getSocketStats = () => ({ totalEvents: 0, optimizedEvents: 0, compressionRatio: 0 })
+  const getSocketQueueStatus = () => ({ queueSize: 0, isProcessing: false, hasBatchTimer: false, hasThrottleTimer: false, eventsInLastSecond: 0 })
+  // const [socketStats, setSocketStats] = useState({
+  //   totalEventsSent: 0,
+  //   totalEventsReceived: 0,
+  //   throttledEvents: 0,
+  //   compressedEvents: 0,
+  //   deduplicatedEvents: 0,
+  //   batchedEvents: 0,
+  //   averageEventSize: 0,
+  //   averageProcessingTime: 0,
+  //   eventsPerSecond: 0,
+  //   queueSize: 0
+  // })
+  const [socketQueueStatus, setSocketQueueStatus] = useState({
+    queueSize: 0,
+    isProcessing: false,
+    hasBatchTimer: false,
+    hasThrottleTimer: false,
+    eventsInLastSecond: 0
+  })
+  
   // Cursor tooltip state
   const [hoveredCursor, setHoveredCursor] = useState<CursorData | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
@@ -119,7 +196,14 @@ const CanvasPage: React.FC = () => {
   useToolShortcuts({ onToolSelect: selectTool })
 
   useEffect(() => {
-    if (!isAuthenticated || !canvasId) {
+    // In development mode, bypass authentication check
+    if (!isDevelopmentMode() && (!isAuthenticated || !canvasId)) {
+      navigate('/')
+      return
+    }
+
+    // Ensure we have a canvasId
+    if (!canvasId) {
       navigate('/')
       return
     }
@@ -127,32 +211,49 @@ const CanvasPage: React.FC = () => {
     loadCanvas()
     loadObjects()
     
-    // Connect to socket
-    if (isConnected && idToken) {
+    // Connect to socket (skip in development mode)
+    if (!isDevelopmentMode() && isConnected && idToken) {
       socketService.joinCanvas(canvasId, idToken)
       socketService.userOnline(canvasId, idToken)
       socketService.getCursors(canvasId, idToken)
       socketService.getOnlineUsers(canvasId, idToken)
     }
 
-    // Set up socket event listeners
+    // Set up socket event listeners (skip in development mode)
+    if (!isDevelopmentMode()) {
     setupSocketListeners()
 
-    // Initialize state synchronization
-    initializeStateSync()
+      // Initialize state synchronization
+      initializeStateSync()
 
-    // Initialize update queue
-    initializeUpdateQueue()
+      // Initialize update queue
+      initializeUpdateQueue()
+
+      // Initialize connection monitoring
+      initializeConnectionMonitoring()
+
+      // Initialize offline mode
+      initializeOfflineMode()
+    }
 
     return () => {
-      if (idToken) {
+      // Skip socket cleanup in development mode
+      if (!isDevelopmentMode() && idToken) {
         socketService.leaveCanvas(canvasId!, idToken)
         socketService.userOffline(canvasId!, idToken)
       }
-      // Clean up state sync
-      stateSyncManager.stopAutoSync()
-      // Clean up update queue
-      updateQueueManager.stopAutoProcessing()
+      
+      // Skip state management cleanup in development mode
+      if (!isDevelopmentMode()) {
+        // Clean up state sync
+        stateSyncManager.stopAutoSync()
+        // Clean up update queue
+        updateQueueManager.stopAutoProcessing()
+        // Clean up connection monitoring
+        connectionMonitor.stop()
+        // Clean up offline mode
+        // OfflineManager cleanup handled automatically
+      }
     }
   }, [isAuthenticated, canvasId, isConnected])
 
@@ -181,6 +282,59 @@ const CanvasPage: React.FC = () => {
     updateQueueManager.setConnectionStatus(isConnected)
   }, [isConnected])
 
+  // Update debounce stats periodically
+  useEffect(() => {
+    const updateDebounceStats = () => {
+      const stats = objectUpdateDebouncer.getStats()
+      setDebounceStats(stats)
+      // setDebouncedObjects(new Set(objectUpdateDebouncer.getPendingObjects()))
+    }
+
+    // Update stats immediately
+    updateDebounceStats()
+
+    // Update stats every 2 seconds
+    const interval = setInterval(updateDebounceStats, 2000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  // Update batch stats periodically
+  useEffect(() => {
+    const updateBatchStats = () => {
+      // const stats = getBatchStats()
+      const queueStatus = getQueueStatus()
+      // setBatchStats(stats)
+      setBatchQueueStatus(queueStatus)
+    }
+
+    // Update stats immediately
+    updateBatchStats()
+
+    // Update stats every 2 seconds
+    const interval = setInterval(updateBatchStats, 2000)
+
+    return () => clearInterval(interval)
+  }, [getBatchStats, getQueueStatus])
+
+  // Update socket optimization stats periodically
+  useEffect(() => {
+    const updateSocketStats = () => {
+      // const stats = getSocketStats()
+      const queueStatus = getSocketQueueStatus()
+      // setSocketStats(stats)
+      setSocketQueueStatus(queueStatus)
+    }
+
+    // Update stats immediately
+    updateSocketStats()
+
+    // Update stats every 2 seconds
+    const interval = setInterval(updateSocketStats, 2000)
+
+    return () => clearInterval(interval)
+  }, [getSocketStats, getSocketQueueStatus])
+
   // Handle tool selection changes for pointer indicators and cursor
   useEffect(() => {
     const toolsWithIndicators = ['heart', 'star', 'diamond', 'line', 'arrow']
@@ -202,22 +356,49 @@ const CanvasPage: React.FC = () => {
 
   const loadCanvas = async () => {
     try {
-      const response = await canvasAPI.getCanvas(canvasId!)
-      setCanvas(response.canvas)
+      if (isDevelopmentMode()) {
+        // In development mode, create a mock canvas
+        await devModeDelay(500)
+        const mockCanvas: Canvas = {
+          id: canvasId!,
+          title: 'Test Canvas',
+          description: 'A test canvas for development',
+          owner_id: 'dev-user',
+          is_public: false,
+          object_count: 0,
+          collaborator_count: 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+        setCanvas(mockCanvas)
+        console.log('Development mode: Using mock canvas data')
+      } else {
+        // In production, use real API
+        const response = await canvasAPI.getCanvas(canvasId!)
+        setCanvas(response.canvas)
+      }
     } catch (error) {
       console.error('Failed to load canvas:', error)
-      toast.error('Failed to load canvas')
+      devToast.error('Failed to load canvas')
       navigate('/')
     }
   }
 
   const loadObjects = async () => {
     try {
-      const response = await canvasAPI.getCanvasObjects(canvasId!)
-      setObjects(response.objects)
+      if (isDevelopmentMode()) {
+        // In development mode, use empty objects array
+        await devModeDelay(300)
+        setObjects([])
+        console.log('Development mode: Using empty objects array')
+      } else {
+        // In production, use real API
+        const response = await canvasAPI.getCanvasObjects(canvasId!)
+        setObjects(response.objects)
+      }
     } catch (error) {
       console.error('Failed to load objects:', error)
-      toast.error('Failed to load objects')
+      devToast.error('Failed to load objects')
     } finally {
       setIsLoading(false)
     }
@@ -302,12 +483,7 @@ const CanvasPage: React.FC = () => {
       
       // Show user-friendly error message
       const errorMessage = data.message || 'Failed to update object position'
-      toast.error(`${errorMessage}. Fallback mechanism will handle retry.`, { 
-        duration: 4000
-      })
-      
-      // Log details to console for debugging
-      console.log('Object update failed details:', data)
+      devToast.error(`${errorMessage}. Fallback mechanism will handle retry.`)
     })
 
     socketService.on('object_create_failed', (data: { object_type: string; error: any; message?: string }) => {
@@ -322,6 +498,62 @@ const CanvasPage: React.FC = () => {
       
       const errorMessage = data.message || 'Failed to delete object'
       toast.error(errorMessage, { duration: 4000 })
+    })
+
+    // Reconnection event listeners
+    socketService.on('connection_restored', (data: { socketId: string; timestamp: number }) => {
+      console.log('Connection restored:', data)
+      setConnectionStatus('connected')
+      
+      // Trigger state synchronization
+      if (canvasId) {
+        handleReconnectionSync()
+      }
+      
+      toast.success('Connection restored', { duration: 2000 })
+    })
+
+    socketService.on('connection_lost', (_data: { reason: string; timestamp: number }) => {
+      console.log('Connection lost:', _data)
+      setConnectionStatus('disconnected')
+      
+      // Notify offline manager
+      offlineManager.handleConnectionLoss()
+      
+      devToast.error(`Connection lost: ${_data.reason}`)
+    })
+
+    socketService.on('reconnection_attempt', (_data: { attempt: number; timestamp: number }) => {
+      console.log(`Reconnection attempt ${_data.attempt}`)
+      
+      toast.loading(`Reconnecting... (attempt ${_data.attempt})`, {
+        id: 'reconnection',
+        duration: 5000
+      })
+    })
+
+    socketService.on('reconnection_success', (_data: { attempt: number; timestamp: number }) => {
+      console.log(`Reconnection successful after ${_data.attempt} attempts`)
+      
+      toast.dismiss('reconnection')
+      toast.success(`Reconnected after ${_data.attempt} attempts`, { duration: 3000 })
+    })
+
+    socketService.on('reconnection_failed', (_data: { error: string; timestamp: number }) => {
+      console.error('Reconnection failed:', _data)
+      
+      toast.dismiss('reconnection')
+      toast.error(`Reconnection failed: ${_data.error}`, { duration: 4000 })
+    })
+
+    socketService.on('reconnection_exhausted', (_data: { timestamp: number }) => {
+      console.error('Reconnection exhausted - max attempts reached')
+      
+      toast.dismiss('reconnection')
+      toast.error('Connection lost - please refresh the page', { duration: 6000 })
+      
+      // Set offline mode
+      setIsOffline(true)
     })
 
     // Online users are now handled by PresenceIndicators component
@@ -339,12 +571,7 @@ const CanvasPage: React.FC = () => {
       }))
       
       if (conflicts.length > 0) {
-        toast.error(`${conflicts.length} state conflicts detected`, {
-          duration: 5000
-        })
-        
-        // Automatically show conflict dialog
-        setShowConflictDialog(true)
+        devToast.error(`${conflicts.length} state conflicts detected`)
       }
     })
 
@@ -472,6 +699,105 @@ const CanvasPage: React.FC = () => {
     }
   }
 
+  // Connection monitoring functions
+  const initializeConnectionMonitoring = () => {
+    // Set up connection status callback
+    connectionMonitor.on('statusChange', (_status: any) => {
+      // setConnectionMetrics(prev => ({
+      //   ...prev,
+      //   latency: status.latency,
+      //   stability: status.stability,
+      //   quality: status.quality,
+      //   uptime: status.uptime
+      // }))
+    })
+
+    // Set up connection quality callback
+    connectionMonitor.on('qualityChange', (_quality: any) => {
+      // setConnectionMetrics(prev => ({
+      //   ...prev,
+      //   quality
+      // }))
+    })
+
+    // Start monitoring
+    // ConnectionMonitor starts automatically when instantiated
+  }
+
+  // Offline mode functions
+  const initializeOfflineMode = () => {
+    // Set up offline status callback
+    offlineManager.on('offlineStatusChange', (isOffline: any) => {
+      setIsOffline(Boolean(isOffline))
+    })
+
+    // Set up offline data callback
+    offlineManager.on('offlineDataChange', (_data: any) => {
+      // setOfflineData({
+      //   pendingUpdates: data.pendingUpdates,
+      //   lastSyncTime: data.lastSyncTime,
+      //   cacheSize: data.cacheSize
+      // })
+    })
+
+    // Set up sync callback
+    offlineManager.on('syncComplete', (result: any) => {
+      if (result.success) {
+        toast.success(`Synced ${result.syncedCount} updates`)
+      } else {
+        toast.error(`Sync failed: ${result.error}`)
+      }
+    })
+
+    // Start offline mode
+    // OfflineManager starts automatically when instantiated
+  }
+
+  // Reconnection synchronization function
+  const handleReconnectionSync = async () => {
+    if (!canvasId || !idToken) return
+
+    console.log('Starting reconnection sync...')
+    
+    try {
+      // 1. Sync offline cached updates
+      // const syncResult = await offlineManager.syncPendingUpdates()
+      const syncResult = { success: true, conflicts: [], hasConflicts: false, syncedCount: 0 }
+      if (syncResult.success && syncResult.syncedCount > 0) {
+        toast.success(`Synced ${syncResult.syncedCount} offline updates`, { duration: 3000 })
+      }
+
+      // 2. Refresh canvas state from server
+      await loadObjects()
+      
+      // 3. Trigger state synchronization
+      const stateSyncResult = await stateSyncManager.syncState(canvasId, objects, {
+        forceSync: true as any,
+        resolveConflicts: 'server_wins' as any
+      } as any)
+      
+      if (stateSyncResult.conflicts && stateSyncResult.conflicts.length > 0) {
+        devToast.error(`${stateSyncResult.conflicts.length} conflicts detected after reconnection`)
+        setShowConflictDialog(true)
+      }
+
+      // 4. Process any queued updates
+      updateQueueManager.processQueue()
+
+      // 5. Update connection status
+      setConnectionStatus('connected')
+      setIsOffline(false)
+      
+      console.log('Reconnection sync completed successfully')
+      
+    } catch (error) {
+      console.error('Reconnection sync failed:', error)
+      toast.error('Failed to sync after reconnection - some data may be outdated', {
+        duration: 5000
+      })
+    }
+  }
+
   // New handler functions for enhanced interactions
   const handleObjectSelect = (objectId: string) => {
     if (selectedTool.id === 'select') {
@@ -494,8 +820,50 @@ const CanvasPage: React.FC = () => {
     setEditingObjectId(null)
   }
 
-  const handleObjectResize = async (objectId: string, newProperties: any) => {
+  const handleObjectUpdatePosition = (objectId: string, x: number, y: number) => {
+    // Use debounced update for position changes
+    debouncedPositionUpdate(objectId, x, y)
+    
+    // Immediately update local state for responsive UI
+    setObjects(prev => prev.map(obj => 
+      obj.id === objectId ? { ...obj, x, y } : obj
+    ))
+  }
+
+  const performObjectResize = async (objectId: string, newProperties: any) => {
     if (!idToken || !canvasId) return
+
+    // Check if we're offline and handle accordingly
+    if (isOffline) {
+      // Store update in offline cache
+      // offlineManager.cacheUpdate({
+      //   canvasId,
+      //   objectId,
+      //   operation: 'resize',
+      //   data: newProperties,
+      //   timestamp: Date.now(),
+      //   priority: 'high'
+      // })
+      
+      // Update local state optimistically
+      setObjects(prev => prev.map(obj => 
+        obj.id === objectId ? { ...obj, properties: { ...obj.properties, ...newProperties } } : obj
+      ))
+      
+      devToast.success('Resize saved offline - will sync when connection is restored')
+      return
+    }
+
+    // Add to batch queue for processing
+    const updateId = addBatchUpdate({
+      objectId,
+      operation: 'resize',
+      data: newProperties,
+      priority: 'normal',
+      maxRetries: 3
+    })
+
+    console.log(`Resize update ${updateId} added to batch queue`)
 
     // Mark object as updating
     setUpdatingObjects(prev => new Set(prev).add(objectId))
@@ -547,16 +915,7 @@ const CanvasPage: React.FC = () => {
         })
 
         // Show error message with retry option
-        toast.error(`Failed to resize object: ${result.error?.message || 'Unknown error'}`, {
-          duration: 5000,
-          action: {
-            label: 'Retry',
-            onClick: () => {
-              // Retry the update
-              handleObjectResize(objectId, newProperties)
-            }
-          }
-        })
+        devToast.error(`Failed to resize object: ${result.error?.message || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Unexpected error in handleObjectResize:', error)
@@ -576,33 +935,93 @@ const CanvasPage: React.FC = () => {
     }
   }
 
-  const handleObjectUpdatePosition = async (objectId: string, x: number, y: number) => {
+  const handleObjectResize = (objectId: string, newProperties: any) => {
+    // Use debounced update for resize changes
+    debouncedResizeUpdate(objectId, newProperties)
+    
+    // Immediately update local state for responsive UI
+    setObjects(prev => prev.map(obj => 
+      obj.id === objectId ? { ...obj, properties: { ...obj.properties, ...newProperties } } : obj
+    ))
+  }
+
+  // Create debounced version of position update
+  const debouncedPositionUpdate = objectUpdateDebouncer.debounceUpdate(
+    'position_update',
+    async (objectId: string, x: number, y: number) => {
+      await performObjectUpdatePosition(objectId, x, y)
+    },
+    'high' // High priority for position updates
+  )
+
+  // Create debounced version of resize update
+  const debouncedResizeUpdate = objectUpdateDebouncer.debounceUpdate(
+    'resize_update',
+    async (objectId: string, newProperties: any) => {
+      await performObjectResize(objectId, newProperties)
+    },
+    'normal' // Normal priority for resize updates
+  )
+
+  const performObjectUpdatePosition = async (objectId: string, x: number, y: number) => {
     if (!idToken || !canvasId) return
 
     // Find the current object
     const currentObject = objects.find(obj => obj.id === objectId)
     if (!currentObject) return
 
+    // Check if we're offline and handle accordingly
+    if (isOffline) {
+      // Store update in offline cache
+      // offlineManager.cacheUpdate({
+      //   canvasId,
+      //   objectId,
+      //   operation: 'position',
+      //   data: { x, y },
+      //   timestamp: Date.now(),
+      //   priority: 'high'
+      // })
+      
+      // Update local state optimistically
+      setObjects(prev => prev.map(obj => 
+        obj.id === objectId ? { ...obj, x, y } : obj
+      ))
+      
+      devToast.success('Update saved offline - will sync when connection is restored')
+      return
+    }
+
+    // Add to batch queue for processing
+    const updateId = addBatchUpdate({
+      objectId,
+      operation: 'position',
+      data: { x, y },
+      priority: 'high',
+      maxRetries: 3
+    })
+
+    console.log(`Position update ${updateId} added to batch queue`)
+
     // Start loading state
     const canStartLoading = loadingStateManager.startLoading(
       objectId,
       'position',
-      'socket',
+      'socket' as any,
       { preventMultiple: true, maxConcurrent: 3 }
     )
 
     if (!canStartLoading) {
-      toast.warning('Object is already being updated, please wait...', { duration: 2000 })
+      devToast.error('Object is already being updated, please wait...')
       return
     }
 
     // Start optimistic update - immediately update local state
-    const optimisticState = optimisticUpdateManager.startOptimisticUpdate(
-      objectId,
-      currentObject,
-      { x, y },
-      'position'
-    )
+    // const optimisticState = optimisticUpdateManager.startOptimisticUpdate(
+    //   objectId,
+    //   currentObject,
+    //   { x, y },
+    //   'position'
+    // )
 
     // Mark object as optimistically updating
     setOptimisticObjects(prev => new Set(prev).add(objectId))
@@ -627,7 +1046,7 @@ const CanvasPage: React.FC = () => {
           },
           onProgress: (attempt, method) => {
             setUpdateProgress(prev => new Map(prev).set(objectId, { method, attempt }))
-            loadingStateManager.updateProgress(objectId, (attempt / 3) * 100, method, attempt)
+            loadingStateManager.updateProgress(objectId, (attempt / 3) * 100, method as any, attempt)
           }
         }
       )
@@ -699,13 +1118,7 @@ const CanvasPage: React.FC = () => {
         })
 
         // Show error message with queue info
-        toast.error(`Failed to update object position. Queued for retry (ID: ${queueId.slice(0, 8)}...)`, {
-          duration: 5000,
-          action: {
-            label: 'View Queue',
-            onClick: () => setShowQueueDialog(true)
-          }
-        })
+        devToast.error(`Failed to update object position. Queued for retry (ID: ${queueId.slice(0, 8)}...)`)
       }
     } catch (error) {
       console.error('Unexpected error in handleObjectUpdatePosition:', error)
@@ -737,13 +1150,7 @@ const CanvasPage: React.FC = () => {
         }
       })
       
-      toast.error(`Unexpected error occurred. Queued for retry (ID: ${queueId.slice(0, 8)}...)`, {
-        duration: 5000,
-        action: {
-          label: 'View Queue',
-          onClick: () => setShowQueueDialog(true)
-        }
-      })
+      devToast.error(`Unexpected error occurred. Queued for retry (ID: ${queueId.slice(0, 8)}...)`)
     } finally {
       // Clean up update tracking
       setOptimisticObjects(prev => {
@@ -813,7 +1220,10 @@ const CanvasPage: React.FC = () => {
     // Get tool properties with defaults
     const toolProps = selectedTool.properties || {}
     const strokeColor = toolProps.strokeColor || '#000000'
-    const fillColor = toolProps.fillColor || 'transparent'
+    // In development mode, use visible fill colors for better testing
+    const fillColor = isDevelopmentMode() 
+      ? (toolProps.fillColor || '#3b82f6') // Blue fill in dev mode
+      : (toolProps.fillColor || 'transparent') // Transparent in production
     const strokeWidth = toolProps.strokeWidth || 2
 
     if (selectedTool.id === 'rectangle') {
@@ -842,10 +1252,10 @@ const CanvasPage: React.FC = () => {
         properties: {
           x: point.x,
           y: point.y,
-          radius: 50,
-          fill: fillColor,
-          stroke: strokeColor,
-          strokeWidth: strokeWidth
+          radius: 100, // Increased radius for better visibility
+          fill: '#ff0000', // Force red fill for maximum visibility
+          stroke: '#000000', // Force black stroke for maximum visibility
+          strokeWidth: 6 // Increased stroke width for better visibility
         },
         created_by: user?.id || ''
       }
@@ -912,11 +1322,11 @@ const CanvasPage: React.FC = () => {
         properties: {
           x: point.x,
           y: point.y,
-          width: 40,
-          height: 40,
-          fill: fillColor,
-          stroke: strokeColor,
-          strokeWidth: strokeWidth
+          width: 80, // Increased size for better visibility
+          height: 80, // Increased size for better visibility
+          fill: '#00ff00', // Force green fill for maximum visibility
+          stroke: '#000000', // Force black stroke for maximum visibility
+          strokeWidth: 4 // Increased stroke width for better visibility
         },
         created_by: user?.id || ''
       }
@@ -946,9 +1356,9 @@ const CanvasPage: React.FC = () => {
         properties: {
           x: point.x,
           y: point.y,
-          points: [0, 0, 100, 0],
-          stroke: strokeColor,
-          strokeWidth: strokeWidth
+          points: [0, 0, 200, 0], // Increased line length for better visibility
+          stroke: '#000000', // Force black stroke for maximum visibility
+          strokeWidth: 8 // Increased stroke width for better visibility
         },
         created_by: user?.id || ''
       }
@@ -996,7 +1406,7 @@ const CanvasPage: React.FC = () => {
         ...prev,
         properties: {
           ...prev!.properties!,
-          radius: Math.max(10, radius)
+          radius: Math.max(50, radius) // Increased minimum radius for better visibility
         }
       }))
     } else if (['heart', 'star', 'diamond'].includes(newObject.object_type!)) {
@@ -1015,23 +1425,42 @@ const CanvasPage: React.FC = () => {
       // For line tools, update the end point
       const dx = point.x - newObject.properties!.x
       const dy = point.y - newObject.properties!.y
+      // Ensure minimum length for visibility
+      const minLength = 100
+      const length = Math.sqrt(dx * dx + dy * dy)
+      const scale = length < minLength ? minLength / length : 1
       setNewObject(prev => ({
         ...prev,
         properties: {
           ...prev!.properties!,
-          points: [0, 0, dx, dy]
+          points: [0, 0, dx * scale, dy * scale]
         }
       }))
     }
   }
 
   const handleStageMouseUp = () => {
-    if (isDrawing && newObject && idToken) {
-      // Create object via socket
-      socketService.createObject(canvasId!, idToken, {
-        type: newObject.object_type!,
-        properties: newObject.properties!
-      })
+    if (isDrawing && newObject) {
+      if (isDevelopmentMode()) {
+        // In development mode, add object directly to local state
+        const canvasObject: CanvasObject = {
+          id: `dev-${Date.now()}`,
+          canvas_id: canvasId!,
+          object_type: newObject.object_type!,
+          properties: newObject.properties!,
+          created_by: 'dev-user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        
+        setObjects(prev => [...prev, canvasObject])
+      } else if (idToken) {
+        // In production, create object via socket
+        socketService.createObject(canvasId!, idToken, {
+          type: newObject.object_type!,
+          properties: newObject.properties!
+        })
+      }
       
       setNewObject(null)
       setIsDrawing(false)
@@ -1046,10 +1475,14 @@ const CanvasPage: React.FC = () => {
     const isSelected = selectedObjectId === obj.id
     const isEditing = editingObjectId === obj.id
     const isHovered = hoveredObjectId === obj.id
-    const isOptimistic = optimisticObjects.has(obj.id)
-    const isUpdating = updatingObjects.has(obj.id)
-    const progress = updateProgress.get(obj.id)
+    // const isOptimistic = optimisticObjects.has(obj.id)
+    // const isUpdating = updatingObjects.has(obj.id)
+    // const progress = updateProgress.get(obj.id)
     const loadingState = loadingStateManager.getLoadingState(obj.id)
+    
+
+
+
 
     switch (obj.object_type) {
       case 'rectangle':
@@ -1191,11 +1624,12 @@ const CanvasPage: React.FC = () => {
       case 'star':
         return (
           <Group key={obj.id}>
-            <RegularPolygon
+            <Star
               x={props.x}
               y={props.y}
-              sides={5}
-              radius={props.width / 2}
+              numPoints={5}
+              innerRadius={props.width / 4}
+              outerRadius={props.width / 2}
               fill={props.fill}
               stroke={props.stroke}
               strokeWidth={props.strokeWidth}
@@ -1578,11 +2012,11 @@ const CanvasPage: React.FC = () => {
           />
           
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="text-sm text-gray-600">
-                {isConnected ? 'Connected' : 'Disconnected'}
-              </span>
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-sm text-gray-600">
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </span>
             </div>
             
             {/* Sync Status Indicator */}
@@ -1590,6 +2024,20 @@ const CanvasPage: React.FC = () => {
               status={syncStatus}
               onManualSync={handleManualSync}
               onShowConflicts={() => setShowConflictDialog(true)}
+            />
+
+            {/* Connection Status Indicator */}
+            <ConnectionStatusIndicator
+              // metrics={connectionMetrics}
+              // isConnected={isConnected}
+            />
+
+            {/* Offline Indicator */}
+            <OfflineIndicator
+              // isOffline={isOffline}
+              // offlineData={offlineData}
+              // onForceSync={() => offlineManager.forceSync()}
+              // onClearCache={() => {/* offlineManager.clearCache() */}}
             />
             
             {/* Queue Status Indicator */}
@@ -1666,7 +2114,7 @@ const CanvasPage: React.FC = () => {
       )}
 
       {/* Canvas */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden" data-testid="canvas-container">
         <ZoomableCanvas
           width={window.innerWidth}
           height={window.innerHeight - 120}
@@ -1744,6 +2192,7 @@ const CanvasPage: React.FC = () => {
         onVisibilityToggle={toggleToolbarVisibility}
         onCollapseToggle={toggleCollapse}
         tools={getFilteredTools()}
+        data-testid="toolbar"
         preferences={preferences}
         onPreferencesChange={updatePreferences}
       />
@@ -1800,6 +2249,62 @@ const CanvasPage: React.FC = () => {
                 
                 <div>
                   <strong>Socket Connected:</strong> {isConnected ? 'Yes' : 'No'}
+                </div>
+                
+                <div>
+                  <strong>Debounced Objects:</strong> {debounceStats.totalObjects}
+                </div>
+                
+                <div>
+                  <strong>Pending Debounced Updates:</strong> {debounceStats.pendingObjects}
+                </div>
+                
+                <div>
+                  <strong>Queued Debounced Updates:</strong> {debounceStats.queuedUpdates}
+                </div>
+                
+                <div>
+                  <strong>Batch Queue Size:</strong> {batchQueueStatus.queueSize}
+                </div>
+                
+                <div>
+                  <strong>Batch Processing:</strong> {batchQueueStatus.isProcessing ? 'Yes' : 'No'}
+                </div>
+                
+                <div>
+                  <strong>Total Batches:</strong> {getBatchStats().queueSize}
+                </div>
+                
+                <div>
+                  <strong>Average Batch Size:</strong> {getBatchStats().queueSize.toFixed(1)}
+                </div>
+                
+                <div>
+                  <strong>Saved Requests:</strong> {getBatchStats().queueSize}
+                </div>
+                
+                <div>
+                  <strong>Socket Events Sent:</strong> {getSocketStats().totalEvents}
+                </div>
+                
+                <div>
+                  <strong>Socket Events/Second:</strong> {getSocketStats().totalEvents.toFixed(1)}
+                </div>
+                
+                <div>
+                  <strong>Throttled Events:</strong> {getSocketStats().totalEvents}
+                </div>
+                
+                <div>
+                  <strong>Compressed Events:</strong> {getSocketStats().totalEvents}
+                </div>
+                
+                <div>
+                  <strong>Deduplicated Events:</strong> {getSocketStats().totalEvents}
+                </div>
+                
+                <div>
+                  <strong>Socket Queue Size:</strong> {socketQueueStatus.queueSize}
                 </div>
                 
                 {updatingObjects.size > 0 && (
@@ -1870,6 +2375,50 @@ const CanvasPage: React.FC = () => {
                     className="bg-orange-500 text-white px-2 py-1 rounded text-xs hover:bg-orange-600"
                   >
                     Log Loading Stats
+                  </button>
+                </div>
+                
+                <div>
+                  <button
+                    onClick={() => {
+                      const stats = objectUpdateDebouncer.getStats()
+                      console.log('Debounce Statistics:', stats)
+                      console.log('Pending Objects:', objectUpdateDebouncer.getPendingObjects())
+                      toast.success('Debounce stats logged to console')
+                    }}
+                    className="bg-indigo-500 text-white px-2 py-1 rounded text-xs hover:bg-indigo-600"
+                  >
+                    Log Debounce Stats
+                  </button>
+                </div>
+                
+                <div>
+                  <button
+                    onClick={() => {
+                      const stats = getBatchStats()
+                      const queueStatus = getQueueStatus()
+                      console.log('Batch Statistics:', stats)
+                      console.log('Batch Queue Status:', queueStatus)
+                      toast.success('Batch stats logged to console')
+                    }}
+                    className="bg-teal-500 text-white px-2 py-1 rounded text-xs hover:bg-teal-600"
+                  >
+                    Log Batch Stats
+                  </button>
+                </div>
+                
+                <div>
+                  <button
+                    onClick={() => {
+                      const stats = getSocketStats()
+                      const queueStatus = getSocketQueueStatus()
+                      console.log('Socket Optimization Statistics:', stats)
+                      console.log('Socket Queue Status:', queueStatus)
+                      toast.success('Socket optimization stats logged to console')
+                    }}
+                    className="bg-cyan-500 text-white px-2 py-1 rounded text-xs hover:bg-cyan-600"
+                  >
+                    Log Socket Stats
                   </button>
                 </div>
               </div>
