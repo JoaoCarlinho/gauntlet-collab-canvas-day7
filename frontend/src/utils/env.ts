@@ -14,7 +14,10 @@ export const validateEnvironment = () => {
   if (import.meta.env.MODE === 'production') {
     if (!apiUrl) {
       console.error('VITE_API_URL is required in production mode!');
-      throw new Error('VITE_API_URL environment variable is required for production deployment');
+      console.error('Please set VITE_API_URL environment variable in Vercel dashboard');
+      // Don't throw error in production to prevent app crash
+      // Return a placeholder that will show an error in the UI instead
+      return 'https://api-not-configured.vercel.app';
     }
     console.log('Production mode detected, using environment variable:', apiUrl);
     return apiUrl;
