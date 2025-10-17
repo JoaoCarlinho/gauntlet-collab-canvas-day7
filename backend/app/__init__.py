@@ -110,9 +110,11 @@ def create_app(config_class=Config):
     
     # Initialize rate limiting
     from .middleware.rate_limiting import init_rate_limiting, init_socket_rate_limiting
+    from .middleware.error_handling import init_error_handling
     from .extensions import redis_client
     init_rate_limiting(app)
     init_socket_rate_limiting(redis_client)
+    init_error_handling(app)
     
     # Register socket handlers
     from .socket_handlers import register_socket_handlers

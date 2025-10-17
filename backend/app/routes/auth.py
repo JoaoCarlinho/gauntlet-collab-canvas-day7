@@ -1,10 +1,16 @@
 from flask import Blueprint, request, jsonify
 from flasgger import swag_from
 from app.services.auth_service import AuthService, require_auth
+from app.middleware.rate_limiting import auth_rate_limit
+from app.middleware.error_handling import secure_error_handler, handle_validation_error, handle_internal_error
+from app.utils.validators import ValidationError
+from app.services.sanitization_service import SanitizationService
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/register', methods=['POST'])
+@auth_rate_limit('register')
+@secure_error_handler
 @swag_from({
     'tags': ['Authentication'],
     'summary': 'Register a new user',
@@ -59,33 +65,34 @@ auth_bp = Blueprint('auth', __name__)
     }
 })
 def register():
-    """Register a new user."""
+    """Register a new user with comprehensive security validation."""
+    data = request.get_json()
+    if not data:
+        return handle_validation_error('Request body is required')
+    
+    id_token = data.get('idToken')
+    if not id_token:
+        return handle_validation_error('ID token is required')
+    
+    # Validate ID token format and length
+    from app.utils.validators import InputValidator
     try:
-        data = request.get_json()
-        id_token = data.get('idToken')
-        
-        if not id_token:
-            return jsonify({'error': 'ID token is required'}), 400
-        
-        auth_service = AuthService()
-        user = auth_service.register_user(id_token)
-        
-        return jsonify({
-            'message': 'User registered successfully',
-            'user': user.to_dict()
-        }), 201
-        
-    except Exception as e:
-        print(f"=== Registration Route Error ===")
-        print(f"Exception type: {type(e)}")
-        print(f"Exception message: {str(e)}")
-        print(f"Exception details: {e}")
-        import traceback
-        print(f"Traceback: {traceback.format_exc()}")
-        return jsonify({'error': str(e)}), 400
+        id_token = InputValidator.validate_string_length(id_token, 'idToken', 1, 2000)
+    except ValidationError as e:
+        return handle_validation_error(f'Invalid ID token: {str(e)}')
+    
+    auth_service = AuthService()
+    user = auth_service.register_user(id_token)
+    
+    return jsonify({
+        'message': 'User registered successfully',
+        'user': user.to_dict()
+    }), 201
 
 @auth_bp.route('/me', methods=['GET'])
 @require_auth
+@auth_rate_limit('get_user')
+@secure_error_handler
 @swag_from({
     'tags': ['Authentication'],
     'summary': 'Get current user information',
@@ -123,12 +130,21 @@ def register():
     }
 })
 def get_current_user(current_user):
-    """Get current user information."""
+    """Get current user information with comprehensive security validation."""
+    # Validate user ID format
+    from app.utils.validators import InputValidator
+    try:
+        user_id = InputValidator.validate_user_id(current_user.id)
+    except ValidationError as e:
+        return handle_validation_error(f'Invalid user ID: {str(e)}')
+    
     return jsonify({
         'user': current_user.to_dict()
     }), 200
 
 @auth_bp.route('/verify', methods=['POST'])
+@auth_rate_limit('verify')
+@secure_error_handler
 @swag_from({
     'tags': ['Authentication'],
     'summary': 'Verify Firebase ID token',
@@ -180,21 +196,26 @@ def get_current_user(current_user):
     }
 })
 def verify_token():
-    """Verify Firebase ID token."""
+    """Verify Firebase ID token with comprehensive security validation."""
+    data = request.get_json()
+    if not data:
+        return handle_validation_error('Request body is required')
+    
+    id_token = data.get('idToken')
+    if not id_token:
+        return handle_validation_error('ID token is required')
+    
+    # Validate ID token format and length
+    from app.utils.validators import InputValidator
     try:
-        data = request.get_json()
-        id_token = data.get('idToken')
-        
-        if not id_token:
-            return jsonify({'error': 'ID token is required'}), 400
-        
-        auth_service = AuthService()
-        decoded_token = auth_service.verify_token(id_token)
-        
-        return jsonify({
-            'valid': True,
-            'user': decoded_token
-        }), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 401
+        id_token = InputValidator.validate_string_length(id_token, 'idToken', 1, 2000)
+    except ValidationError as e:
+        return handle_validation_error(f'Invalid ID token: {str(e)}')
+    
+    auth_service = AuthService()
+    decoded_token = auth_service.verify_token(id_token)
+    
+    return jsonify({
+        'valid': True,
+        'user': decoded_token
+    }), 200
