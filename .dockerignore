@@ -1,0 +1,68 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Frontend (not needed for backend)
+frontend/
+node_modules/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test files
+tests/
+*_test.py
+test_*.py
+
+# Cypress
+cypress/
+cypress.config.*
+
+# Screenshots and videos
+screenshots/
+videos/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Railway specific
+.railwayenv
+railway.json
+railpack.toml
+
+# Scripts
+scripts/
+
+# Other
+*.tmp
+*.temp
