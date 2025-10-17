@@ -41,9 +41,13 @@ canvas_service = CanvasService()
                         'type': 'string',
                         'enum': ['view', 'edit'],
                         'description': 'Permission level to grant (view or edit)'
+                    },
+                    'invitation_message': {
+                        'type': 'string',
+                        'description': 'Optional invitation message (max 1000 characters)'
                     }
                 },
-                'required': ['canvas_id', 'invitee_email']
+                'required': ['canvas_id', 'invitee_email', 'permission_type']
             }
         }
     ],
@@ -71,11 +75,12 @@ canvas_service = CanvasService()
             }
         },
         400: {
-            'description': 'Bad request - missing required fields or invalid permission type',
+            'description': 'Bad request - missing required fields or invalid data',
             'schema': {
                 'type': 'object',
                 'properties': {
-                    'error': {'type': 'string'}
+                    'error': {'type': 'string'},
+                    'details': {'type': 'object'}
                 }
             }
         },
@@ -87,17 +92,27 @@ canvas_service = CanvasService()
                     'error': {'type': 'string'}
                 }
             }
+        },
+        429: {
+            'description': 'Rate limit exceeded',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string'},
+                    'retry_after': {'type': 'number'}
+                }
+            }
         }
     }
 })
 def invite_user(current_user):
-    """Invite a user to collaborate on a canvas."""
+    """Invite a user to collaborate on a canvas with comprehensive security validation."""
     try:
         data = request.get_json()
         if not data:
             return jsonify({'error': 'Request body is required'}), 400
         
-        # Validate input using schema
+        # Validate input using comprehensive schema
         schema = CollaborationInviteSchema()
         try:
             validated_data = schema.load(data)
@@ -109,18 +124,49 @@ def invite_user(current_user):
         permission_type = validated_data['permission_type']
         invitation_message = validated_data.get('invitation_message')
         
-        # Additional validation
-        if not canvas_id or not invitee_email:
-            return jsonify({'error': 'canvas_id and invitee_email are required'}), 400
+        # Additional security validations
+        from app.utils.validators import InputValidator
         
-        # Check if user is owner
+        # Validate canvas ID format and length
+        try:
+            canvas_id = InputValidator.validate_canvas_id(canvas_id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid canvas ID: {str(e)}'}), 400
+        
+        # Validate email format and length (already done by schema, but double-check)
+        try:
+            invitee_email = InputValidator.validate_email_address(invitee_email)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid email address: {str(e)}'}), 400
+        
+        # Validate permission type enum
+        try:
+            permission_type = InputValidator.validate_enum_value(
+                permission_type, 'permission_type', ['view', 'edit']
+            )
+        except ValidationError as e:
+            return jsonify({'error': str(e)}), 400
+        
+        # Check if user is owner with additional security
         canvas = canvas_service.get_canvas_by_id(canvas_id)
-        if not canvas or canvas.owner_id != current_user.id:
-            return jsonify({'error': 'Only the owner can invite users'}), 403
+        if not canvas:
+            return jsonify({'error': 'Canvas not found'}), 404
+        
+        if canvas.owner_id != current_user.id:
+            return jsonify({'error': 'Only the canvas owner can invite users'}), 403
+        
+        # Prevent self-invitation
+        if invitee_email.lower() == current_user.email.lower():
+            return jsonify({'error': 'Cannot invite yourself'}), 400
         
         # Sanitize invitation message if provided
         if invitation_message:
             invitation_message = SanitizationService.sanitize_invitation_message(invitation_message)
+        
+        # Check for existing invitation to prevent spam
+        existing_invitation = collaboration_service.get_pending_invitation(canvas_id, invitee_email)
+        if existing_invitation:
+            return jsonify({'error': 'Invitation already sent to this user'}), 409
         
         invitation = collaboration_service.invite_user_to_canvas(
             canvas_id=canvas_id,
@@ -138,54 +184,107 @@ def invite_user(current_user):
     except ValidationError as e:
         return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
+        # Secure error handling - don't expose internal details
         return jsonify({'error': 'Internal server error'}), 500
 
 @collaboration_bp.route('/invitations', methods=['GET'])
 @require_auth
+@collaboration_rate_limit('get_invitations')
 def get_invitations(current_user):
-    """Get all pending invitations for the current user."""
+    """Get all pending invitations for the current user with comprehensive security validation."""
     try:
-        invitations = collaboration_service.get_user_invitations(current_user.id)
+        # Validate user ID format
+        from app.utils.validators import InputValidator
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
+        invitations = collaboration_service.get_user_invitations(user_id)
         return jsonify({
             'invitations': [invitation.to_dict() for invitation in invitations]
         }), 200
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @collaboration_bp.route('/canvas/<canvas_id>/invitations', methods=['GET'])
 @require_auth
+@collaboration_rate_limit('get_canvas_invitations')
 def get_canvas_invitations(current_user, canvas_id):
-    """Get all invitations for a specific canvas."""
+    """Get all invitations for a specific canvas with comprehensive security validation."""
     try:
+        # Validate canvas ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            canvas_id = InputValidator.validate_canvas_id(canvas_id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid canvas ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
         # Check if user is canvas owner
         canvas = canvas_service.get_canvas_by_id(canvas_id)
-        if not canvas or canvas.owner_id != current_user.id:
+        if not canvas or canvas.owner_id != user_id:
             return jsonify({'error': 'Only the canvas owner can view invitations'}), 403
         
         invitations = collaboration_service.get_canvas_invitations(canvas_id)
         return jsonify({
             'invitations': [invitation.to_dict() for invitation in invitations]
         }), 200
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @collaboration_bp.route('/invitations/<invitation_id>/resend', methods=['POST'])
 @require_auth
+@collaboration_rate_limit('resend_invitation')
 def resend_invitation(current_user, invitation_id):
-    """Resend an invitation email."""
+    """Resend an invitation email with comprehensive security validation."""
     try:
-        invitation = collaboration_service.resend_invitation(invitation_id, current_user.id)
+        # Validate invitation ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            invitation_id = InputValidator.validate_string_length(invitation_id, 'invitation_id', 1, 100)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid invitation ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
+        invitation = collaboration_service.resend_invitation(invitation_id, user_id)
         return jsonify({
             'message': 'Invitation resent successfully',
             'invitation': invitation.to_dict()
         }), 200
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @collaboration_bp.route('/invitations/<invitation_id>', methods=['GET'])
 def get_invitation_details(invitation_id):
-    """Get invitation details (public endpoint for invitation links)."""
+    """Get invitation details (public endpoint for invitation links) with comprehensive security validation."""
     try:
+        # Validate invitation ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            invitation_id = InputValidator.validate_string_length(invitation_id, 'invitation_id', 1, 100)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid invitation ID: {str(e)}'}), 400
+        
         invitation = collaboration_service.get_invitation_by_id(invitation_id)
         if not invitation:
             return jsonify({'error': 'Invitation not found'}), 404
@@ -196,15 +295,32 @@ def get_invitation_details(invitation_id):
         return jsonify({
             'invitation': invitation.to_dict()
         }), 200
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @collaboration_bp.route('/invitations/<invitation_id>/accept', methods=['POST'])
 @require_auth
+@collaboration_rate_limit('accept_invitation')
 def accept_invitation(current_user, invitation_id):
-    """Accept an invitation."""
+    """Accept an invitation with comprehensive security validation."""
     try:
-        permission = collaboration_service.accept_invitation(invitation_id, current_user.id)
+        # Validate invitation ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            invitation_id = InputValidator.validate_string_length(invitation_id, 'invitation_id', 1, 100)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid invitation ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
+        permission = collaboration_service.accept_invitation(invitation_id, user_id)
         if not permission:
             return jsonify({'error': 'Invitation not found or expired'}), 404
         
@@ -213,14 +329,31 @@ def accept_invitation(current_user, invitation_id):
             'permission': permission.to_dict()
         }), 200
         
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @collaboration_bp.route('/invitations/<invitation_id>/decline', methods=['POST'])
 @require_auth
+@collaboration_rate_limit('decline_invitation')
 def decline_invitation(current_user, invitation_id):
-    """Decline an invitation."""
+    """Decline an invitation with comprehensive security validation."""
     try:
+        # Validate invitation ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            invitation_id = InputValidator.validate_string_length(invitation_id, 'invitation_id', 1, 100)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid invitation ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
         invitation = collaboration_service.decline_invitation(invitation_id)
         if not invitation:
             return jsonify({'error': 'Invitation not found'}), 404
@@ -230,16 +363,33 @@ def decline_invitation(current_user, invitation_id):
             'invitation': invitation.to_dict()
         }), 200
         
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @collaboration_bp.route('/canvas/<canvas_id>/collaborators', methods=['GET'])
 @require_auth
+@collaboration_rate_limit('get_collaborators')
 def get_collaborators(current_user, canvas_id):
-    """Get all collaborators for a canvas."""
+    """Get all collaborators for a canvas with comprehensive security validation."""
     try:
+        # Validate canvas ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            canvas_id = InputValidator.validate_canvas_id(canvas_id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid canvas ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
         # Check permission
-        if not canvas_service.check_canvas_permission(canvas_id, current_user.id):
+        if not canvas_service.check_canvas_permission(canvas_id, user_id):
             return jsonify({'error': 'Access denied'}), 403
         
         collaborators = collaboration_service.get_canvas_collaborators(canvas_id)
@@ -247,35 +397,64 @@ def get_collaborators(current_user, canvas_id):
             'collaborators': collaborators
         }), 200
         
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @collaboration_bp.route('/canvas/<canvas_id>/collaborators/<user_id>', methods=['PUT'])
 @require_auth
+@collaboration_rate_limit('update_collaborator_permission')
 def update_collaborator_permission(current_user, canvas_id, user_id):
-    """Update a collaborator's permission."""
+    """Update a collaborator's permission with comprehensive security validation."""
     try:
+        # Validate canvas ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            canvas_id = InputValidator.validate_canvas_id(canvas_id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid canvas ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            target_user_id = InputValidator.validate_user_id(user_id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
+        # Validate current user ID format
+        try:
+            current_user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid current user ID: {str(e)}'}), 400
+        
         # Check if user is owner
         canvas = canvas_service.get_canvas_by_id(canvas_id)
-        if not canvas or canvas.owner_id != current_user.id:
+        if not canvas or canvas.owner_id != current_user_id:
             return jsonify({'error': 'Only the owner can update permissions'}), 403
         
         data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
         new_permission_type = data.get('permission_type')
         
         if not new_permission_type:
             return jsonify({'error': 'permission_type is required'}), 400
         
-        # Validate permission type
-        valid_permissions = ['view', 'edit']
-        if new_permission_type not in valid_permissions:
-            return jsonify({'error': f'Invalid permission type. Must be one of: {valid_permissions}'}), 400
+        # Validate permission type using InputValidator
+        try:
+            new_permission_type = InputValidator.validate_enum_value(
+                new_permission_type, 'permission_type', ['view', 'edit']
+            )
+        except ValidationError as e:
+            return jsonify({'error': str(e)}), 400
         
         permission = collaboration_service.update_collaborator_permission(
             canvas_id=canvas_id,
-            user_id=user_id,
+            user_id=target_user_id,
             new_permission_type=new_permission_type,
-            updated_by=current_user.id
+            updated_by=current_user_id
         )
         
         if not permission:
@@ -286,20 +465,47 @@ def update_collaborator_permission(current_user, canvas_id, user_id):
             'permission': permission.to_dict()
         }), 200
         
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 
 @collaboration_bp.route('/canvas/<canvas_id>/collaborators/<user_id>', methods=['DELETE'])
 @require_auth
+@collaboration_rate_limit('remove_collaborator')
 def remove_collaborator(current_user, canvas_id, user_id):
-    """Remove a collaborator from a canvas."""
+    """Remove a collaborator from a canvas with comprehensive security validation."""
     try:
+        # Validate canvas ID format and length
+        from app.utils.validators import InputValidator
+        try:
+            canvas_id = InputValidator.validate_canvas_id(canvas_id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid canvas ID: {str(e)}'}), 400
+        
+        # Validate user ID format
+        try:
+            target_user_id = InputValidator.validate_user_id(user_id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
+        
+        # Validate current user ID format
+        try:
+            current_user_id = InputValidator.validate_user_id(current_user.id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid current user ID: {str(e)}'}), 400
+        
         # Check if user is owner
         canvas = canvas_service.get_canvas_by_id(canvas_id)
-        if not canvas or canvas.owner_id != current_user.id:
+        if not canvas or canvas.owner_id != current_user_id:
             return jsonify({'error': 'Only the owner can remove collaborators'}), 403
         
-        success = collaboration_service.remove_collaborator(canvas_id, user_id)
+        # Prevent owner from removing themselves
+        if target_user_id == current_user_id:
+            return jsonify({'error': 'Cannot remove yourself as a collaborator'}), 400
+        
+        success = collaboration_service.remove_collaborator(canvas_id, target_user_id)
         if not success:
             return jsonify({'error': 'Collaborator not found'}), 404
         
@@ -307,6 +513,172 @@ def remove_collaborator(current_user, canvas_id, user_id):
             'message': 'Collaborator removed successfully'
         }), 200
         
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
+
+@collaboration_bp.route('/presence/update', methods=['POST'])
+@require_auth
+@collaboration_rate_limit('presence_update')
+@swag_from({
+    'tags': ['Collaboration'],
+    'summary': 'Update user presence status',
+    'description': 'Update the current user\'s presence status and activity on a canvas',
+    'security': [{'Bearer': []}],
+    'parameters': [
+        {
+            'name': 'body',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'canvas_id': {
+                        'type': 'string',
+                        'description': 'ID of the canvas'
+                    },
+                    'status': {
+                        'type': 'string',
+                        'enum': ['online', 'away', 'busy', 'offline'],
+                        'description': 'User presence status'
+                    },
+                    'activity': {
+                        'type': 'string',
+                        'enum': ['viewing', 'editing', 'drawing', 'idle'],
+                        'description': 'User activity description'
+                    },
+                    'timestamp': {
+                        'type': 'number',
+                        'description': 'Timestamp of the update'
+                    }
+                },
+                'required': ['canvas_id', 'status']
+            }
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Presence updated successfully',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'message': {'type': 'string'},
+                    'presence': {
+                        'type': 'object',
+                        'properties': {
+                            'user_id': {'type': 'string'},
+                            'canvas_id': {'type': 'string'},
+                            'status': {'type': 'string'},
+                            'activity': {'type': 'string'},
+                            'timestamp': {'type': 'number'}
+                        }
+                    }
+                }
+            }
+        },
+        400: {
+            'description': 'Bad request - invalid data',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string'},
+                    'details': {'type': 'object'}
+                }
+            }
+        },
+        403: {
+            'description': 'Access denied - insufficient permissions',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string'}
+                }
+            }
+        },
+        429: {
+            'description': 'Rate limit exceeded',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string'},
+                    'retry_after': {'type': 'number'}
+                }
+            }
+        }
+    }
+})
+def update_presence(current_user):
+    """Update user presence status with comprehensive security validation."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        # Validate input using comprehensive schema
+        schema = PresenceUpdateSchema()
+        try:
+            validated_data = schema.load(data)
+        except ValidationError as e:
+            return jsonify({'error': 'Validation failed', 'details': e.messages}), 400
+        
+        canvas_id = validated_data['canvas_id']
+        status = validated_data['status']
+        activity = validated_data.get('activity')
+        timestamp = validated_data.get('timestamp')
+        
+        # Additional security validations
+        from app.utils.validators import InputValidator
+        
+        # Validate canvas ID format and length
+        try:
+            canvas_id = InputValidator.validate_canvas_id(canvas_id)
+        except ValidationError as e:
+            return jsonify({'error': f'Invalid canvas ID: {str(e)}'}), 400
+        
+        # Validate status enum
+        try:
+            status = InputValidator.validate_enum_value(
+                status, 'status', ['online', 'away', 'busy', 'offline']
+            )
+        except ValidationError as e:
+            return jsonify({'error': str(e)}), 400
+        
+        # Validate activity enum if provided
+        if activity:
+            try:
+                activity = InputValidator.validate_enum_value(
+                    activity, 'activity', ['viewing', 'editing', 'drawing', 'idle']
+                )
+            except ValidationError as e:
+                return jsonify({'error': str(e)}), 400
+        
+        # Check canvas access permission
+        if not canvas_service.check_canvas_permission(canvas_id, current_user.id):
+            return jsonify({'error': 'Access denied to canvas'}), 403
+        
+        # Sanitize activity description if provided
+        if activity:
+            activity = SanitizationService.sanitize_text(activity, max_length=100)
+        
+        # Update presence through collaboration service
+        presence_data = collaboration_service.update_user_presence(
+            user_id=current_user.id,
+            canvas_id=canvas_id,
+            status=status,
+            activity=activity,
+            timestamp=timestamp
+        )
+        
+        return jsonify({
+            'message': 'Presence updated successfully',
+            'presence': presence_data
+        }), 200
+        
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
+    except Exception as e:
+        # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
 

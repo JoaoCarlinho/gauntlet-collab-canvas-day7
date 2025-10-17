@@ -47,7 +47,7 @@ class RateLimitingService:
         
         # Initialize Flask-Limiter
         self.limiter = Limiter(
-            app,
+            app=app,
             key_func=self._get_rate_limit_key,
             storage_uri=redis_url if self.redis_client else "memory://",
             default_limits=["100 per minute"],
@@ -127,28 +127,40 @@ class RateLimitConfig:
     AUTH_LIMITS = {
         'login': '5 per minute',
         'register': '3 per minute',
-        'refresh_token': '10 per minute'
+        'refresh_token': '10 per minute',
+        'get_user': '30 per minute',
+        'verify': '20 per minute'
     }
     
     COLLABORATION_LIMITS = {
         'invite': '5 per minute',
         'accept_invitation': '10 per minute',
         'decline_invitation': '10 per minute',
-        'presence_update': '10 per minute'
+        'presence_update': '10 per minute',
+        'get_invitations': '30 per minute',
+        'get_canvas_invitations': '30 per minute',
+        'resend_invitation': '5 per minute',
+        'get_collaborators': '30 per minute',
+        'update_collaborator_permission': '10 per minute',
+        'remove_collaborator': '10 per minute'
     }
     
     CANVAS_LIMITS = {
         'create': '10 per minute',
         'update': '20 per minute',
         'delete': '5 per minute',
-        'list': '30 per minute'
+        'list': '30 per minute',
+        'get_all': '30 per minute',
+        'get': '50 per minute',
+        'get_objects': '50 per minute'
     }
     
     OBJECT_LIMITS = {
         'create': '50 per minute',
         'update': '100 per minute',
         'delete': '20 per minute',
-        'list': '100 per minute'
+        'list': '100 per minute',
+        'get': '100 per minute'
     }
     
     # Socket.IO event limits

@@ -1,6 +1,8 @@
 from flask_socketio import emit, join_room, leave_room
 from app.services.auth_service import AuthService
 from app.extensions import redis_client
+from app.services.sanitization_service import SanitizationService
+from app.middleware.rate_limiting import check_socket_rate_limit
 import json
 
 def register_presence_handlers(socketio):
@@ -34,8 +36,11 @@ def register_presence_handlers(socketio):
     def handle_user_online(data):
         """Handle user coming online."""
         try:
-            canvas_id = data.get('canvas_id')
-            id_token = data.get('id_token')
+            # Sanitize input data
+            sanitized_data = SanitizationService.sanitize_socket_event_data(data)
+            
+            canvas_id = sanitized_data.get('canvas_id')
+            id_token = sanitized_data.get('id_token')
             
             if not all([canvas_id, id_token]):
                 return
@@ -45,6 +50,10 @@ def register_presence_handlers(socketio):
                 user = authenticate_socket_user(id_token)
             except Exception as e:
                 print(f"Presence authentication failed: {str(e)}")
+                return
+            
+            # Check rate limiting
+            if not check_socket_rate_limit(user.id, 'user_online'):
                 return
             
             # Store user presence in Redis (if available)
@@ -77,8 +86,11 @@ def register_presence_handlers(socketio):
     def handle_user_offline(data):
         """Handle user going offline."""
         try:
-            canvas_id = data.get('canvas_id')
-            id_token = data.get('id_token')
+            # Sanitize input data
+            sanitized_data = SanitizationService.sanitize_socket_event_data(data)
+            
+            canvas_id = sanitized_data.get('canvas_id')
+            id_token = sanitized_data.get('id_token')
             
             if not all([canvas_id, id_token]):
                 return
@@ -89,6 +101,10 @@ def register_presence_handlers(socketio):
                 decoded_token = auth_service.verify_token(id_token)
                 user = auth_service.get_user_by_id(decoded_token['uid'])
             except Exception:
+                return
+            
+            # Check rate limiting
+            if not check_socket_rate_limit(user.id, 'user_offline'):
                 return
             
             # Remove user presence from Redis
@@ -112,8 +128,11 @@ def register_presence_handlers(socketio):
     def handle_get_online_users(data):
         """Get all online users for a canvas."""
         try:
-            canvas_id = data.get('canvas_id')
-            id_token = data.get('id_token')
+            # Sanitize input data
+            sanitized_data = SanitizationService.sanitize_socket_event_data(data)
+            
+            canvas_id = sanitized_data.get('canvas_id')
+            id_token = sanitized_data.get('id_token')
             
             if not all([canvas_id, id_token]):
                 return
@@ -124,6 +143,10 @@ def register_presence_handlers(socketio):
                 decoded_token = auth_service.verify_token(id_token)
                 user = auth_service.get_user_by_id(decoded_token['uid'])
             except Exception:
+                return
+            
+            # Check rate limiting
+            if not check_socket_rate_limit(user.id, 'get_online_users'):
                 return
             
             # Get all online users from Redis
@@ -151,8 +174,11 @@ def register_presence_handlers(socketio):
     def handle_heartbeat(data):
         """Handle user heartbeat to maintain presence."""
         try:
-            canvas_id = data.get('canvas_id')
-            id_token = data.get('id_token')
+            # Sanitize input data
+            sanitized_data = SanitizationService.sanitize_socket_event_data(data)
+            
+            canvas_id = sanitized_data.get('canvas_id')
+            id_token = sanitized_data.get('id_token')
             
             if not all([canvas_id, id_token]):
                 return
@@ -163,6 +189,10 @@ def register_presence_handlers(socketio):
                 decoded_token = auth_service.verify_token(id_token)
                 user = auth_service.get_user_by_id(decoded_token['uid'])
             except Exception:
+                return
+            
+            # Check rate limiting
+            if not check_socket_rate_limit(user.id, 'heartbeat'):
                 return
             
             # Update presence timestamp in Redis

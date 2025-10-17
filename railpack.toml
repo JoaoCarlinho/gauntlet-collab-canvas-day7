@@ -12,3 +12,6 @@ restartPolicyMaxRetries = 10
 [python]
 version = "3.9"
 requirementsFile = "backend/requirements.txt"
+
+[secrets]
+CORS_ORIGINS = "https://collabcanvas-mvp-day7.vercel.app,https://*.vercel.app"
