@@ -25,8 +25,13 @@ def create_app(config_class=Config):
         "http://localhost:5173"
     ]
     
-    # Add wildcard for Vercel preview deployments
-    allowed_origins = default_origins + cors_origins + ["https://*.vercel.app"]
+    # Add specific Vercel deployment URLs
+    vercel_origins = [
+        "https://gauntlet-collab-canvas-day7.vercel.app",
+        "https://collabcanvas-mvp-day7.vercel.app",
+        "https://*.vercel.app"
+    ]
+    allowed_origins = default_origins + cors_origins + vercel_origins
     
     # Initialize CORS with comprehensive configuration
     cors.init_app(
