@@ -17,7 +17,7 @@ class EmailService:
         self.smtp_username = os.environ.get('SMTP_USERNAME')
         self.smtp_password = os.environ.get('SMTP_PASSWORD')
         self.from_email = os.environ.get('FROM_EMAIL', 'noreply@collabcanvas.com')
-        self.app_url = os.environ.get('APP_URL', 'https://gauntlet-collab-canvas-24hr.vercel.app')
+        self.app_url = os.environ.get('APP_URL', 'http://localhost:5173')
         
     def send_invitation_email(self, invitation_data: dict) -> bool:
         """Send invitation email to user."""

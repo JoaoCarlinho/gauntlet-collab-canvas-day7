@@ -10,11 +10,14 @@ export const validateEnvironment = () => {
   console.log('- NODE_ENV:', import.meta.env.NODE_ENV);
   console.log('- MODE:', import.meta.env.MODE);
   
-  // Temporary hardcoded fallback for production
+  // Production mode should use environment variable
   if (import.meta.env.MODE === 'production') {
-    const hardcodedUrl = 'https://gauntlet-collab-canvas-24hr-production.up.railway.app';
-    console.log('Production mode detected, using hardcoded URL:', hardcodedUrl);
-    return hardcodedUrl;
+    if (!apiUrl) {
+      console.error('VITE_API_URL is required in production mode!');
+      throw new Error('VITE_API_URL environment variable is required for production deployment');
+    }
+    console.log('Production mode detected, using environment variable:', apiUrl);
+    return apiUrl;
   }
   
   if (!apiUrl) {

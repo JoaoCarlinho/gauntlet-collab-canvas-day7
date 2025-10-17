@@ -42,8 +42,7 @@ Configure these environment variables in Vercel dashboard:
 
 ```bash
 # API Configuration
-VITE_API_BASE_URL=https://your-railway-backend-url.railway.app
-VITE_SOCKET_URL=https://your-railway-backend-url.railway.app
+VITE_API_URL=https://your-railway-backend-url.railway.app
 
 # Firebase Configuration
 VITE_FIREBASE_API_KEY=your-firebase-api-key
@@ -156,11 +155,8 @@ FIREBASE_CLIENT_ID=your-client-id
 FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
 FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
 
-# CORS Configuration
+# CORS Configuration (comma-separated list of allowed origins)
 CORS_ORIGINS=https://your-vercel-frontend-url.vercel.app
-
-# Socket.IO Configuration
-SOCKETIO_CORS_ALLOWED_ORIGINS=https://your-vercel-frontend-url.vercel.app
 ```
 
 ### **3. Database Setup**
@@ -317,7 +313,7 @@ Update `backend/railway.json` to run migrations:
    - Update Vercel environment variables
 
 3. **Deploy Frontend:**
-   - Update `VITE_API_BASE_URL` in Vercel
+   - Update `VITE_API_URL` in Vercel
    - Trigger new deployment
 
 ### **3. Verify Deployment**
