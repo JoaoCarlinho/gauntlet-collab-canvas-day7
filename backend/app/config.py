@@ -22,7 +22,29 @@ class Config:
     FIREBASE_CLIENT_X509_CERT_URL = os.environ.get('FIREBASE_CLIENT_X509_CERT_URL')
     
     # CORS Configuration
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5173').split(',')
+    def _get_cors_origins():
+        """Get CORS origins from environment variable or secrets file."""
+        # First try environment variable
+        cors_origins = os.environ.get('CORS_ORIGINS')
+        if cors_origins:
+            return [origin.strip() for origin in cors_origins.split(',')]
+        
+        # Try reading from secrets file (Railway deployment)
+        secrets_path = '/tmp/railpack-build-*/secrets/CORS_ORIGINS'
+        import glob
+        secrets_files = glob.glob(secrets_path)
+        if secrets_files:
+            try:
+                with open(secrets_files[0], 'r') as f:
+                    content = f.read().strip()
+                    return [origin.strip() for origin in content.split(',')]
+            except (IOError, OSError):
+                pass
+        
+        # Default fallback
+        return ['http://localhost:3000', 'http://localhost:5173']
+    
+    CORS_ORIGINS = _get_cors_origins()
     
     # Socket.IO Logging Configuration
     SOCKETIO_LOGGER = os.environ.get('SOCKETIO_LOGGER', 'false').lower() == 'true'
