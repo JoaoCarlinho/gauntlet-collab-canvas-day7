@@ -150,8 +150,6 @@ const getAuthErrorMessage = (error: AuthError): string => {
       return 'Please sign in again to complete this action.'
     case 'auth/web-storage-unsupported':
       return 'Your browser does not support the required authentication features. Please try a different browser.'
-    case 'auth/too-many-requests':
-      return 'Too many failed attempts. Please try again later.'
     default:
       return 'An unexpected error occurred during sign-in. This may be due to browser compatibility issues. Please try using a different browser or contact support.'
   }
