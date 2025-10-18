@@ -29,9 +29,25 @@ def create_app(config_class=Config):
     vercel_origins = [
         "https://gauntlet-collab-canvas-day7.vercel.app",
         "https://collabcanvas-mvp-day7.vercel.app",
+        "https://gauntlet-collab-canvas-24hr.vercel.app",
         "https://*.vercel.app"
     ]
-    allowed_origins = default_origins + cors_origins + vercel_origins
+    
+    # Add Railway backend URLs for self-referencing (if needed)
+    railway_origins = [
+        "https://gauntlet-collab-canvas-7day-production.up.railway.app",
+        "https://gauntlet-collab-canvas-day7-production.up.railway.app",
+        "https://gauntlet-collab-canvas-24hr-production.up.railway.app",
+        "https://*.up.railway.app"
+    ]
+    
+    allowed_origins = default_origins + cors_origins + vercel_origins + railway_origins
+    
+    # Debug CORS configuration
+    print(f"CORS Configuration Debug:")
+    print(f"- Environment CORS_ORIGINS: {cors_origins}")
+    print(f"- Total allowed origins: {len(allowed_origins)}")
+    print(f"- Allowed origins: {allowed_origins}")
     
     # Initialize CORS with comprehensive configuration
     cors.init_app(
@@ -41,6 +57,18 @@ def create_app(config_class=Config):
         allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
     )
+    
+    # Add security headers
+    @app.after_request
+    def add_security_headers(response):
+        """Add security headers to all responses."""
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"
+        return response
     
     socketio.init_app(
         app, 
