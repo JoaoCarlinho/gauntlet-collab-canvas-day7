@@ -54,8 +54,10 @@ def create_app(config_class=Config):
         app, 
         origins=allowed_origins, 
         supports_credentials=True,
-        allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
-        methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+        allow_headers=['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+        expose_headers=['Content-Range', 'X-Content-Range'],
+        vary_header=True
     )
     
     # Add security headers
@@ -136,12 +138,14 @@ def create_app(config_class=Config):
     from .routes.objects import objects_bp
     from .routes.collaboration import collaboration_bp
     from .routes.ai_agent import ai_agent_bp
+    from .routes.cors_debug import cors_debug_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(canvas_bp, url_prefix='/api/canvas')
     app.register_blueprint(objects_bp, url_prefix='/api/objects')
     app.register_blueprint(collaboration_bp, url_prefix='/api/collaboration')
     app.register_blueprint(ai_agent_bp, url_prefix='/api/ai-agent')
+    app.register_blueprint(cors_debug_bp, url_prefix='/api/debug')
     
     # Initialize rate limiting
     from .middleware.rate_limiting import init_rate_limiting, init_socket_rate_limiting
