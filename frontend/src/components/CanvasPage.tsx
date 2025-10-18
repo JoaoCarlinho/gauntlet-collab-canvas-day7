@@ -44,6 +44,9 @@ import PointerIndicator from './PointerIndicator'
 import { getUserColor, getUserInitials, getCursorIcon } from '../utils/cursorUtils'
 import { getCursorManager, CursorState } from '../utils/cursorManager'
 import { FloatingToolbar, useToolbarState, useToolShortcuts, getToolById } from './toolbar'
+import { AIAgentButton } from './AIAgentButton'
+import { AIAgentPanel } from './AIAgentPanel'
+import '../styles/AIAgent.css'
 
 const CanvasPage: React.FC = () => {
   const { canvasId } = useParams<{ canvasId: string }>()
@@ -59,6 +62,9 @@ const CanvasPage: React.FC = () => {
   const [newObject, setNewObject] = useState<Partial<CanvasObject> | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [showCollaborationSidebar, setShowCollaborationSidebar] = useState(false)
+  
+  // AI Agent state
+  const [showAIPanel, setShowAIPanel] = useState(false)
   
   // Floating toolbar state
   const {

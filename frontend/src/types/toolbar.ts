@@ -6,7 +6,8 @@ export enum ToolCategory {
   DRAWING = 'drawing',
   TEXT = 'text',
   ANNOTATION = 'annotation',
-  UTILITIES = 'utilities'
+  UTILITIES = 'utilities',
+  AI = 'ai'
 }
 
 export interface DrawingTool {
