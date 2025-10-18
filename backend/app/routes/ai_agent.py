@@ -1,0 +1,245 @@
+from flask import Blueprint, request, jsonify
+from datetime import datetime
+import os
+from marshmallow import ValidationError
+from app.services.ai_agent_service import AIAgentService
+from app.services.auth_service import require_auth
+from app.schemas.ai_agent_schemas import (
+    CanvasCreationRequestSchema, 
+    AIAgentHealthResponseSchema,
+    CanvasCreationResponseSchema
+)
+from app.middleware.rate_limiting import ai_rate_limit
+from app.utils.logger import SmartLogger
+
+ai_agent_bp = Blueprint('ai_agent', __name__, url_prefix='/api/ai-agent')
+logger = SmartLogger('ai_agent_routes', 'INFO')
+
+@ai_agent_bp.route('/create-canvas', methods=['POST'])
+@require_auth
+@ai_rate_limit('create_canvas')
+def create_canvas_with_ai(current_user):
+    """
+    Create canvas objects using AI agent based on user query.
+    
+    ---
+    tags:
+      - AI Agent
+    security:
+      - Bearer: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - instructions
+          properties:
+            instructions:
+              type: string
+              description: Natural language description of what to create
+              example: "Create a flowchart for a user login process"
+            style:
+              type: string
+              enum: [modern, corporate, creative, minimal]
+              default: modern
+              description: Visual style for the canvas
+            colorScheme:
+              type: string
+              enum: [pastel, vibrant, monochrome, default]
+              default: default
+              description: Color scheme for the canvas
+            canvas_id:
+              type: string
+              description: Optional existing canvas ID to add objects to
+    responses:
+      200:
+        description: Canvas created successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            canvas:
+              type: object
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+                objects:
+                  type: array
+                  items:
+                    type: object
+            message:
+              type: string
+      400:
+        description: Invalid request data
+      401:
+        description: Unauthorized
+      500:
+        description: Internal server error
+    """
+    try:
+        # Validate request data
+        schema = CanvasCreationRequestSchema()
+        data = schema.load(request.json)
+        
+        # Initialize AI agent service
+        ai_service = AIAgentService()
+        
+        # Process the query and generate canvas objects
+        result = ai_service.create_canvas_from_query(
+            query=data['instructions'],
+            user_id=current_user.id,
+            canvas_id=data.get('canvas_id'),
+            style=data.get('style', 'modern'),
+            color_scheme=data.get('colorScheme', 'default')
+        )
+        
+        logger.log_info(f"AI canvas created successfully for user {current_user.id}")
+        
+        return jsonify({
+            'success': True,
+            'canvas': {
+                'id': result['canvas_id'],
+                'title': result['title'],
+                'objects': result['objects']
+            },
+            'message': result['message']
+        }), 200
+        
+    except ValidationError as e:
+        logger.log_warning(f"Validation error in AI canvas creation: {e.messages}")
+        return jsonify({
+            'success': False,
+            'error': 'Invalid request data',
+            'details': e.messages
+        }), 400
+        
+    except ValueError as e:
+        logger.log_warning(f"Value error in AI canvas creation: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Invalid request',
+            'message': str(e)
+        }), 400
+        
+    except Exception as e:
+        logger.log_error(f"AI canvas creation failed: {str(e)}", e)
+        return jsonify({
+            'success': False,
+            'error': 'Failed to create canvas',
+            'message': str(e)
+        }), 500
+
+@ai_agent_bp.route('/health', methods=['GET'])
+@ai_rate_limit('health')
+def health_check():
+    """
+    Health check endpoint for AI agent service.
+    
+    ---
+    tags:
+      - AI Agent
+    responses:
+      200:
+        description: Service is healthy
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+            openai_connected:
+              type: boolean
+            timestamp:
+              type: string
+      500:
+        description: Service is unhealthy
+    """
+    try:
+        ai_service = AIAgentService()
+        # Test OpenAI connection by listing models
+        models = ai_service.openai_client.models.list()
+        
+        return jsonify({
+            'status': 'healthy',
+            'openai_connected': True,
+            'timestamp': datetime.utcnow().isoformat(),
+            'model_count': len(models.data) if hasattr(models, 'data') else 0
+        }), 200
+        
+    except Exception as e:
+        logger.log_error(f"AI agent health check failed: {str(e)}", e)
+        return jsonify({
+            'status': 'unhealthy',
+            'openai_connected': False,
+            'error': str(e),
+            'timestamp': datetime.utcnow().isoformat()
+        }), 500
+
+@ai_agent_bp.route('/models', methods=['GET'])
+@require_auth
+@ai_rate_limit('models')
+def list_available_models(current_user):
+    """
+    List available OpenAI models for AI canvas generation.
+    
+    ---
+    tags:
+      - AI Agent
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: List of available models
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            models:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  object:
+                    type: string
+                  created:
+                    type: integer
+      401:
+        description: Unauthorized
+      500:
+        description: Internal server error
+    """
+    try:
+        ai_service = AIAgentService()
+        models = ai_service.openai_client.models.list()
+        
+        # Filter for chat completion models
+        chat_models = [
+            {
+                'id': model.id,
+                'object': model.object,
+                'created': model.created
+            }
+            for model in models.data
+            if 'gpt' in model.id.lower()
+        ]
+        
+        return jsonify({
+            'success': True,
+            'models': chat_models,
+            'current_model': os.environ.get('OPENAI_MODEL', 'gpt-4')
+        }), 200
+        
+    except Exception as e:
+        logger.log_error(f"Failed to list models: {str(e)}", e)
+        return jsonify({
+            'success': False,
+            'error': 'Failed to list models',
+            'message': str(e)
+        }), 500

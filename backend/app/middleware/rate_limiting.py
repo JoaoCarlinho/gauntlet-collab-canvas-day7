@@ -163,6 +163,12 @@ class RateLimitConfig:
         'get': '100 per minute'
     }
     
+    AI_LIMITS = {
+        'create_canvas': '5 per minute',
+        'health': '30 per minute',
+        'models': '10 per minute'
+    }
+    
     # Socket.IO event limits
     SOCKET_LIMITS = {
         'cursor_move': '100 per minute',
@@ -296,6 +302,12 @@ def object_rate_limit(endpoint: str):
 def auth_rate_limit(endpoint: str):
     """Rate limiting decorator for authentication endpoints."""
     limit = RateLimitConfig.AUTH_LIMITS.get(endpoint, '5 per minute')
+    return api_rate_limit(limit)
+
+
+def ai_rate_limit(endpoint: str):
+    """Rate limiting decorator for AI agent endpoints."""
+    limit = RateLimitConfig.AI_LIMITS.get(endpoint, '5 per minute')
     return api_rate_limit(limit)
 
 
