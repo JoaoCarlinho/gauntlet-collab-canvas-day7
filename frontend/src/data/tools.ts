@@ -18,7 +18,8 @@ import {
   Diamond,
   SprayCan,
   Copy,
-  Zap
+  Zap,
+  Bot
 } from 'lucide-react'
 import { DrawingTool, ToolCategory, ToolProperties } from '../types/toolbar'
 
@@ -293,6 +294,20 @@ export const TOOLS: DrawingTool[] = [
     isEnabled: true,
     description: 'Apply gradients',
     properties: defaultProperties
+  },
+
+  // AI CATEGORY
+  {
+    id: 'ai-agent',
+    name: 'AI Agent',
+    icon: Bot,
+    category: ToolCategory.AI,
+    shortcut: 'q',
+    cursor: 'default',
+    isActive: false,
+    isEnabled: true,
+    description: 'Create canvas content with AI',
+    properties: defaultProperties
   }
 ]
 
@@ -333,6 +348,12 @@ export const TOOL_CATEGORIES = [
     name: 'Utilities',
     icon: Palette,
     tools: TOOLS.filter(tool => tool.category === ToolCategory.UTILITIES)
+  },
+  {
+    id: ToolCategory.AI,
+    name: 'AI',
+    icon: Bot,
+    tools: TOOLS.filter(tool => tool.category === ToolCategory.AI)
   }
 ]
 
