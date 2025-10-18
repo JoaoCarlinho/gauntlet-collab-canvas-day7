@@ -33,12 +33,12 @@ def session(app):
         connection = db.engine.connect()
         transaction = connection.begin()
         options = dict(bind=connection, binds={})
-        session = db.create_scoped_session(options=options)
-        db.session = session
-        yield session
+        session = db.sessionmaker(bind=connection, **options)
+        db.session = session()
+        yield db.session
         transaction.rollback()
         connection.close()
-        session.remove()
+        session.close()
 
 @pytest.fixture
 def sample_user():

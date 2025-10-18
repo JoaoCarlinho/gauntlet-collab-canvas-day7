@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin
 from flasgger import swag_from
 from app.services.auth_service import AuthService, require_auth
 from app.middleware.rate_limiting import auth_rate_limit
@@ -8,7 +9,8 @@ from app.services.sanitization_service import SanitizationService
 
 auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/register', methods=['POST'])
+@auth_bp.route('/register', methods=['POST', 'OPTIONS'])
+@cross_origin(origins=['*'], supports_credentials=True)
 @auth_rate_limit('register')
 @secure_error_handler
 @swag_from({
@@ -89,7 +91,8 @@ def register():
         'user': user.to_dict()
     }), 201
 
-@auth_bp.route('/me', methods=['GET'])
+@auth_bp.route('/me', methods=['GET', 'OPTIONS'])
+@cross_origin(origins=['*'], supports_credentials=True)
 @require_auth
 @auth_rate_limit('get_user')
 @secure_error_handler

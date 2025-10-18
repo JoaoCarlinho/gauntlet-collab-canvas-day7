@@ -9,17 +9,17 @@ class CanvasCreationRequestSchema(Schema):
         error_messages={'required': 'Instructions are required'}
     )
     style = fields.Str(
-        missing='modern',
+        load_default='modern',
         validate=validate.OneOf(['modern', 'corporate', 'creative', 'minimal']),
         error_messages={'validator_failed': 'Invalid style option'}
     )
     colorScheme = fields.Str(
-        missing='default',
+        load_default='default',
         validate=validate.OneOf(['pastel', 'vibrant', 'monochrome', 'default']),
         error_messages={'validator_failed': 'Invalid color scheme option'}
     )
     canvas_id = fields.Str(
-        missing=None,
+        load_default=None,
         validate=validate.Length(min=1, max=100),
         allow_none=True
     )

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 from marshmallow import ValidationError
 from app.services.ai_agent_service import AIAgentService
@@ -166,7 +166,7 @@ def health_check():
         return jsonify({
             'status': 'healthy',
             'openai_connected': True,
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'model_count': len(models.data) if hasattr(models, 'data') else 0
         }), 200
         
