@@ -164,9 +164,10 @@ class RateLimitConfig:
     }
     
     AI_LIMITS = {
-        'create_canvas': '5 per minute',
-        'health': '30 per minute',
-        'models': '10 per minute'
+        'create_canvas': '10 per minute',  # Increased for better UX
+        'health': '60 per minute',         # Increased for monitoring
+        'models': '20 per minute',         # Increased for model selection
+        'performance': '30 per minute'     # New endpoint for performance metrics
     }
     
     # Socket.IO event limits

@@ -8,7 +8,7 @@ pip install -r requirements.txt
 
 # Set default CORS_ORIGINS if not set
 if [ -z "$CORS_ORIGINS" ]; then
-    export CORS_ORIGINS="https://gauntlet-collab-canvas-day7.vercel.app,https://collabcanvas-mvp-day7.vercel.app,https://*.vercel.app"
+    export CORS_ORIGINS="https://gauntlet-collab-canvas-day7.vercel.app,https://collabcanvas-mvp-day7.vercel.app,https://gauntlet-collab-canvas-24hr.vercel.app,https://*.vercel.app"
     echo "Set default CORS_ORIGINS: $CORS_ORIGINS"
 fi
 

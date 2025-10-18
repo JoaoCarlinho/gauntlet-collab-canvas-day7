@@ -2446,6 +2446,23 @@ const CanvasPage: React.FC = () => {
         isOpen={showQueueDialog}
         onClose={() => setShowQueueDialog(false)}
       />
+
+      {/* AI Agent Components */}
+      <AIAgentButton
+        onClick={() => setShowAIPanel(!showAIPanel)}
+        isOpen={showAIPanel}
+        disabled={!isAuthenticated}
+      />
+      
+      <AIAgentPanel
+        isOpen={showAIPanel}
+        onClose={() => setShowAIPanel(false)}
+        onSuccess={(canvasId) => {
+          console.log('AI canvas created successfully:', canvasId);
+          // Optionally refresh the canvas or show success message
+        }}
+        currentCanvasId={canvasId}
+      />
     </div>
   )
 }

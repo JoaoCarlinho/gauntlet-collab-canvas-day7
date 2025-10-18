@@ -24,7 +24,7 @@ interface AIAgentRequest {
 export const useAIAgent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { user, getAuthToken } = useAuth();
+  const { user } = useAuth();
   
   const createCanvas = async (request: AIAgentRequest): Promise<AIAgentResponse> => {
     setIsLoading(true);
@@ -32,7 +32,7 @@ export const useAIAgent = () => {
     
     try {
       const API_URL = getApiUrl();
-      const token = await getAuthToken();
+      const token = localStorage.getItem('idToken');
       
       const response = await fetch(`${API_URL}/api/ai-agent/create-canvas`, {
         method: 'POST',

@@ -7,6 +7,8 @@ from app.models.canvas_object import CanvasObject
 from app.models.canvas import Canvas
 from app.utils.logger import SmartLogger
 from app.services.auth_service import AuthService
+from app.services.ai_performance_service import AIPerformanceService
+from app.services.ai_security_service import AISecurityService
 from app.extensions import db
 
 class AIAgentService:
@@ -18,6 +20,8 @@ class AIAgentService:
             api_key=os.environ.get('OPENAI_API_KEY')
         )
         self.auth_service = AuthService()
+        self.performance_service = AIPerformanceService()
+        self.security_service = AISecurityService()
     
     def create_canvas_from_query(
         self, 
@@ -29,11 +33,42 @@ class AIAgentService:
     ) -> Dict[str, Any]:
         """Create canvas objects from natural language query."""
         try:
-            # Generate AI response
-            ai_response = self._generate_ai_response(query, style, color_scheme)
+            # Sanitize and validate user query
+            sanitized_query = self.security_service.sanitize_user_query(query)
             
-            # Parse AI response into canvas objects
-            objects_data = self._parse_ai_response_to_objects(ai_response)
+            # Optimize request and check for common patterns
+            optimization_result = self.performance_service.optimize_request(sanitized_query, style, color_scheme)
+            
+            # Check if we have a cached result
+            if 'cached_result' in optimization_result:
+                return optimization_result['cached_result']
+            
+            # Check for common patterns first
+            pattern_objects = self.performance_service.get_pattern_for_query(query)
+            if pattern_objects:
+                self.logger.log_info(f"Using common pattern for query: {query[:50]}...")
+                objects_data = {
+                    'title': f'AI Generated: {query[:50]}...',
+                    'objects': pattern_objects
+                }
+            else:
+                # Generate AI response
+                ai_response = self._generate_ai_response(
+                    optimization_result['optimized_query'], 
+                    style, 
+                    color_scheme
+                )
+                
+                # Validate and sanitize AI response
+                validated_response = self.security_service.validate_ai_response(ai_response)
+                
+                # Parse AI response into canvas objects
+                objects_data = self._parse_ai_response_to_objects(validated_response)
+            
+            # Optimize objects for rendering
+            objects_data['objects'] = self.performance_service.optimize_objects_for_rendering(
+                objects_data['objects']
+            )
             
             # Create or update canvas
             if not canvas_id:
@@ -47,12 +82,22 @@ class AIAgentService:
             # Save objects to database
             saved_objects = self._save_objects_to_canvas(objects_data['objects'], canvas_id, user_id)
             
-            return {
+            result = {
+                'success': True,
                 'canvas_id': canvas_id,
                 'objects': [obj.to_dict() for obj in saved_objects],
                 'message': f'Successfully created {len(saved_objects)} objects',
                 'title': objects_data.get('title', 'AI Generated Canvas')
             }
+            
+            # Record performance metrics
+            self.performance_service.record_response_time(
+                optimization_result['start_time'],
+                optimization_result['cache_key'],
+                result
+            )
+            
+            return result
             
         except Exception as e:
             self.logger.log_error(f"AI canvas creation failed: {str(e)}", e)

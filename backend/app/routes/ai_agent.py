@@ -243,3 +243,113 @@ def list_available_models(current_user):
             'error': 'Failed to list models',
             'message': str(e)
         }), 500
+
+@ai_agent_bp.route('/performance', methods=['GET'])
+@require_auth
+@ai_rate_limit('models')
+def get_performance_metrics(current_user):
+    """
+    Get AI Agent performance metrics.
+    
+    ---
+    tags:
+      - AI Agent
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Performance metrics retrieved successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            metrics:
+              type: object
+              properties:
+                total_requests:
+                  type: integer
+                cache_hits:
+                  type: integer
+                cache_misses:
+                  type: integer
+                cache_hit_rate:
+                  type: string
+                average_response_time:
+                  type: string
+                cache_size:
+                  type: integer
+      401:
+        description: Unauthorized
+      500:
+        description: Internal server error
+    """
+    try:
+        ai_service = AIAgentService()
+        metrics = ai_service.performance_service.get_performance_metrics()
+        
+        return jsonify({
+            'success': True,
+            'metrics': metrics
+        }), 200
+        
+    except Exception as e:
+        logger.log_error(f"Failed to get performance metrics: {str(e)}", e)
+        return jsonify({
+            'success': False,
+            'error': 'Failed to get performance metrics',
+            'message': str(e)
+        }), 500
+
+@ai_agent_bp.route('/security', methods=['GET'])
+@require_auth
+@ai_rate_limit('models')
+def get_security_metrics(current_user):
+    """
+    Get AI Agent security metrics and status.
+    
+    ---
+    tags:
+      - AI Agent
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Security metrics retrieved successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            security_metrics:
+              type: object
+              properties:
+                prompt_injection_patterns:
+                  type: integer
+                dangerous_keywords:
+                  type: integer
+                security_limits:
+                  type: object
+                service_status:
+                  type: string
+      401:
+        description: Unauthorized
+      500:
+        description: Internal server error
+    """
+    try:
+        ai_service = AIAgentService()
+        security_metrics = ai_service.security_service.get_security_metrics()
+        
+        return jsonify({
+            'success': True,
+            'security_metrics': security_metrics
+        }), 200
+        
+    except Exception as e:
+        logger.log_error(f"Failed to get security metrics: {str(e)}", e)
+        return jsonify({
+            'success': False,
+            'error': 'Failed to get security metrics',
+            'message': str(e)
+        }), 500

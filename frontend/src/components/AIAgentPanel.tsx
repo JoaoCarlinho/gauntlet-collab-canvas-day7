@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAIAgent } from '../hooks/useAIAgent';
 import { useNotifications } from '../hooks/useNotifications';
 import { socketService } from '../services/socket';
@@ -23,7 +23,7 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
   
   const { createCanvas, isLoading, error, clearError } = useAIAgent();
   const { addNotification } = useNotifications();
-  const { user, getAuthToken } = useAuth();
+  const { user } = useAuth();
   
   const handleSubmit = async () => {
     if (!query.trim()) return;
@@ -41,14 +41,16 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
       if (result.success && result.canvas.objects) {
         // Add objects to current canvas using socket service
         if (currentCanvasId && user) {
-          const token = await getAuthToken();
+          const token = localStorage.getItem('idToken');
           
-          // Add each object to the canvas
-          for (const obj of result.canvas.objects) {
-            socketService.createObject(currentCanvasId, token, {
-              type: obj.object_type,
-              properties: obj.properties
-            });
+          if (token) {
+            // Add each object to the canvas
+            for (const obj of result.canvas.objects) {
+              socketService.createObject(currentCanvasId, token, {
+                type: obj.object_type,
+                properties: obj.properties
+              });
+            }
           }
         }
         
@@ -93,18 +95,11 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
   };
   
   // Close panel when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (isOpen && e.target === e.currentTarget) {
-        handleClose();
-      }
-    };
-    
-    if (isOpen) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+  const handleClickOutside = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
     }
-  }, [isOpen]);
+  };
   
   return (
     <div 

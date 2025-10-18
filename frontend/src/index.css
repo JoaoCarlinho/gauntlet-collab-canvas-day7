@@ -1,8 +1,8 @@
+@import './styles/AIAgent.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import './styles/AIAgent.css';
 
 @layer base {
   html {
