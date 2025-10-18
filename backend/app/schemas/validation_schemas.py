@@ -416,3 +416,69 @@ class PresenceEventSchema(SocketEventSchema):
         validate=validate.Range(min=0),
         allow_none=True
     )
+
+
+class ObjectCreateEventSchema(SocketEventSchema):
+    """Schema for object creation socket events."""
+    
+    object_type = fields.Str(
+        required=True,
+        validate=validate.OneOf(
+            ['rectangle', 'circle', 'text', 'heart', 'star', 'diamond', 'line', 'arrow'],
+            error='Object type must be one of: rectangle, circle, text, heart, star, diamond, line, arrow'
+        ),
+        error_messages={'required': 'Object type is required'}
+    )
+    
+    properties = fields.Nested(
+        CanvasObjectPropertiesSchema,
+        required=True,
+        error_messages={'required': 'Properties are required'}
+    )
+    
+    @validates_schema
+    def validate_object_properties(self, data, **kwargs):
+        """Validate object properties based on object type."""
+        if 'object_type' in data and 'properties' in data:
+            object_type = data['object_type']
+            properties = data['properties']
+            
+            # Validate required properties for each object type
+            if object_type in ['rectangle', 'heart', 'star', 'diamond']:
+                if not properties.get('width') or not properties.get('height'):
+                    raise ValidationError(f'{object_type} objects require width and height properties')
+            
+            elif object_type == 'circle':
+                if not properties.get('radius'):
+                    raise ValidationError('Circle objects require radius property')
+            
+            elif object_type == 'text':
+                if not properties.get('text'):
+                    raise ValidationError('Text objects require text property')
+            
+            elif object_type in ['line', 'arrow']:
+                if not properties.get('points') or len(properties.get('points', [])) != 4:
+                    raise ValidationError('Line and arrow objects require points property with 4 values')
+
+
+class ObjectDeleteEventSchema(SocketEventSchema):
+    """Schema for object deletion socket events."""
+    
+    object_id = fields.Str(
+        required=True,
+        validate=[
+            validate.Length(min=1, max=255),
+            validate.Regexp(r'^[a-zA-Z0-9\-_]+$', error='Object ID must contain only alphanumeric characters, hyphens, and underscores')
+        ],
+        error_messages={'required': 'Object ID is required'}
+    )
+
+
+class JoinCanvasEventSchema(SocketEventSchema):
+    """Schema for join canvas socket events."""
+    pass
+
+
+class LeaveCanvasEventSchema(SocketEventSchema):
+    """Schema for leave canvas socket events."""
+    pass

@@ -2,9 +2,15 @@ from flask_socketio import emit, join_room, leave_room
 from app.services.auth_service import AuthService
 from app.services.canvas_service import CanvasService
 from app.extensions import redis_client
-from app.schemas.validation_schemas import ObjectUpdateEventSchema
+from app.schemas.validation_schemas import (
+    ObjectUpdateEventSchema, 
+    ObjectCreateEventSchema,
+    ObjectDeleteEventSchema,
+    JoinCanvasEventSchema,
+    LeaveCanvasEventSchema
+)
 from app.middleware.rate_limiting import check_socket_rate_limit
-from app.utils.validators import ValidationError
+from app.utils.validators import ValidationError, InputValidator
 from app.services.sanitization_service import SanitizationService
 import json
 
@@ -38,17 +44,31 @@ def register_canvas_handlers(socketio):
     
     @socketio.on('join_canvas')
     def handle_join_canvas(data):
-        """Handle user joining a canvas room."""
+        """Handle user joining a canvas room with comprehensive validation."""
         try:
-            canvas_id = data.get('canvas_id')
-            id_token = data.get('id_token')
+            # Sanitize input data
+            sanitized_data = SanitizationService.sanitize_socket_event_data(data)
+            
+            # Validate input using schema
+            schema = JoinCanvasEventSchema()
+            try:
+                validated_data = schema.load(sanitized_data)
+            except ValidationError as e:
+                emit('error', {'message': 'Validation failed', 'details': e.messages})
+                return
+            
+            canvas_id = validated_data['canvas_id']
+            id_token = validated_data['id_token']
             
             print(f"=== Join Canvas Debug ===")
             print(f"Canvas ID: {canvas_id}")
             print(f"Token provided: {bool(id_token)}")
             
-            if not canvas_id or not id_token:
-                emit('error', {'message': 'canvas_id and id_token are required'})
+            # Validate canvas ID format
+            try:
+                canvas_id = InputValidator.validate_canvas_id(canvas_id)
+            except ValidationError as e:
+                emit('error', {'message': f'Invalid canvas ID: {str(e)}'})
                 return
             
             # Verify authentication
@@ -78,17 +98,34 @@ def register_canvas_handlers(socketio):
                 'user': user.to_dict()
             }, room=canvas_id, include_self=False)
             
+        except ValidationError as e:
+            emit('error', {'message': 'Validation failed', 'details': str(e)})
         except Exception as e:
-            emit('error', {'message': str(e)})
+            emit('error', {'message': 'Internal server error'})
     
     @socketio.on('leave_canvas')
     def handle_leave_canvas(data):
-        """Handle user leaving a canvas room."""
+        """Handle user leaving a canvas room with comprehensive validation."""
         try:
-            canvas_id = data.get('canvas_id')
-            id_token = data.get('id_token')
+            # Sanitize input data
+            sanitized_data = SanitizationService.sanitize_socket_event_data(data)
             
-            if not canvas_id or not id_token:
+            # Validate input using schema
+            schema = LeaveCanvasEventSchema()
+            try:
+                validated_data = schema.load(sanitized_data)
+            except ValidationError as e:
+                emit('error', {'message': 'Validation failed', 'details': e.messages})
+                return
+            
+            canvas_id = validated_data['canvas_id']
+            id_token = validated_data['id_token']
+            
+            # Validate canvas ID format
+            try:
+                canvas_id = InputValidator.validate_canvas_id(canvas_id)
+            except ValidationError as e:
+                emit('error', {'message': f'Invalid canvas ID: {str(e)}'})
                 return
             
             # Verify authentication
@@ -108,19 +145,66 @@ def register_canvas_handlers(socketio):
                 'user_name': user.name
             }, room=canvas_id, include_self=False)
             
+        except ValidationError as e:
+            emit('error', {'message': 'Validation failed', 'details': str(e)})
         except Exception as e:
-            emit('error', {'message': str(e)})
+            emit('error', {'message': 'Internal server error'})
     
     @socketio.on('object_created')
     def handle_object_created(data):
-        """Handle canvas object creation."""
+        """Handle canvas object creation with comprehensive validation."""
         try:
+            # Extract object data from the payload
             canvas_id = data.get('canvas_id')
             id_token = data.get('id_token')
-            object_data = data.get('object')
+            object_data = data.get('object', {})
             
-            if not all([canvas_id, id_token, object_data]):
-                emit('error', {'message': 'canvas_id, id_token, and object are required'})
+            # Prepare validation data
+            validation_data = {
+                'canvas_id': canvas_id,
+                'id_token': id_token,
+                'object_type': object_data.get('type'),
+                'properties': object_data.get('properties', {})
+            }
+            
+            # Sanitize input data
+            sanitized_data = SanitizationService.sanitize_socket_event_data(validation_data)
+            
+            # Validate input using schema
+            schema = ObjectCreateEventSchema()
+            try:
+                validated_data = schema.load(sanitized_data)
+            except ValidationError as e:
+                emit('error', {'message': 'Validation failed', 'details': e.messages})
+                return
+            
+            canvas_id = validated_data['canvas_id']
+            id_token = validated_data['id_token']
+            object_type = validated_data['object_type']
+            properties = validated_data['properties']
+            
+            # Validate canvas ID format
+            try:
+                canvas_id = InputValidator.validate_canvas_id(canvas_id)
+            except ValidationError as e:
+                emit('error', {'message': f'Invalid canvas ID: {str(e)}'})
+                return
+            
+            # Validate object type
+            try:
+                object_type = InputValidator.validate_enum_value(
+                    object_type, 'object_type',
+                    ['rectangle', 'circle', 'text', 'heart', 'star', 'diamond', 'line', 'arrow']
+                )
+            except ValidationError as e:
+                emit('error', {'message': str(e)})
+                return
+            
+            # Validate object properties
+            try:
+                validated_properties = InputValidator.validate_object_properties(properties, object_type)
+            except ValidationError as e:
+                emit('error', {'message': f'Invalid object properties: {str(e)}'})
                 return
             
             # Verify authentication
@@ -132,17 +216,25 @@ def register_canvas_handlers(socketio):
                 emit('error', {'message': f'Authentication failed: {str(e)}'})
                 return
             
+            # Check rate limiting
+            if not check_socket_rate_limit(user.id, 'object_created'):
+                emit('error', {'message': 'Rate limit exceeded for object creation'})
+                return
+            
             # Check edit permission
             canvas_service = CanvasService()
             if not canvas_service.check_canvas_permission(canvas_id, user.id, 'edit'):
                 emit('error', {'message': 'Edit permission required'})
                 return
             
+            # Sanitize object properties
+            sanitized_properties = SanitizationService.sanitize_object_properties(validated_properties)
+            
             # Create object in database
             canvas_object = canvas_service.create_canvas_object(
                 canvas_id=canvas_id,
-                object_type=object_data['type'],
-                properties=json.dumps(object_data['properties']),
+                object_type=object_type,
+                properties=json.dumps(sanitized_properties),
                 created_by=user.id
             )
             
@@ -151,8 +243,10 @@ def register_canvas_handlers(socketio):
                 'object': canvas_object.to_dict()
             }, room=canvas_id, include_self=True)
             
+        except ValidationError as e:
+            emit('error', {'message': 'Validation failed', 'details': str(e)})
         except Exception as e:
-            emit('error', {'message': str(e)})
+            emit('error', {'message': 'Internal server error'})
     
     @socketio.on('object_updated')
     def handle_object_updated(data):
@@ -216,14 +310,35 @@ def register_canvas_handlers(socketio):
     
     @socketio.on('object_deleted')
     def handle_object_deleted(data):
-        """Handle canvas object deletion."""
+        """Handle canvas object deletion with comprehensive validation."""
         try:
-            canvas_id = data.get('canvas_id')
-            id_token = data.get('id_token')
-            object_id = data.get('object_id')
+            # Sanitize input data
+            sanitized_data = SanitizationService.sanitize_socket_event_data(data)
             
-            if not all([canvas_id, id_token, object_id]):
-                emit('error', {'message': 'canvas_id, id_token, and object_id are required'})
+            # Validate input using schema
+            schema = ObjectDeleteEventSchema()
+            try:
+                validated_data = schema.load(sanitized_data)
+            except ValidationError as e:
+                emit('error', {'message': 'Validation failed', 'details': e.messages})
+                return
+            
+            canvas_id = validated_data['canvas_id']
+            id_token = validated_data['id_token']
+            object_id = validated_data['object_id']
+            
+            # Validate canvas ID format
+            try:
+                canvas_id = InputValidator.validate_canvas_id(canvas_id)
+            except ValidationError as e:
+                emit('error', {'message': f'Invalid canvas ID: {str(e)}'})
+                return
+            
+            # Validate object ID format
+            try:
+                object_id = InputValidator.validate_string_length(object_id, 'object_id', 255, 1)
+            except ValidationError as e:
+                emit('error', {'message': f'Invalid object ID: {str(e)}'})
                 return
             
             # Verify authentication
@@ -233,6 +348,11 @@ def register_canvas_handlers(socketio):
                 user = auth_service.get_user_by_id(decoded_token['uid'])
             except Exception as e:
                 emit('error', {'message': f'Authentication failed: {str(e)}'})
+                return
+            
+            # Check rate limiting
+            if not check_socket_rate_limit(user.id, 'object_deleted'):
+                emit('error', {'message': 'Rate limit exceeded for object deletion'})
                 return
             
             # Check edit permission
@@ -250,5 +370,7 @@ def register_canvas_handlers(socketio):
                     'object_id': object_id
                 }, room=canvas_id, include_self=True)
             
+        except ValidationError as e:
+            emit('error', {'message': 'Validation failed', 'details': str(e)})
         except Exception as e:
-            emit('error', {'message': str(e)})
+            emit('error', {'message': 'Internal server error'})
