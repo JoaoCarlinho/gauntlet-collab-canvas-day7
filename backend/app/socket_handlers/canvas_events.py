@@ -4,8 +4,13 @@ from app.services.canvas_service import CanvasService
 from app.extensions import redis_client
 from app.schemas.validation_schemas import ObjectUpdateEventSchema
 from app.middleware.rate_limiting import check_socket_rate_limit
+from app.middleware.socket_security import (
+    secure_socket_event, authenticate_socket_user, check_canvas_permission,
+    sanitize_broadcast_data, SocketAuthenticationError, SocketAuthorizationError
+)
 from app.utils.validators import ValidationError
 from app.services.sanitization_service import SanitizationService
+from app.utils.logger import SmartLogger
 import json
 
 def register_canvas_handlers(socketio):
@@ -37,106 +42,62 @@ def register_canvas_handlers(socketio):
             raise e
     
     @socketio.on('join_canvas')
+    @secure_socket_event('join_canvas', 'view')
     def handle_join_canvas(data):
-        """Handle user joining a canvas room."""
+        """Handle user joining a canvas room with comprehensive security."""
         try:
             canvas_id = data.get('canvas_id')
-            id_token = data.get('id_token')
-            
-            print(f"=== Join Canvas Debug ===")
-            print(f"Canvas ID: {canvas_id}")
-            print(f"Token provided: {bool(id_token)}")
-            
-            if not canvas_id or not id_token:
-                emit('error', {'message': 'canvas_id and id_token are required'})
-                return
-            
-            # Verify authentication
-            try:
-                user = authenticate_socket_user(id_token)
-            except Exception as e:
-                emit('error', {'message': f'Authentication failed: {str(e)}'})
-                return
-            
-            # Check canvas permission
-            canvas_service = CanvasService()
-            if not canvas_service.check_canvas_permission(canvas_id, user.id):
-                emit('error', {'message': 'Access denied to canvas'})
-                return
+            user = data.get('_authenticated_user')
             
             # Join the canvas room
             join_room(canvas_id)
             
+            # Prepare user data for broadcast (sanitized)
+            user_data = user.to_dict()
+            sanitized_user_data = sanitize_broadcast_data({'user': user_data})['user']
+            
             # Store user info in session
             emit('joined_canvas', {
                 'canvas_id': canvas_id,
-                'user': user.to_dict()
+                'user': sanitized_user_data
             })
             
-            # Notify others in the room
+            # Notify others in the room (sanitized data)
             emit('user_joined', {
-                'user': user.to_dict()
+                'user': sanitized_user_data
             }, room=canvas_id, include_self=False)
             
         except Exception as e:
-            emit('error', {'message': str(e)})
+            emit('error', {'message': 'Failed to join canvas'})
     
     @socketio.on('leave_canvas')
+    @secure_socket_event('leave_canvas', 'view')
     def handle_leave_canvas(data):
-        """Handle user leaving a canvas room."""
+        """Handle user leaving a canvas room with comprehensive security."""
         try:
             canvas_id = data.get('canvas_id')
-            id_token = data.get('id_token')
-            
-            if not canvas_id or not id_token:
-                return
-            
-            # Verify authentication
-            auth_service = AuthService()
-            try:
-                decoded_token = auth_service.verify_token(id_token)
-                user = auth_service.get_user_by_id(decoded_token['uid'])
-            except Exception:
-                return
+            user = data.get('_authenticated_user')
             
             # Leave the canvas room
             leave_room(canvas_id)
             
-            # Notify others in the room
+            # Notify others in the room (sanitized data)
             emit('user_left', {
                 'user_id': user.id,
-                'user_name': user.name
+                'user_name': SanitizationService.sanitize_html(user.name or '')
             }, room=canvas_id, include_self=False)
             
         except Exception as e:
-            emit('error', {'message': str(e)})
+            emit('error', {'message': 'Failed to leave canvas'})
     
     @socketio.on('object_created')
+    @secure_socket_event('object_created', 'edit')
     def handle_object_created(data):
-        """Handle canvas object creation."""
+        """Handle canvas object creation with comprehensive security."""
         try:
             canvas_id = data.get('canvas_id')
-            id_token = data.get('id_token')
+            user = data.get('_authenticated_user')
             object_data = data.get('object')
-            
-            if not all([canvas_id, id_token, object_data]):
-                emit('error', {'message': 'canvas_id, id_token, and object are required'})
-                return
-            
-            # Verify authentication
-            auth_service = AuthService()
-            try:
-                decoded_token = auth_service.verify_token(id_token)
-                user = auth_service.get_user_by_id(decoded_token['uid'])
-            except Exception as e:
-                emit('error', {'message': f'Authentication failed: {str(e)}'})
-                return
-            
-            # Check edit permission
-            canvas_service = CanvasService()
-            if not canvas_service.check_canvas_permission(canvas_id, user.id, 'edit'):
-                emit('error', {'message': 'Edit permission required'})
-                return
             
             # Create object in database
             canvas_object = canvas_service.create_canvas_object(

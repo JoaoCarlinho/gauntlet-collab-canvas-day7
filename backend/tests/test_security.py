@@ -18,8 +18,8 @@ class TestInputValidation:
     
     @pytest.fixture
     def app(self):
-        app = create_app()
-        app.config['TESTING'] = True
+        from app.config import TestingConfig
+        app = create_app(TestingConfig)
         return app
     
     @pytest.fixture
