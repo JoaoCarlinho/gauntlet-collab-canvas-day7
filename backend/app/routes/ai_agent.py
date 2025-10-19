@@ -172,7 +172,7 @@ def _create_emergency_canvas(data, current_user):
             canvas = Canvas(
                 id=str(uuid.uuid4()),
                 title=f"Canvas: {data['instructions'][:50]}...",
-                user_id=current_user.id,
+                owner_id=current_user.id,
                 is_public=False
             )
             db.session.add(canvas)
@@ -187,12 +187,13 @@ def _create_emergency_canvas(data, current_user):
                     'fill': '#3B82F6',
                     'stroke': '#1E40AF',
                     'text': 'Canvas Object',
-                    'fontSize': 14
+                    'fontSize': 14,
+                    'x': 100,
+                    'y': 100,
+                    'width': 200,
+                    'height': 100
                 }),
-                position_x=100,
-                position_y=100,
-                width=200,
-                height=100
+                created_by=current_user.id
             )
             db.session.add(canvas_object)
             db.session.commit()
@@ -205,11 +206,7 @@ def _create_emergency_canvas(data, current_user):
                     'objects': [{
                         'id': canvas_object.id,
                         'type': canvas_object.object_type,
-                        'properties': json.loads(canvas_object.properties),
-                        'x': canvas_object.position_x,
-                        'y': canvas_object.position_y,
-                        'width': canvas_object.width,
-                        'height': canvas_object.height
+                        'properties': json.loads(canvas_object.properties)
                     }]
                 },
                 'message': 'Canvas created with emergency fallback (AI services unavailable)'
