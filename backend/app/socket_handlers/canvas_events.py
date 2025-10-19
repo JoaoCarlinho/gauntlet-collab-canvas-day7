@@ -11,6 +11,10 @@ from app.middleware.socket_security import (
 from app.utils.validators import ValidationError
 from app.services.sanitization_service import SanitizationService
 from app.utils.logger import SmartLogger
+from app.socket_handlers.error_handlers import (
+    handle_socket_error, handle_authentication_error, handle_validation_error,
+    handle_permission_error, log_socket_event, emit_error_response
+)
 import json
 
 def register_canvas_handlers(socketio):
@@ -68,7 +72,8 @@ def register_canvas_handlers(socketio):
             }, room=canvas_id, include_self=False)
             
         except Exception as e:
-            emit('error', {'message': 'Failed to join canvas'})
+            handle_socket_error(e, 'join_canvas', data.get('_authenticated_user', {}).get('id'))
+            log_socket_event('join_canvas', data.get('_authenticated_user', {}).get('id'), False)
     
     @socketio.on('leave_canvas')
     @secure_socket_event('leave_canvas', 'view')
@@ -88,7 +93,8 @@ def register_canvas_handlers(socketio):
             }, room=canvas_id, include_self=False)
             
         except Exception as e:
-            emit('error', {'message': 'Failed to leave canvas'})
+            handle_socket_error(e, 'leave_canvas', data.get('_authenticated_user', {}).get('id'))
+            log_socket_event('leave_canvas', data.get('_authenticated_user', {}).get('id'), False)
     
     @socketio.on('object_created')
     @secure_socket_event('object_created', 'edit')

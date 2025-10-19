@@ -152,6 +152,7 @@ def create_app(config_class=Config):
     from .routes.auth import auth_bp
     from .routes.canvas import canvas_bp
     from .routes.objects import objects_bp
+    from .routes.socket_debug import socket_debug_bp
     from .routes.collaboration import collaboration_bp
     from .routes.ai_agent import ai_agent_bp
     from .routes.ai_agent_debug import ai_agent_debug_bp
@@ -162,6 +163,7 @@ def create_app(config_class=Config):
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(canvas_bp, url_prefix='/api/canvas')
     app.register_blueprint(objects_bp, url_prefix='/api/objects')
+    app.register_blueprint(socket_debug_bp)
     app.register_blueprint(collaboration_bp, url_prefix='/api/collaboration')
     app.register_blueprint(ai_agent_bp, url_prefix='/api/ai-agent')
     app.register_blueprint(ai_agent_debug_bp, url_prefix='/api/ai-agent/debug')

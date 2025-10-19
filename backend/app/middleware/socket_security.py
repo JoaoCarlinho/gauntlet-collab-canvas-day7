@@ -302,7 +302,8 @@ def require_socket_auth(func: Callable) -> Callable:
         try:
             id_token = data.get('id_token')
             if not id_token:
-                emit('error', {'message': 'Authentication required'})
+                security_logger.log_warning("Socket event missing authentication token")
+                emit('error', {'message': 'Authentication token required', 'type': 'auth_error'})
                 return
             
             # Authenticate user
@@ -314,12 +315,12 @@ def require_socket_auth(func: Callable) -> Callable:
             return func(data, *args, **kwargs)
             
         except SocketAuthenticationError as e:
-            security_logger.log_error(f"Authentication failed: {str(e)}", e)
-            emit('error', {'message': 'Authentication failed'})
+            security_logger.log_error(f"Socket authentication error: {str(e)}", e)
+            emit('error', {'message': f'Authentication failed: {str(e)}', 'type': 'auth_error'})
             return
         except Exception as e:
-            security_logger.log_error(f"Authentication error: {str(e)}", e)
-            emit('error', {'message': 'Authentication error'})
+            security_logger.log_error(f"Socket authentication error: {str(e)}", e)
+            emit('error', {'message': 'Authentication error occurred', 'type': 'auth_error'})
             return
     
     return wrapper
@@ -380,8 +381,10 @@ def rate_limit_socket_event(event_type: str):
                     rate_config = SOCKET_RATE_LIMITS.get(event_type, {})
                     limit = rate_config.get('limit', 'unknown')
                     window = rate_config.get('window', 'unknown')
+                    security_logger.log_warning(f"Rate limit exceeded for user {user.id} on event {event_type}")
                     emit('error', {
-                        'message': f'Rate limit exceeded. Limit: {limit} requests per {window} seconds'
+                        'message': f'Rate limit exceeded. Limit: {limit} requests per {window} seconds',
+                        'type': 'rate_limit_error'
                     })
                     return
                 
