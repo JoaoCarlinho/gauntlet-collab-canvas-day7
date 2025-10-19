@@ -105,7 +105,7 @@ def create_app(config_class=Config):
     
     socketio.init_app(
         app, 
-        cors_allowed_origins="*",  # Temporary wildcard for Socket.IO
+        cors_allowed_origins=allowed_origins,  # Use proper CORS origins
         manage_session=False,
         logger=app.config.get('SOCKETIO_LOGGER', False),  # Environment controlled
         engineio_logger=app.config.get('SOCKETIO_ENGINEIO_LOGGER', False),  # Environment controlled
@@ -114,7 +114,13 @@ def create_app(config_class=Config):
         max_http_buffer_size=1000000,
         always_connect=True,
         allow_upgrades=True,
-        transports=['websocket', 'polling']
+        transports=['polling', 'websocket'],  # Polling first for Railway compatibility
+        # Railway-specific optimizations
+        async_mode='eventlet',
+        # Add proper headers for Railway
+        headers={
+            'X-Forwarded-Proto': 'https'
+        }
     )
     migrate.init_app(app, db)
     
