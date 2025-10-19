@@ -46,7 +46,9 @@ def run_health_check_server():
         return {'status': 'starting', 'message': 'Application is starting up'}, 200
     
     def run_health_server():
-        health_app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
+        # Use a different port for health server to avoid conflicts
+        health_port = int(os.environ.get('PORT', 5000)) + 1
+        health_app.run(host='0.0.0.0', port=health_port, debug=False)
     
     # Start health server in a separate thread
     health_thread = Thread(target=run_health_server, daemon=True)
