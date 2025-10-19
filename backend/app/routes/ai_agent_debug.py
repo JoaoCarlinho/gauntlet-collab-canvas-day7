@@ -129,8 +129,9 @@ def test_openai_connection():
                 'timestamp': datetime.now(timezone.utc).isoformat()
             }), 500
         
-        # Try to create OpenAI client
-        client = openai.OpenAI(api_key=api_key)
+        # Try to create OpenAI client with minimal configuration
+        client_kwargs = {'api_key': api_key}
+        client = openai.OpenAI(**client_kwargs)
         
         # Try to list models (this will test the connection)
         models = client.models.list()

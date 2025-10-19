@@ -89,12 +89,17 @@ def create_canvas_with_ai(current_user):
         schema = CanvasCreationRequestSchema()
         data = schema.load(request.json)
         
-        # Initialize AI agent service (try simple service first)
+        # Initialize AI agent service (try robust service first)
         try:
-            ai_service = SimpleAIAgentService()
+            from app.services.ai_agent_robust import RobustAIAgentService
+            ai_service = RobustAIAgentService()
         except Exception as e:
-            logger.log_error(f"Simple AI service failed, falling back to full service: {str(e)}", e)
-            ai_service = AIAgentService()
+            logger.log_error(f"Robust AI service failed, falling back to simple service: {str(e)}", e)
+            try:
+                ai_service = SimpleAIAgentService()
+            except Exception as e2:
+                logger.log_error(f"Simple AI service failed, falling back to full service: {str(e2)}", e2)
+                ai_service = AIAgentService()
         
         # Process the query and generate canvas objects
         result = ai_service.create_canvas_from_query(
