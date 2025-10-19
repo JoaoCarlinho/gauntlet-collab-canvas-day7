@@ -96,6 +96,13 @@ class SocketService {
         connectionState: this.connectionState,
         connectionQuality: this.connectionQuality
       })
+      
+      // Emit event for state backup
+      this.emit('connection_disconnected', {
+        reason,
+        timestamp: Date.now(),
+        connectionState: this.connectionState
+      })
     })
 
     // Track reconnection attempts
@@ -127,6 +134,14 @@ class SocketService {
       this.emit('reconnection_success', {
         attempt: attemptNumber,
         timestamp: Date.now()
+      })
+      
+      // Emit event for state restoration
+      this.emit('connection_restored', {
+        attempt: attemptNumber,
+        timestamp: Date.now(),
+        connectionState: this.connectionState,
+        connectionQuality: this.connectionQuality
       })
     })
 
@@ -598,6 +613,159 @@ class SocketService {
     } catch (error) {
       console.error('Error getting current user:', error)
       return null
+    }
+  }
+
+  /**
+   * State synchronization methods for object visibility
+   */
+  private objectStateBackup = new Map<string, any[]>()
+  private lastSyncTime = new Map<string, number>()
+
+  /**
+   * Backup object state before potential disconnection
+   */
+  backupObjectState(canvasId: string, objects: any[]): void {
+    try {
+      console.log(`Backing up object state for canvas: ${canvasId} (${objects.length} objects)`)
+      this.objectStateBackup.set(canvasId, [...objects])
+      this.lastSyncTime.set(canvasId, Date.now())
+    } catch (error) {
+      console.error('Error backing up object state:', error)
+    }
+  }
+
+  /**
+   * Restore object state after reconnection
+   */
+  async restoreObjectState(canvasId: string): Promise<any[]> {
+    try {
+      console.log(`Restoring object state for canvas: ${canvasId}`)
+      
+      const backup = this.objectStateBackup.get(canvasId)
+      if (!backup) {
+        console.log('No backup found for canvas:', canvasId)
+        return []
+      }
+
+      // Check if backup is recent (within 5 minutes)
+      const lastSync = this.lastSyncTime.get(canvasId) || 0
+      const now = Date.now()
+      const backupAge = now - lastSync
+
+      if (backupAge > 5 * 60 * 1000) { // 5 minutes
+        console.log('Backup too old, clearing:', backupAge)
+        this.objectStateBackup.delete(canvasId)
+        this.lastSyncTime.delete(canvasId)
+        return []
+      }
+
+      console.log(`Restored ${backup.length} objects from backup`)
+      return backup
+    } catch (error) {
+      console.error('Error restoring object state:', error)
+      return []
+    }
+  }
+
+  /**
+   * Clear object state backup
+   */
+  clearObjectStateBackup(canvasId: string): void {
+    this.objectStateBackup.delete(canvasId)
+    this.lastSyncTime.delete(canvasId)
+    console.log(`Cleared object state backup for canvas: ${canvasId}`)
+  }
+
+  /**
+   * Validate object state consistency
+   */
+  async validateObjectStateConsistency(canvasId: string, expectedObjects: any[]): Promise<boolean> {
+    try {
+      console.log(`Validating object state consistency for canvas: ${canvasId}`)
+      
+      // Get current objects from server
+      const { objectsAPI } = await import('./api')
+      const response = await objectsAPI.getObjects(canvasId)
+      const serverObjects = response.data || []
+      
+      // Compare with expected objects
+      const expectedIds = new Set(expectedObjects.map(obj => obj.id))
+      const serverIds = new Set(serverObjects.map(obj => obj.id))
+      
+      const missingObjects = [...expectedIds].filter(id => !serverIds.has(id))
+      const extraObjects = [...serverIds].filter(id => !expectedIds.has(id))
+      
+      if (missingObjects.length > 0) {
+        console.warn(`Missing objects on server: ${missingObjects.join(', ')}`)
+      }
+      
+      if (extraObjects.length > 0) {
+        console.warn(`Extra objects on server: ${extraObjects.join(', ')}`)
+      }
+      
+      const isConsistent = missingObjects.length === 0 && extraObjects.length === 0
+      console.log(`Object state consistency: ${isConsistent ? 'VALID' : 'INVALID'}`)
+      
+      return isConsistent
+    } catch (error) {
+      console.error('Error validating object state consistency:', error)
+      return false
+    }
+  }
+
+  /**
+   * Sync object state with server
+   */
+  async syncObjectState(canvasId: string, localObjects: any[]): Promise<any[]> {
+    try {
+      console.log(`Syncing object state for canvas: ${canvasId}`)
+      
+      // Get server objects
+      const { objectsAPI } = await import('./api')
+      const response = await objectsAPI.getObjects(canvasId)
+      const serverObjects = response.data || []
+      
+      // Create maps for comparison
+      const localMap = new Map(localObjects.map(obj => [obj.id, obj]))
+      const serverMap = new Map(serverObjects.map(obj => [obj.id, obj]))
+      
+      // Find missing objects (on server but not local)
+      const missingObjects = serverObjects.filter(obj => !localMap.has(obj.id))
+      
+      // Find outdated objects (different versions)
+      const outdatedObjects = localObjects.filter(localObj => {
+        const serverObj = serverMap.get(localObj.id)
+        return serverObj && serverObj.updated_at !== localObj.updated_at
+      })
+      
+      // Merge server objects with local objects
+      const syncedObjects = [...localObjects]
+      
+      // Add missing objects
+      missingObjects.forEach(obj => {
+        syncedObjects.push(obj)
+        console.log(`Added missing object: ${obj.id}`)
+      })
+      
+      // Update outdated objects
+      outdatedObjects.forEach(localObj => {
+        const serverObj = serverMap.get(localObj.id)
+        if (serverObj) {
+          const index = syncedObjects.findIndex(obj => obj.id === localObj.id)
+          if (index !== -1) {
+            syncedObjects[index] = serverObj
+            console.log(`Updated outdated object: ${localObj.id}`)
+          }
+        }
+      })
+      
+      console.log(`Object state sync completed: ${syncedObjects.length} objects`)
+      return syncedObjects
+      
+    } catch (error) {
+      console.error('Error syncing object state:', error)
+      return localObjects // Return local objects as fallback
     }
   }
 

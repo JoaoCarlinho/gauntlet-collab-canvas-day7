@@ -16,6 +16,7 @@ import { stateSyncManager, StateConflict } from '../services/stateSyncManager'
 import { updateQueueManager, QueueStats } from '../services/updateQueueManager'
 import { connectionMonitor } from '../services/connectionMonitor'
 import { offlineManager } from '../services/offlineManager'
+import { objectVisibilityRecoveryService } from '../services/objectVisibilityRecoveryService'
 import { objectUpdateDebouncer } from '../utils/debounce'
 import { enhancedErrorHandler } from '../services/enhancedErrorHandler'
 // import { batchUpdateManager, useBatchUpdates } from '../utils/batchUpdates'
@@ -230,6 +231,9 @@ const CanvasPage: React.FC = () => {
     // Set up socket event listeners (skip in development mode)
     if (!isDevelopmentMode()) {
     setupSocketListeners()
+    
+    // Set up visibility monitoring
+    setupVisibilityMonitoring()
 
       // Initialize state synchronization
       initializeStateSync()
@@ -536,10 +540,27 @@ const CanvasPage: React.FC = () => {
       console.log('Connection lost:', _data)
       setConnectionStatus('disconnected')
       
+      // Backup object state before disconnection
+      if (canvasId && objects.length > 0) {
+        socketService.backupObjectState(canvasId, objects)
+        console.log(`Backed up ${objects.length} objects before disconnection`)
+      }
+      
       // Notify offline manager
       offlineManager.handleConnectionLoss()
       
       devToast.error(`Connection lost: ${_data.reason}`)
+    })
+
+    // Enhanced connection event handlers
+    socketService.on('connection_disconnected', (_data: { reason: string; timestamp: number }) => {
+      console.log('Connection disconnected:', _data)
+      
+      // Backup object state
+      if (canvasId && objects.length > 0) {
+        socketService.backupObjectState(canvasId, objects)
+        console.log(`Backed up ${objects.length} objects on disconnection`)
+      }
     })
 
     socketService.on('reconnection_attempt', (_data: { attempt: number; timestamp: number }) => {
@@ -772,24 +793,89 @@ const CanvasPage: React.FC = () => {
     // OfflineManager starts automatically when instantiated
   }
 
-  // Reconnection synchronization function
+  // Set up visibility monitoring
+  const setupVisibilityMonitoring = () => {
+    if (!canvasId) return
+
+    console.log('Setting up object visibility monitoring')
+
+    // Monitor visibility every 30 seconds
+    const visibilityInterval = setInterval(async () => {
+      if (canvasId && objects.length > 0) {
+        await objectVisibilityRecoveryService.monitorObjectVisibility(canvasId, objects)
+      }
+    }, 30000)
+
+    // Listen for visibility recovery events
+    socketService.on('visibility_recovery_success', (data: any) => {
+      console.log('Visibility recovery successful:', data)
+      toast.success(`Recovered ${data.recoveredObjects} missing objects`, { duration: 3000 })
+      
+      // Refresh objects to show recovered ones
+      if (data.canvasId === canvasId) {
+        loadObjects()
+      }
+    })
+
+    socketService.on('visibility_recovery_failed', (data: any) => {
+      console.error('Visibility recovery failed:', data)
+      toast.error('Failed to recover some objects - refreshing canvas', { duration: 4000 })
+      
+      // Force refresh on recovery failure
+      if (data.canvasId === canvasId) {
+        objectVisibilityRecoveryService.forceRefreshCanvas(canvasId).then(() => {
+          loadObjects()
+        })
+      }
+    })
+
+    // Cleanup function
+    return () => {
+      clearInterval(visibilityInterval)
+      socketService.off('visibility_recovery_success')
+      socketService.off('visibility_recovery_failed')
+    }
+  }
+
+  // Enhanced reconnection synchronization function
   const handleReconnectionSync = async () => {
     if (!canvasId || !idToken) return
 
-    console.log('Starting reconnection sync...')
+    console.log('Starting enhanced reconnection sync...')
     
     try {
-      // 1. Sync offline cached updates
-      // const syncResult = await offlineManager.syncPendingUpdates()
+      // 1. Restore object state from backup
+      const restoredObjects = await socketService.restoreObjectState(canvasId)
+      if (restoredObjects.length > 0) {
+        console.log(`Restored ${restoredObjects.length} objects from backup`)
+        setObjects(restoredObjects)
+      }
+
+      // 2. Sync offline cached updates
       const syncResult = { success: true, conflicts: [], hasConflicts: false, syncedCount: 0 }
       if (syncResult.success && syncResult.syncedCount > 0) {
         toast.success(`Synced ${syncResult.syncedCount} offline updates`, { duration: 3000 })
       }
 
-      // 2. Refresh canvas state from server
+      // 3. Refresh canvas state from server
       await loadObjects()
       
-      // 3. Trigger state synchronization
+      // 4. Sync object state with server
+      const syncedObjects = await socketService.syncObjectState(canvasId, objects)
+      if (syncedObjects.length !== objects.length) {
+        console.log(`Object state sync: ${objects.length} -> ${syncedObjects.length} objects`)
+        setObjects(syncedObjects)
+      }
+      
+      // 5. Validate object state consistency
+      const isConsistent = await socketService.validateObjectStateConsistency(canvasId, objects)
+      if (!isConsistent) {
+        console.warn('Object state inconsistency detected after reconnection')
+        toast.warning('Some objects may not be visible - refreshing canvas', { duration: 4000 })
+        await loadObjects() // Force refresh
+      }
+      
+      // 6. Trigger state synchronization
       const stateSyncResult = await stateSyncManager.syncState(canvasId, objects, {
         forceSync: true as any,
         resolveConflicts: 'server_wins' as any
@@ -800,17 +886,20 @@ const CanvasPage: React.FC = () => {
         setShowConflictDialog(true)
       }
 
-      // 4. Process any queued updates
+      // 7. Process any queued updates
       updateQueueManager.processQueue()
 
-      // 5. Update connection status
+      // 8. Update connection status
       setConnectionStatus('connected')
       setIsOffline(false)
       
-      console.log('Reconnection sync completed successfully')
+      // 9. Clear object state backup after successful sync
+      socketService.clearObjectStateBackup(canvasId)
+      
+      console.log('Enhanced reconnection sync completed successfully')
       
     } catch (error) {
-      console.error('Reconnection sync failed:', error)
+      console.error('Enhanced reconnection sync failed:', error)
       toast.error('Failed to sync after reconnection - some data may be outdated', {
         duration: 5000
       })

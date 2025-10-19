@@ -16,6 +16,7 @@ from app.socket_handlers.error_handlers import (
     handle_socket_error, handle_authentication_error, handle_validation_error,
     handle_permission_error, emit_error_response
 )
+from app.utils.socket_message_validator import SocketMessageValidator
 import json
 
 def register_canvas_handlers(socketio):
@@ -99,34 +100,78 @@ def register_canvas_handlers(socketio):
     @socketio.on('object_created')
     @secure_socket_event('object_created', 'edit')
     def handle_object_created(data):
-        """Handle canvas object creation with comprehensive security."""
+        """Handle canvas object creation with comprehensive security and validation."""
         try:
-            canvas_id = data.get('canvas_id')
-            user = data.get('_authenticated_user')
-            object_data = data.get('object')
+            # Validate message data to prevent parse errors
+            if not SocketMessageValidator.validate_socket_message('object_created', data):
+                railway_logger.log('socket_io', 40, "Object creation message validation failed")
+                emit('error', {'message': 'Invalid message format', 'type': 'validation_error'})
+                return
+            
+            # Sanitize message data
+            sanitized_data = SocketMessageValidator.sanitize_message_data(data)
+            
+            canvas_id = sanitized_data.get('canvas_id')
+            user = sanitized_data.get('_authenticated_user')
+            object_data = sanitized_data.get('object')
+            
+            # Additional validation
+            if not canvas_id or not user or not object_data:
+                railway_logger.log('socket_io', 40, "Missing required data for object creation")
+                emit('error', {'message': 'Missing required data', 'type': 'validation_error'})
+                return
+            
+            # Validate object data structure
+            if not isinstance(object_data, dict) or 'type' not in object_data or 'properties' not in object_data:
+                railway_logger.log('socket_io', 40, "Invalid object data structure")
+                emit('error', {'message': 'Invalid object data', 'type': 'validation_error'})
+                return
             
             # Create object in database
             canvas_service = CanvasService()
             # Handle both user object and user dict
             user_id = user.id if hasattr(user, 'id') else user.get('id')
+            
+            # Validate object properties are JSON serializable
+            try:
+                properties_json = json.dumps(object_data['properties'])
+            except (TypeError, ValueError) as e:
+                railway_logger.log('socket_io', 40, f"Object properties not JSON serializable: {str(e)}")
+                emit('error', {'message': 'Invalid object properties', 'type': 'validation_error'})
+                return
+            
             canvas_object = canvas_service.create_canvas_object(
                 canvas_id=canvas_id,
                 object_type=object_data['type'],
-                properties=json.dumps(object_data['properties']),
+                properties=properties_json,
                 created_by=user_id
             )
             
             # Log successful object creation
             log_object_event(canvas_id, 'created', object_data['type'], True)
             
-            # Broadcast to all users in the canvas room (including the creator)
-            emit('object_created', {
+            # Prepare response data with validation
+            response_data = {
                 'object': canvas_object.to_dict()
-            }, room=canvas_id, include_self=True)
+            }
+            
+            # Validate response data before emitting
+            if not SocketMessageValidator.validate_message_size(response_data):
+                railway_logger.log('socket_io', 40, "Response data too large for object creation")
+                emit('error', {'message': 'Response data too large', 'type': 'size_error'})
+                return
+            
+            # Broadcast to all users in the canvas room (including the creator)
+            emit('object_created', response_data, room=canvas_id, include_self=True)
+            
+            railway_logger.log('socket_io', 10, f"Object created successfully: {canvas_object.id}")
             
         except Exception as e:
-            log_object_event(canvas_id, 'created', object_data.get('type', 'unknown'), False)
-            emit('error', {'message': str(e)})
+            canvas_id = data.get('canvas_id', 'unknown') if data else 'unknown'
+            object_type = data.get('object', {}).get('type', 'unknown') if data else 'unknown'
+            log_object_event(canvas_id, 'created', object_type, False)
+            railway_logger.log('socket_io', 40, f"Object creation failed: {str(e)}")
+            emit('error', {'message': 'Object creation failed', 'type': 'creation_error'})
     
     @socketio.on('object_updated')
     def handle_object_updated(data):
