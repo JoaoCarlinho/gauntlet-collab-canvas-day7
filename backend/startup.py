@@ -23,9 +23,9 @@ def wait_for_dependencies():
     # Wait for environment variables
     required_env_vars = ['FLASK_ENV']
     for var in required_env_vars:
-        while not os.environ.get(var):
-            print(f"Waiting for environment variable: {var}")
-            time.sleep(1)
+        if not os.environ.get(var):
+            print(f"Setting default environment variable: {var}=production")
+            os.environ[var] = 'production'
     
     print("Dependencies ready!")
 
