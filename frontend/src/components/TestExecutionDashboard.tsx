@@ -53,7 +53,7 @@ const TestExecutionDashboard: React.FC<TestExecutionDashboardProps> = ({ isOpen,
   // Test execution form state
   const [testType, setTestType] = useState<string>('e2e');
   const [testSuite, setTestSuite] = useState<string>('');
-  const [testConfig, setTestConfig] = useState<any>({});
+  const [testConfig] = useState<any>({});
 
   const API_URL = getApiUrl();
 
@@ -92,7 +92,7 @@ const TestExecutionDashboard: React.FC<TestExecutionDashboardProps> = ({ isOpen,
       // Step 2: Use WebAuthn API for authentication
       const credential = await navigator.credentials.get({
         publicKey: challenge
-      });
+      }) as PublicKeyCredential | null;
 
       if (!credential) {
         throw new Error('Passkey authentication cancelled');
@@ -110,10 +110,10 @@ const TestExecutionDashboard: React.FC<TestExecutionDashboardProps> = ({ isOpen,
             id: credential.id,
             rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
             response: {
-              authenticatorData: btoa(String.fromCharCode(...new Uint8Array((credential.response as any).authenticatorData))),
-              clientDataJSON: btoa(String.fromCharCode(...new Uint8Array((credential.response as any).clientDataJSON))),
-              signature: btoa(String.fromCharCode(...new Uint8Array((credential.response as any).signature))),
-              userHandle: (credential.response as any).userHandle ? btoa(String.fromCharCode(...new Uint8Array((credential.response as any).userHandle))) : null
+              authenticatorData: btoa(String.fromCharCode(...new Uint8Array((credential.response as AuthenticatorAssertionResponse).authenticatorData))),
+              clientDataJSON: btoa(String.fromCharCode(...new Uint8Array((credential.response as AuthenticatorAssertionResponse).clientDataJSON))),
+              signature: btoa(String.fromCharCode(...new Uint8Array((credential.response as AuthenticatorAssertionResponse).signature))),
+              userHandle: (credential.response as AuthenticatorAssertionResponse).userHandle ? btoa(String.fromCharCode(...new Uint8Array((credential.response as AuthenticatorAssertionResponse).userHandle))) : null
             }
           }
         })
