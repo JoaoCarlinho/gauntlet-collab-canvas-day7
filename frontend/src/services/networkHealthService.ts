@@ -159,7 +159,9 @@ class NetworkHealthService {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), this.config.timeout)
 
-      const response = await fetch('/api/health', {
+      // Use the correct API URL instead of relative path
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${API_URL}/api/health`, {
         method: 'HEAD',
         signal: controller.signal,
         cache: 'no-cache'
@@ -196,7 +198,9 @@ class NetworkHealthService {
     const startTime = Date.now()
     
     try {
-      const response = await fetch('/api/health', {
+      // Use the correct API URL instead of relative path
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+      const response = await fetch(`${API_URL}/api/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
