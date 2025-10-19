@@ -107,11 +107,13 @@ def register_canvas_handlers(socketio):
             
             # Create object in database
             canvas_service = CanvasService()
+            # Handle both user object and user dict
+            user_id = user.id if hasattr(user, 'id') else user.get('id')
             canvas_object = canvas_service.create_canvas_object(
                 canvas_id=canvas_id,
                 object_type=object_data['type'],
                 properties=json.dumps(object_data['properties']),
-                created_by=user.id
+                created_by=user_id
             )
             
             # Log successful object creation

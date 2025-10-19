@@ -211,37 +211,52 @@ def create_app(config_class=Config):
             if app.config.get('DEBUG', False):
                 print("=== Socket.IO Connection Attempt ===")
                 print(f"Auth data: {auth}")
-            
+
             # Check if we're in development mode (skip auth)
             is_development = app.config.get('DEBUG', False) or app.config.get('FLASK_ENV') == 'development'
-            
+
             if is_development:
                 print("Development mode: Allowing Socket.IO connection without authentication")
+                # Store mock user for development
+                from flask import session
+                session['authenticated_user'] = {
+                    'id': 'dev-user',
+                    'email': 'dev@example.com',
+                    'name': 'Development User'
+                }
                 return True
-            
+
             # Production mode: require authentication
             if not auth or not auth.get('token'):
                 print("Socket.IO connection rejected: No authentication token provided")
                 return False
-            
+
             # Verify the Firebase token
             try:
                 from app.services.auth_service import AuthService
+                from flask import session
                 auth_service = AuthService()
                 decoded_token = auth_service.verify_token(auth['token'])
-                
+
                 # Get or create user
                 user = auth_service.get_user_by_id(decoded_token['uid'])
                 if not user:
                     user = auth_service.register_user(auth['token'])
-                
+
+                # Store user in session for event handlers
+                session['authenticated_user'] = {
+                    'id': user.id,
+                    'email': user.email,
+                    'name': user.name
+                }
+
                 print(f"Socket.IO connection authenticated for user: {user.email}")
                 return True
-                
+
             except Exception as e:
                 print(f"Socket.IO authentication failed: {str(e)}")
                 return False
-                
+
         except Exception as e:
             print(f"Socket.IO connection error: {str(e)}")
             return False
