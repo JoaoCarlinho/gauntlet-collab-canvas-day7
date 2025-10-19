@@ -60,10 +60,17 @@ def create_app(config_class=Config):
         vary_header=True
     )
     
-    # Add security headers
+    # Add CORS and security headers
     @app.after_request
-    def add_security_headers(response):
-        """Add security headers to all responses."""
+    def add_headers(response):
+        """Add CORS and security headers to all responses."""
+        # Import CORS middleware
+        from .middleware.cors_middleware import add_cors_headers
+        
+        # Add CORS headers first
+        response = add_cors_headers(response)
+        
+        # Add security headers
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-XSS-Protection'] = '1; mode=block'
@@ -72,16 +79,25 @@ def create_app(config_class=Config):
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"
         return response
     
+    # Handle preflight requests globally
+    @app.before_request
+    def handle_preflight():
+        """Handle CORS preflight requests globally."""
+        from .middleware.cors_middleware import handle_preflight
+        return handle_preflight()
+    
     socketio.init_app(
         app, 
-        cors_allowed_origins=allowed_origins, 
+        cors_allowed_origins="*",  # Temporary wildcard for Socket.IO
         manage_session=False,
         logger=app.config.get('SOCKETIO_LOGGER', False),  # Environment controlled
         engineio_logger=app.config.get('SOCKETIO_ENGINEIO_LOGGER', False),  # Environment controlled
         ping_timeout=60,
         ping_interval=25,
         max_http_buffer_size=1000000,
-        always_connect=True
+        always_connect=True,
+        allow_upgrades=True,
+        transports=['websocket', 'polling']
     )
     migrate.init_app(app, db)
     
@@ -138,14 +154,20 @@ def create_app(config_class=Config):
     from .routes.objects import objects_bp
     from .routes.collaboration import collaboration_bp
     from .routes.ai_agent import ai_agent_bp
+    from .routes.ai_agent_debug import ai_agent_debug_bp
+    from .routes.test_execution import test_execution_bp
     from .routes.cors_debug import cors_debug_bp
+    from .routes.test_cors import test_cors_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(canvas_bp, url_prefix='/api/canvas')
     app.register_blueprint(objects_bp, url_prefix='/api/objects')
     app.register_blueprint(collaboration_bp, url_prefix='/api/collaboration')
     app.register_blueprint(ai_agent_bp, url_prefix='/api/ai-agent')
+    app.register_blueprint(ai_agent_debug_bp, url_prefix='/api/ai-agent/debug')
+    app.register_blueprint(test_execution_bp, url_prefix='/api/test-execution')
     app.register_blueprint(cors_debug_bp, url_prefix='/api/debug')
+    app.register_blueprint(test_cors_bp, url_prefix='/api/test')
     
     # Initialize rate limiting
     from .middleware.rate_limiting import init_rate_limiting, init_socket_rate_limiting

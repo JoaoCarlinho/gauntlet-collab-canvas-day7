@@ -1,0 +1,195 @@
+# CollabCanvas Alerting Rules
+groups:
+  - name: collabcanvas.rules
+    rules:
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: collabcanvas
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors per second for the last 5 minutes"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/high-error-rate"
+
+      # High Response Time
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: collabcanvas
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }} seconds"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/high-response-time"
+
+      # WebSocket Connection Issues
+      - alert: WebSocketConnectionIssues
+        expr: websocket_connections_total < 1
+        for: 1m
+        labels:
+          severity: critical
+          service: collabcanvas
+        annotations:
+          summary: "WebSocket connection issues"
+          description: "No active WebSocket connections detected"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/websocket-issues"
+
+      # High WebSocket Disconnection Rate
+      - alert: HighWebSocketDisconnectionRate
+        expr: rate(websocket_disconnections_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: collabcanvas
+        annotations:
+          summary: "High WebSocket disconnection rate"
+          description: "WebSocket disconnection rate is {{ $value }} per second"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/websocket-disconnections"
+
+      # Database Connection Issues
+      - alert: DatabaseConnectionIssues
+        expr: database_connections_active < 1
+        for: 1m
+        labels:
+          severity: critical
+          service: collabcanvas
+        annotations:
+          summary: "Database connection issues"
+          description: "No active database connections detected"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/database-issues"
+
+      # High Database Query Time
+      - alert: HighDatabaseQueryTime
+        expr: histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: collabcanvas
+        annotations:
+          summary: "High database query time"
+          description: "95th percentile database query time is {{ $value }} seconds"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/database-performance"
+
+      # Redis Connection Issues
+      - alert: RedisConnectionIssues
+        expr: redis_connections_active < 1
+        for: 1m
+        labels:
+          severity: critical
+          service: collabcanvas
+        annotations:
+          summary: "Redis connection issues"
+          description: "No active Redis connections detected"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/redis-issues"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: collabcanvas
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/high-memory-usage"
+
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: collabcanvas
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}%"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/high-cpu-usage"
+
+      # Disk Space Low
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: collabcanvas
+        annotations:
+          summary: "Disk space low"
+          description: "Disk space is {{ $value | humanizePercentage }} available"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/disk-space-low"
+
+      # Test Failure Rate
+      - alert: HighTestFailureRate
+        expr: rate(test_executions_total{status="failed"}[10m]) / rate(test_executions_total[10m]) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          service: collabcanvas
+        annotations:
+          summary: "High test failure rate"
+          description: "Test failure rate is {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/test-failures"
+
+      # Security Scan Failures
+      - alert: SecurityScanFailures
+        expr: security_scan_failures_total > 0
+        for: 0m
+        labels:
+          severity: critical
+          service: collabcanvas
+        annotations:
+          summary: "Security scan failures detected"
+          description: "{{ $value }} security scan failures detected"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/security-failures"
+
+      # API Rate Limiting
+      - alert: APIRateLimiting
+        expr: rate(http_requests_total{status="429"}[5m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+          service: collabcanvas
+        annotations:
+          summary: "API rate limiting active"
+          description: "Rate limiting is active with {{ $value }} requests per second being limited"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/rate-limiting"
+
+      # Service Down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: collabcanvas
+        annotations:
+          summary: "Service is down"
+          description: "{{ $labels.job }} service is down"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/service-down"
+
+      # Deployment Failures
+      - alert: DeploymentFailure
+        expr: deployment_status{status="failed"} == 1
+        for: 0m
+        labels:
+          severity: critical
+          service: collabcanvas
+        annotations:
+          summary: "Deployment failed"
+          description: "Deployment to {{ $labels.environment }} has failed"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/deployment-failure"
+
+      # Performance Degradation
+      - alert: PerformanceDegradation
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[1h])) * 2
+        for: 10m
+        labels:
+          severity: warning
+          service: collabcanvas
+        annotations:
+          summary: "Performance degradation detected"
+          description: "Response time has increased significantly compared to the last hour"
+          runbook_url: "https://docs.collabcanvas.com/runbooks/performance-degradation"

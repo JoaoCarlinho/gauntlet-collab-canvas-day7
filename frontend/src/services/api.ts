@@ -122,6 +122,10 @@ export const canvasAPI = {
   },
   
   getCanvasObjects: async (canvasId: string): Promise<{ objects: CanvasObject[] }> => {
+    if (!canvasId || canvasId.trim() === '') {
+      throw new Error('Canvas ID is required and cannot be empty')
+    }
+    console.log('Getting canvas objects for canvasId:', canvasId)
     const response = await api.get(`/canvas/${canvasId}/objects`)
     return response.data
   },
