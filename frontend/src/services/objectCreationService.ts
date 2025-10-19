@@ -27,6 +27,43 @@ class ObjectCreationService {
   private pendingCreations = new Map<string, Promise<CreationResult>>()
 
   /**
+   * Enhanced authentication context validation
+   */
+  private validateAuthContext(
+    canvasId: string, 
+    idToken: string, 
+    object: { type: string; properties: Record<string, any> }
+  ): void {
+    if (!canvasId || !idToken) {
+      throw new Error('Missing authentication context: canvasId or idToken')
+    }
+    
+    // Additional validation
+    if (canvasId.length < 10) {
+      throw new Error('Invalid canvas ID format')
+    }
+    
+    if (idToken.length < 100) {
+      throw new Error('Invalid authentication token format')
+    }
+    
+    if (!object || !object.type) {
+      throw new Error('Invalid object data: missing type')
+    }
+    
+    // Validate object type
+    const validTypes = ['rectangle', 'circle', 'text', 'heart', 'star', 'diamond', 'line', 'arrow']
+    if (!validTypes.includes(object.type)) {
+      throw new Error(`Invalid object type: ${object.type}`)
+    }
+    
+    // Validate properties
+    if (!object.properties || typeof object.properties !== 'object') {
+      throw new Error('Invalid object properties')
+    }
+  }
+
+  /**
    * Create object with socket fallback to REST API
    */
   async createObject(
@@ -35,6 +72,9 @@ class ObjectCreationService {
     object: { type: string; properties: Record<string, any> },
     options: CreationOptions = {}
   ): Promise<CreationResult> {
+    // Enhanced authentication context validation
+    this.validateAuthContext(canvasId, idToken, object)
+    
     const creationKey = `${canvasId}_${object.type}_${Date.now()}`
     
     // Prevent duplicate creations

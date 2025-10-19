@@ -356,29 +356,67 @@ def validate_socket_input(schema_class):
 
 def require_socket_auth(func: Callable) -> Callable:
     """
-    Decorator to require authentication for Socket.IO events.
-    Uses session data set during connection authentication.
+    Decorator to require authentication for Socket.IO events with fallback methods.
+    Uses session data set during connection authentication with fallback to direct token validation.
     """
     @functools.wraps(func)
     def wrapper(data, *args, **kwargs):
         try:
             from flask import session
+            import time
             
             # Debug session information
             security_logger.log_info(f"Socket event authentication check - Session keys: {list(session.keys())}")
             security_logger.log_info(f"Socket event authentication check - Data keys: {list(data.keys()) if data else 'None'}")
             
-            # Get user from session (set during connection)
+            # Try session-based authentication first
             user_data = session.get('authenticated_user')
+            
             if not user_data:
-                security_logger.log_warning("Socket event missing authenticated user context")
-                security_logger.log_warning(f"Session contents: {dict(session)}")
-                emit('error', {'message': 'User not authenticated', 'type': 'auth_error'})
+                # Fallback to direct token authentication
+                id_token = data.get('id_token')
+                if id_token:
+                    try:
+                        security_logger.log_info("Attempting fallback token authentication")
+                        auth_service = AuthService()
+                        decoded_token = auth_service.verify_token(id_token)
+                        user = auth_service.get_user_by_id(decoded_token['uid'])
+                        
+                        if user:
+                            user_data = {
+                                'id': user.id,
+                                'email': user.email,
+                                'name': user.name,
+                                'auth_method': 'fallback_token',
+                                'authenticated_at': time.time(),
+                                'token_uid': decoded_token.get('uid')
+                            }
+                            # Store in session for future use
+                            session['authenticated_user'] = user_data
+                            security_logger.log_info(f"Fallback authentication successful for user: {user.email}")
+                        else:
+                            security_logger.log_warning("Fallback authentication failed: User not found")
+                            emit('error', {'message': 'User not found', 'type': 'auth_error'})
+                            return
+                    except Exception as e:
+                        security_logger.log_error(f"Fallback token authentication failed: {str(e)}", e)
+                        emit('error', {'message': 'Token authentication failed', 'type': 'auth_error'})
+                        return
+                else:
+                    security_logger.log_warning("Socket event missing authenticated user context and no fallback token")
+                    security_logger.log_warning(f"Session contents: {dict(session)}")
+                    emit('error', {'message': 'User or canvas ID missing', 'type': 'auth_error'})
+                    return
+            
+            # Validate user data
+            if not user_data.get('id') or not user_data.get('email'):
+                security_logger.log_warning("Invalid user data in session")
+                emit('error', {'message': 'Invalid user data', 'type': 'auth_error'})
                 return
             
             # Add user to data for use in handler
             data['_authenticated_user'] = user_data
-            security_logger.log_info(f"Socket event authenticated for user: {user_data.get('email', 'unknown')}")
+            security_logger.log_info(f"Socket event authenticated for user: {user_data.get('email', 'unknown')} (method: {user_data.get('auth_method', 'session')})")
             
             return func(data, *args, **kwargs)
             

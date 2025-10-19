@@ -205,24 +205,44 @@ def create_app(config_class=Config):
     # Add Socket.IO connection authentication
     @socketio.on('connect')
     def handle_connect(auth=None):
-        """Handle Socket.IO connection with proper authentication."""
+        """Handle Socket.IO connection with enhanced authentication and session management."""
         try:
+            import time
+            from flask import session
+            
+            # Enhanced session management
+            session.permanent = True
+            session.modified = True
+            
+            # Store connection metadata
+            session['connection_time'] = time.time()
+            session['socket_id'] = request.sid
+            
             # Only log in development mode
             if app.config.get('DEBUG', False):
                 print("=== Socket.IO Connection Attempt ===")
                 print(f"Auth data: {auth}")
+                print(f"Session ID: {session.get('_id', 'No session ID')}")
+                print(f"Socket ID: {request.sid}")
 
             # Check if we're in development mode (skip auth)
             is_development = app.config.get('DEBUG', False) or app.config.get('FLASK_ENV') == 'development'
 
             if is_development:
                 print("Development mode: Allowing Socket.IO connection without authentication")
-                # Store mock user for development
-                from flask import session
+                # Store mock user for development with enhanced metadata
                 session['authenticated_user'] = {
                     'id': 'dev-user',
                     'email': 'dev@example.com',
-                    'name': 'Development User'
+                    'name': 'Development User',
+                    'auth_method': 'development',
+                    'authenticated_at': time.time()
+                }
+                session['connection_metadata'] = {
+                    'connection_time': time.time(),
+                    'socket_id': request.sid,
+                    'auth_method': 'development',
+                    'user_agent': request.headers.get('User-Agent', 'Unknown')
                 }
                 print(f"Development session stored with keys: {list(session.keys())}")
                 return True
@@ -235,7 +255,6 @@ def create_app(config_class=Config):
             # Verify the Firebase token
             try:
                 from app.services.auth_service import AuthService
-                from flask import session
                 auth_service = AuthService()
                 decoded_token = auth_service.verify_token(auth['token'])
 
@@ -244,19 +263,36 @@ def create_app(config_class=Config):
                 if not user:
                     user = auth_service.register_user(auth['token'])
 
-                # Store user in session for event handlers
+                # Store user in session for event handlers with enhanced metadata
                 session['authenticated_user'] = {
                     'id': user.id,
                     'email': user.email,
-                    'name': user.name
+                    'name': user.name,
+                    'auth_method': 'firebase',
+                    'authenticated_at': time.time(),
+                    'token_uid': decoded_token.get('uid')
+                }
+                session['connection_metadata'] = {
+                    'connection_time': time.time(),
+                    'socket_id': request.sid,
+                    'auth_method': 'firebase',
+                    'user_agent': request.headers.get('User-Agent', 'Unknown'),
+                    'token_verified': True
                 }
 
                 print(f"Socket.IO connection authenticated for user: {user.email}")
                 print(f"Session stored with keys: {list(session.keys())}")
+                print(f"User ID: {user.id}, Token UID: {decoded_token.get('uid')}")
                 return True
 
             except Exception as e:
                 print(f"Socket.IO authentication failed: {str(e)}")
+                # Store failed authentication attempt
+                session['auth_failure'] = {
+                    'error': str(e),
+                    'timestamp': time.time(),
+                    'auth_data': auth
+                }
                 return False
 
         except Exception as e:

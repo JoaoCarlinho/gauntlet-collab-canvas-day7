@@ -344,12 +344,18 @@ class SocketService {
   }
 
   createObject(canvasId: string, idToken: string, object: { type: string; properties: Record<string, any> }) {
+    // Enhanced authentication context validation
+    this.validateAuthContext(canvasId, idToken)
+    
     if (this.socket) {
-      this.socket.emit('object_created', {
+      // Enhanced data with additional context
+      const enhancedData = this.ensureAuthContext({
         canvas_id: canvasId,
         id_token: idToken,
         object
       })
+      
+      this.socket.emit('object_created', enhancedData)
     }
   }
 
@@ -535,6 +541,64 @@ class SocketService {
   // Update optimization configuration
   updateOptimizationConfig(config: any) {
     socketEventOptimizer.updateConfig(config)
+  }
+
+  // Authentication context validation and enhancement
+  private validateAuthContext(canvasId: string, idToken: string): void {
+    if (!canvasId || !idToken) {
+      throw new Error('Missing authentication context: canvasId or idToken')
+    }
+    
+    // Additional validation
+    if (canvasId.length < 10) {
+      throw new Error('Invalid canvas ID format')
+    }
+    
+    if (idToken.length < 100) {
+      throw new Error('Invalid authentication token format')
+    }
+  }
+
+  private ensureAuthContext(data: any): any {
+    const user = this.getCurrentUser()
+    const canvasId = data.canvas_id
+    
+    if (!user || !user.idToken) {
+      throw new Error('User not authenticated')
+    }
+    
+    if (!canvasId) {
+      throw new Error('Canvas ID not available')
+    }
+    
+    return {
+      ...data,
+      canvas_id: canvasId,
+      user_id: user.id,
+      id_token: user.idToken,
+      user_email: user.email,
+      timestamp: Date.now()
+    }
+  }
+
+  private getCurrentUser(): any {
+    try {
+      const userStr = localStorage.getItem('user')
+      const idToken = localStorage.getItem('idToken')
+      
+      if (!userStr || !idToken) {
+        return null
+      }
+      
+      const user = JSON.parse(userStr)
+      return {
+        ...user,
+        idToken
+      }
+    } catch (error) {
+      console.error('Error getting current user:', error)
+      return null
+    }
   }
 
   // Connection state management methods
