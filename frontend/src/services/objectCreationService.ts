@@ -175,7 +175,7 @@ class ObjectCreationService {
    */
   private async tryRestCreation(
     canvasId: string,
-    idToken: string,
+    _idToken: string, // Prefixed with underscore to indicate intentionally unused
     object: { type: string; properties: Record<string, any> },
     retryOptions: any,
     onProgress?: (attempt: number, method: string) => void
@@ -199,7 +199,7 @@ class ObjectCreationService {
     })).catch(error => {
       // Log the error
       const context = {
-        operation: 'rest_object_creation',
+        operation: 'object_create' as const,
         timestamp: Date.now(),
         additionalData: {
           canvasId,

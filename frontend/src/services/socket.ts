@@ -468,10 +468,6 @@ class SocketService {
     }
   }
 
-  isConnected(): boolean {
-    return this.socket?.connected || false
-  }
-
   // Get error log for debugging (delegates to errorLogger)
   getErrorLog() {
     return errorLogger.getErrorLog()
