@@ -1,1 +1,1 @@
-web: cd backend && pip install -r requirements.txt && python startup.py
+web: pip install -r requirements.txt && python startup.py
