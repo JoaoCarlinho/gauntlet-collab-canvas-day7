@@ -88,14 +88,16 @@ def create_app(config_class=Config):
     
     socketio.init_app(
         app, 
-        cors_allowed_origins=allowed_origins, 
+        cors_allowed_origins="*",  # Temporary wildcard for Socket.IO
         manage_session=False,
         logger=app.config.get('SOCKETIO_LOGGER', False),  # Environment controlled
         engineio_logger=app.config.get('SOCKETIO_ENGINEIO_LOGGER', False),  # Environment controlled
         ping_timeout=60,
         ping_interval=25,
         max_http_buffer_size=1000000,
-        always_connect=True
+        always_connect=True,
+        allow_upgrades=True,
+        transports=['websocket', 'polling']
     )
     migrate.init_app(app, db)
     

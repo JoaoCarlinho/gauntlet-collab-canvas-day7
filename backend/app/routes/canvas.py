@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin
 from flasgger import swag_from
 from app.services.canvas_service import CanvasService
 from app.services.auth_service import require_auth
@@ -442,7 +443,8 @@ def delete_canvas(current_user, canvas_id):
         # Secure error handling - don't expose internal details
         return jsonify({'error': 'Internal server error'}), 500
 
-@canvas_bp.route('/<canvas_id>/objects', methods=['GET'])
+@canvas_bp.route('/<canvas_id>/objects', methods=['GET', 'OPTIONS'])
+@cross_origin(origins=['*'], supports_credentials=True)
 @require_auth
 @canvas_rate_limit('get_objects')
 def get_canvas_objects(current_user, canvas_id):

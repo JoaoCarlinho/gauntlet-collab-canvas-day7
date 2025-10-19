@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin
 from flasgger import swag_from
 from app.services.canvas_service import CanvasService
 from app.services.auth_service import require_auth
@@ -11,7 +12,8 @@ import json
 objects_bp = Blueprint('objects', __name__)
 canvas_service = CanvasService()
 
-@objects_bp.route('/', methods=['POST'])
+@objects_bp.route('/', methods=['POST', 'OPTIONS'])
+@cross_origin(origins=['*'], supports_credentials=True)
 @require_auth
 @object_rate_limit('create')
 @swag_from({

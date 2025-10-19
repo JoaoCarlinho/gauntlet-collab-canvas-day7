@@ -31,8 +31,11 @@ def add_cors_headers(response):
 def handle_preflight():
     """Handle CORS preflight requests."""
     if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        return add_cors_headers(response), 200
+        # Create response with proper CORS headers
+        response = jsonify({'status': 'ok', 'message': 'CORS preflight handled'})
+        response = add_cors_headers(response)
+        response.status_code = 200
+        return response
     return None
 
 def cors_required(f):
