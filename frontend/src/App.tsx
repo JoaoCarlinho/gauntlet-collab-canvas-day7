@@ -7,6 +7,7 @@ import CanvasPage from './components/CanvasPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import { EnvDebug } from './components/EnvDebug'
 import ErrorBoundary from './components/ErrorBoundary'
+import NetworkStatusIndicator from './components/NetworkStatusIndicator'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <SocketProvider>
           <div className="min-h-screen bg-gray-50">
             <EnvDebug />
+            <NetworkStatusIndicator />
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />

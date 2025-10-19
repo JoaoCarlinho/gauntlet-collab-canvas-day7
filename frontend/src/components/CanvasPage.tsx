@@ -462,15 +462,17 @@ const CanvasPage: React.FC = () => {
       console.error('Socket error received:', data)
       setConnectionStatus('error')
       
-      // Show user-friendly error message based on error type
-      let errorMessage = 'Connection error occurred'
-      if (data.type === 'connection_error') {
-        errorMessage = 'Lost connection to server. Attempting to reconnect...'
-      } else if (data.type === 'general_error') {
-        errorMessage = 'Network error occurred. Some features may be limited.'
-      }
-      
-      toast.error(errorMessage, { duration: 5000 })
+      // Use enhanced error handler for better error management
+      const { enhancedErrorHandler } = require('../services/enhancedErrorHandler')
+      enhancedErrorHandler.handleSocketError(data.error, {
+        operation: 'socket_connection',
+        component: 'CanvasPage',
+        canvasId: canvasId,
+        additionalData: {
+          errorType: data.type,
+          timestamp: data.timestamp
+        }
+      })
     })
 
     socketService.on('object_update_failed', (data: { object_id: string; error: any; message?: string }) => {
@@ -487,9 +489,18 @@ const CanvasPage: React.FC = () => {
         return newMap
       })
       
-      // Show user-friendly error message
-      const errorMessage = data.message || 'Failed to update object position'
-      devToast.error(`${errorMessage}. Fallback mechanism will handle retry.`)
+      // Use enhanced error handler for better error management
+      const { enhancedErrorHandler } = require('../services/enhancedErrorHandler')
+      enhancedErrorHandler.handleSocketError(data.error, {
+        operation: 'object_update',
+        component: 'CanvasPage',
+        canvasId: canvasId,
+        objectId: data.object_id,
+        additionalData: {
+          errorMessage: data.message,
+          retryCount: failedUpdates.get(data.object_id)?.retryCount || 0
+        }
+      })
     })
 
     socketService.on('object_create_failed', (data: { object_type: string; error: any; message?: string }) => {

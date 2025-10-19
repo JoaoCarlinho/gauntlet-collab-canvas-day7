@@ -101,11 +101,8 @@ class RobustAIAgentService:
                     id=str(uuid.uuid4()),
                     canvas_id=canvas.id,
                     object_type=obj_data.get('type', 'rectangle'),
-                    properties=obj_data.get('properties', {}),
-                    position_x=obj_data.get('x', 100),
-                    position_y=obj_data.get('y', 100),
-                    width=obj_data.get('width', 120),
-                    height=obj_data.get('height', 60)
+                    properties=json.dumps(obj_data.get('properties', {})),
+                    created_by=user_id
                 )
                 db.session.add(canvas_object)
                 created_objects.append(canvas_object)
@@ -121,11 +118,7 @@ class RobustAIAgentService:
                     {
                         'id': obj.id,
                         'type': obj.object_type,
-                        'properties': obj.properties,
-                        'x': obj.position_x,
-                        'y': obj.position_y,
-                        'width': obj.width,
-                        'height': obj.height
+                        'properties': json.loads(obj.properties) if obj.properties else {}
                     }
                     for obj in created_objects
                 ],
