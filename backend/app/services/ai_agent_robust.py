@@ -12,6 +12,7 @@ from app.models.canvas_object import CanvasObject
 from app.models.canvas import Canvas
 from app.utils.logger import SmartLogger
 from app.extensions import db
+from app.services.openai_client_factory import OpenAIClientFactory
 
 
 class RobustAIAgentService:
@@ -27,83 +28,15 @@ class RobustAIAgentService:
             self.logger.log_error("OPENAI_API_KEY environment variable not set")
             raise ValueError("OpenAI API key is required but not configured")
         
-        # Initialize OpenAI client with multiple fallback strategies
-        self.openai_client = self._initialize_openai_client(api_key)
+        # Initialize OpenAI client using factory
+        self.openai_client = OpenAIClientFactory.create_client(api_key)
+        if not self.openai_client:
+            raise ValueError("Failed to initialize OpenAI client")
         
         # Only log success in development
         if os.environ.get('FLASK_ENV') == 'development':
             self.logger.log_info("Robust AI Agent Service initialized successfully")
     
-    def _initialize_openai_client(self, api_key: str):
-        """Initialize OpenAI client with multiple fallback strategies."""
-        
-        # Strategy 1: Minimal configuration
-        try:
-            client_kwargs = {'api_key': api_key}
-            client = openai.OpenAI(**client_kwargs)
-            self.logger.log_info("OpenAI client initialized with minimal configuration")
-            return client
-        except Exception as e:
-            self.logger.log_warning(f"Minimal configuration failed: {str(e)}")
-        
-        # Strategy 2: With timeout only
-        try:
-            client_kwargs = {
-                'api_key': api_key,
-                'timeout': 30.0
-            }
-            client = openai.OpenAI(**client_kwargs)
-            self.logger.log_info("OpenAI client initialized with timeout")
-            return client
-        except Exception as e:
-            self.logger.log_warning(f"Timeout configuration failed: {str(e)}")
-        
-        # Strategy 3: Try with different parameter combinations
-        try:
-            # Remove any environment variables that might be causing issues
-            old_proxies = os.environ.pop('HTTP_PROXY', None)
-            old_https_proxies = os.environ.pop('HTTPS_PROXY', None)
-            
-            client_kwargs = {
-                'api_key': api_key,
-                'timeout': 30.0,
-                'max_retries': 2
-            }
-            client = openai.OpenAI(**client_kwargs)
-            
-            # Restore environment variables
-            if old_proxies:
-                os.environ['HTTP_PROXY'] = old_proxies
-            if old_https_proxies:
-                os.environ['HTTPS_PROXY'] = old_https_proxies
-                
-            self.logger.log_info("OpenAI client initialized after proxy cleanup")
-            return client
-        except Exception as e:
-            self.logger.log_warning(f"Proxy cleanup configuration failed: {str(e)}")
-        
-        # Strategy 4: Try with explicit None values for problematic parameters
-        try:
-            client_kwargs = {
-                'api_key': api_key,
-                'timeout': 30.0,
-                'max_retries': 2,
-                'proxies': None  # Explicitly set to None
-            }
-            client = openai.OpenAI(**client_kwargs)
-            self.logger.log_info("OpenAI client initialized with explicit None proxies")
-            return client
-        except Exception as e:
-            self.logger.log_warning(f"Explicit None proxies failed: {str(e)}")
-        
-        # Strategy 5: Try with only api_key and handle the error gracefully
-        try:
-            client = openai.OpenAI(api_key=api_key)
-            self.logger.log_info("OpenAI client initialized with api_key only")
-            return client
-        except Exception as e:
-            self.logger.log_error(f"All OpenAI client initialization strategies failed: {str(e)}")
-            raise ValueError(f"Failed to initialize OpenAI client: {str(e)}")
     
     def create_canvas_from_query(
         self, 

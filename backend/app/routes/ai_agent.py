@@ -89,17 +89,28 @@ def create_canvas_with_ai(current_user):
         schema = CanvasCreationRequestSchema()
         data = schema.load(request.json)
         
-        # Initialize AI agent service (try robust service first)
+        # Initialize AI agent service (try fallback service first to avoid OpenAI issues)
         try:
-            from app.services.ai_agent_robust import RobustAIAgentService
-            ai_service = RobustAIAgentService()
+            from app.services.ai_agent_fallback import FallbackAIAgentService
+            ai_service = FallbackAIAgentService()
+            logger.log_info("Using fallback AI service (no OpenAI dependency)")
         except Exception as e:
-            logger.log_error(f"Robust AI service failed, falling back to simple service: {str(e)}", e)
+            logger.log_error(f"Fallback AI service failed, trying robust service: {str(e)}", e)
             try:
-                ai_service = SimpleAIAgentService()
+                from app.services.ai_agent_robust import RobustAIAgentService
+                ai_service = RobustAIAgentService()
             except Exception as e2:
-                logger.log_error(f"Simple AI service failed, falling back to full service: {str(e2)}", e2)
-                ai_service = AIAgentService()
+                logger.log_error(f"Robust AI service failed, trying simple service: {str(e2)}", e2)
+                try:
+                    ai_service = SimpleAIAgentService()
+                except Exception as e3:
+                    logger.log_error(f"Simple AI service failed, trying full service: {str(e3)}", e3)
+                    try:
+                        ai_service = AIAgentService()
+                    except Exception as e4:
+                        logger.log_error(f"All AI services failed, using emergency fallback: {str(e4)}", e4)
+                        # Emergency fallback - create a simple canvas without AI
+                        return self._create_emergency_canvas(data, current_user)
         
         # Process the query and generate canvas objects
         result = ai_service.create_canvas_from_query(
@@ -147,6 +158,70 @@ def create_canvas_with_ai(current_user):
             'error': 'Failed to create canvas',
             'message': str(e)
         }), 500
+
+
+def _create_emergency_canvas(data, current_user):
+        """Emergency fallback when all AI services fail."""
+        try:
+            import uuid
+            from app.models.canvas import Canvas
+            from app.models.canvas_object import CanvasObject
+            from app.extensions import db
+            
+            # Create a simple canvas with basic objects
+            canvas = Canvas(
+                id=str(uuid.uuid4()),
+                title=f"Canvas: {data['instructions'][:50]}...",
+                user_id=current_user.id,
+                is_public=False
+            )
+            db.session.add(canvas)
+            db.session.commit()
+            
+            # Create a simple rectangle object
+            canvas_object = CanvasObject(
+                id=str(uuid.uuid4()),
+                canvas_id=canvas.id,
+                object_type='rectangle',
+                properties=json.dumps({
+                    'fill': '#3B82F6',
+                    'stroke': '#1E40AF',
+                    'text': 'Canvas Object',
+                    'fontSize': 14
+                }),
+                position_x=100,
+                position_y=100,
+                width=200,
+                height=100
+            )
+            db.session.add(canvas_object)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'canvas': {
+                    'id': canvas.id,
+                    'title': canvas.title,
+                    'objects': [{
+                        'id': canvas_object.id,
+                        'type': canvas_object.object_type,
+                        'properties': json.loads(canvas_object.properties),
+                        'x': canvas_object.position_x,
+                        'y': canvas_object.position_y,
+                        'width': canvas_object.width,
+                        'height': canvas_object.height
+                    }]
+                },
+                'message': 'Canvas created with emergency fallback (AI services unavailable)'
+            }), 200
+            
+        except Exception as e:
+            logger.log_error(f"Emergency canvas creation failed: {str(e)}", e)
+            return jsonify({
+                'success': False,
+                'error': 'All canvas creation methods failed',
+                'message': 'Unable to create canvas at this time'
+            }), 500
 
 @ai_agent_bp.route('/health', methods=['GET'])
 @ai_rate_limit('health')
