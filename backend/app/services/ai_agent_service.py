@@ -26,11 +26,15 @@ class AIAgentService:
         
         try:
             # Initialize OpenAI client with minimal configuration
-            self.openai_client = openai.OpenAI(
-                api_key=api_key,
-                timeout=30.0,  # 30 second timeout
-                max_retries=2
-            )
+            # Remove any potential proxies argument that might be causing issues
+            client_kwargs = {
+                'api_key': api_key,
+                'timeout': 30.0,  # 30 second timeout
+                'max_retries': 2
+            }
+            
+            # Only add supported parameters to avoid version compatibility issues
+            self.openai_client = openai.OpenAI(**client_kwargs)
             # Only log success in development
             if os.environ.get('FLASK_ENV') == 'development':
                 self.logger.log_info("OpenAI client initialized successfully")
