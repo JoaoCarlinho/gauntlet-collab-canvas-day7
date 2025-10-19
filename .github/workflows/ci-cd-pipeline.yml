@@ -1,0 +1,406 @@
+name: CollabCanvas CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Frontend Tests
+  frontend-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run TypeScript compilation
+      run: npm run build
+    
+    - name: Run ESLint
+      run: npx eslint src --ext .ts,.tsx --max-warnings 0
+    
+    - name: Run unit tests
+      run: npm test -- --coverage --watchAll=false
+    
+    - name: Run Playwright tests
+      run: npx playwright test --project=chromium
+    
+    - name: Upload Playwright report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: playwright-report
+        path: frontend/playwright-report/
+        retention-days: 30
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./frontend/coverage/lcov.info
+        flags: frontend
+        name: frontend-coverage
+
+  # Backend Tests
+  backend-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements_test.txt
+    
+    - name: Run Python tests
+      run: python -m pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+    
+    - name: Run comprehensive API tests
+      run: python -m pytest tests/test_api_comprehensive.py -v -m api
+    
+    - name: Run WebSocket tests
+      run: python -m pytest tests/test_websocket_comprehensive.py -v -m websocket
+    
+    - name: Run performance tests
+      run: python -m pytest tests/test_performance_comprehensive.py -v -m performance
+    
+    - name: Run security tests
+      run: python -m pytest tests/test_security_comprehensive.py -v -m security
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+
+  # Integration Tests
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: [frontend-tests, backend-tests]
+    
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements_test.txt
+    
+    - name: Start backend server
+      run: |
+        cd backend
+        python run.py &
+        sleep 10
+    
+    - name: Start frontend server
+      run: |
+        cd frontend
+        npm run dev &
+        sleep 15
+    
+    - name: Run Cypress integration tests
+      run: |
+        cd frontend
+        npx cypress run --spec 'cypress/e2e/authenticated-object-tests.cy.ts,cypress/e2e/multi-user-collaboration.cy.ts,cypress/e2e/auth-error-scenarios.cy.ts' --config-file cypress.config.auth.ts --headless
+    
+    - name: Run Playwright integration tests
+      run: |
+        cd frontend
+        npx playwright test playwright-tests/collaboration/ --project=chromium
+    
+    - name: Generate test reports
+      run: |
+        cd frontend
+        npx cypress run --spec 'cypress/e2e/dev-screenshot-generation.cy.ts' --config-file cypress.config.auth.ts --headless
+    
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-artifacts
+        path: |
+          frontend/cypress/screenshots/
+          frontend/cypress/videos/
+          frontend/playwright-tests/screenshots/
+          reports/
+
+  # Performance Tests
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        cd frontend && npm ci
+        cd ../backend && pip install -r requirements.txt
+    
+    - name: Run performance tests
+      run: |
+        chmod +x scripts/performance-metrics.sh
+        ./scripts/performance-metrics.sh
+    
+    - name: Run Playwright performance tests
+      run: |
+        cd frontend
+        npx playwright test playwright-tests/performance/ --project=chromium
+    
+    - name: Upload performance reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-reports
+        path: reports/metrics/
+
+  # Security Scan
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+    
+    - name: Run security tests
+      run: |
+        cd backend
+        python -m pytest tests/test_security_comprehensive.py -v -m security
+
+  # Build Docker Images
+  build-images:
+    runs-on: ubuntu-latest
+    needs: [frontend-tests, backend-tests, integration-tests, performance-tests, security-scan]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Deploy to Staging
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to staging
+      run: |
+        echo "🚀 Deploying to staging environment..."
+        # Add your staging deployment commands here
+        # Example: kubectl apply -f k8s/staging/
+        # Example: helm upgrade --install collabcanvas-staging ./helm-chart --values staging-values.yaml
+    
+    - name: Run staging health checks
+      run: |
+        echo "🔍 Running staging health checks..."
+        sleep 30
+        # Add health check commands here
+        # Example: curl -f https://staging.collabcanvas.com/health
+    
+    - name: Run staging smoke tests
+      run: |
+        echo "🧪 Running staging smoke tests..."
+        # Add smoke test commands here
+        # Example: npx playwright test --config=playwright.staging.config.ts
+
+  # Deploy to Production
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      run: |
+        echo "🚀 Deploying to production environment..."
+        # Add your production deployment commands here
+        # Example: kubectl apply -f k8s/production/
+        # Example: helm upgrade --install collabcanvas-production ./helm-chart --values production-values.yaml
+    
+    - name: Run production health checks
+      run: |
+        echo "🔍 Running production health checks..."
+        sleep 30
+        # Add health check commands here
+        # Example: curl -f https://collabcanvas.com/health
+    
+    - name: Run production smoke tests
+      run: |
+        echo "🧪 Running production smoke tests..."
+        # Add smoke test commands here
+        # Example: npx playwright test --config=playwright.production.config.ts
+
+  # Notify on completion
+  notify:
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always()
+    
+    steps:
+    - name: Notify success
+      if: needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success'
+      run: |
+        echo "✅ Deployment successful!"
+        # Add notification logic here (Slack, Discord, etc.)
+        # Example: curl -X POST -H 'Content-type: application/json' --data '{"text":"✅ CollabCanvas deployment successful!"}' ${{ secrets.SLACK_WEBHOOK_URL }}
+    
+    - name: Notify failure
+      if: needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure'
+      run: |
+        echo "❌ Deployment failed!"
+        # Add notification logic here (Slack, Discord, etc.)
+        # Example: curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ CollabCanvas deployment failed!"}' ${{ secrets.SLACK_WEBHOOK_URL }}

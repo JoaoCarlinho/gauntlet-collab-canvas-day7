@@ -114,7 +114,12 @@
     "ml:predict": "cd .. && python3 scripts/ml-failure-predictor.py",
     "scenarios:run": "cd .. && python3 scripts/custom-test-scenarios.py",
     "reporting:generate": "cd .. && python3 scripts/advanced-reporting.py",
-    "reliability:analyze": "cd .. && python3 scripts/test-reliability-improver.py"
+    "reliability:analyze": "cd .. && python3 scripts/test-reliability-improver.py",
+    "validation:build": "cd .. && ./scripts/validate-build.sh",
+    "validation:typescript": "tsc --noEmit",
+    "validation:lint": "eslint src/ --ext .ts,.tsx --max-warnings 0",
+    "validation:prettier": "prettier --check src/",
+    "validation:all": "npm run validation:typescript && npm run validation:lint && npm run validation:prettier && npm run build"
   },
   "dependencies": {
     "axios": "^1.5.0",
