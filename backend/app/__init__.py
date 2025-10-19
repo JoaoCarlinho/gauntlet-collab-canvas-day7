@@ -106,7 +106,7 @@ def create_app(config_class=Config):
     socketio.init_app(
         app, 
         cors_allowed_origins=allowed_origins,  # Use same CORS origins as Flask app
-        manage_session=False,
+        manage_session=True,  # Enable session management for authentication context
         logger=app.config.get('SOCKETIO_LOGGER', False),  # Environment controlled
         engineio_logger=app.config.get('SOCKETIO_ENGINEIO_LOGGER', False),  # Environment controlled
         ping_timeout=60,
@@ -224,6 +224,7 @@ def create_app(config_class=Config):
                     'email': 'dev@example.com',
                     'name': 'Development User'
                 }
+                print(f"Development session stored with keys: {list(session.keys())}")
                 return True
 
             # Production mode: require authentication
@@ -251,6 +252,7 @@ def create_app(config_class=Config):
                 }
 
                 print(f"Socket.IO connection authenticated for user: {user.email}")
+                print(f"Session stored with keys: {list(session.keys())}")
                 return True
 
             except Exception as e:

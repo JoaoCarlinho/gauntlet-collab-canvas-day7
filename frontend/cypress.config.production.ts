@@ -2,7 +2,7 @@ import { defineConfig } from 'cypress'
 
 export default defineConfig({
   e2e: {
-    baseUrl: 'https://gauntlet-collab-canvas-24hr.vercel.app',
+    baseUrl: 'https://gauntlet-collab-canvas-day7.vercel.app',
     supportFile: 'cypress/support/e2e.ts',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     viewportWidth: 1280,
@@ -21,10 +21,15 @@ export default defineConfig({
     pageLoadTimeout: 30000,
     // Environment variables for production testing
     env: {
-      API_URL: 'https://gauntlet-collab-canvas-24hr-production.up.railway.app',
+      API_URL: 'https://gauntlet-collab-canvas-day7-production.up.railway.app',
       MOCK_AUTH: false,
       MOCK_WEBSOCKET: false,
-      PRODUCTION_TESTING: true
+      PRODUCTION_TESTING: true,
+      // Test user credentials for production testing
+      TEST_USER_EMAIL: 'test@collabcanvas.com',
+      TEST_USER_PASSWORD: 'TestPassword123!',
+      TEST_USER_DISPLAY_NAME: 'Test User',
+      ENABLE_TEST_AUTH: true
     },
     setupNodeEvents(on, config) {
       // Add custom tasks for production testing

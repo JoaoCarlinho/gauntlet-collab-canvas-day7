@@ -153,7 +153,7 @@ class ObjectCreationService {
           // Add error classification
           if (errorMessage.includes('User or canvas ID missing')) {
             error.name = 'ValidationError'
-          } else if (errorMessage.includes('Authentication')) {
+          } else if (errorMessage.includes('Authentication') || errorMessage.includes('not authenticated')) {
             error.name = 'AuthenticationError'
           } else if (errorMessage.includes('permission')) {
             error.name = 'PermissionError'
