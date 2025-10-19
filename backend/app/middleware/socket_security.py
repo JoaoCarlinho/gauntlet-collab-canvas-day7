@@ -357,28 +357,25 @@ def validate_socket_input(schema_class):
 def require_socket_auth(func: Callable) -> Callable:
     """
     Decorator to require authentication for Socket.IO events.
+    Uses session data set during connection authentication.
     """
     @functools.wraps(func)
     def wrapper(data, *args, **kwargs):
         try:
-            id_token = data.get('id_token')
-            if not id_token:
-                security_logger.log_warning("Socket event missing authentication token")
-                emit('error', {'message': 'Authentication token required', 'type': 'auth_error'})
+            from flask import session
+            
+            # Get user from session (set during connection)
+            user_data = session.get('authenticated_user')
+            if not user_data:
+                security_logger.log_warning("Socket event missing authenticated user context")
+                emit('error', {'message': 'User not authenticated', 'type': 'auth_error'})
                 return
             
-            # Authenticate user
-            user = authenticate_socket_user(id_token)
-            
             # Add user to data for use in handler
-            data['_authenticated_user'] = user
+            data['_authenticated_user'] = user_data
             
             return func(data, *args, **kwargs)
             
-        except SocketAuthenticationError as e:
-            security_logger.log_error(f"Socket authentication error: {str(e)}", e)
-            emit('error', {'message': f'Authentication failed: {str(e)}', 'type': 'auth_error'})
-            return
         except Exception as e:
             security_logger.log_error(f"Socket authentication error: {str(e)}", e)
             emit('error', {'message': 'Authentication error occurred', 'type': 'auth_error'})
@@ -405,8 +402,9 @@ def check_canvas_permission_decorator(permission: str = 'view'):
                     emit('error', {'message': 'User or canvas ID missing'})
                     return
                 
-                # Check permission
-                if not check_canvas_permission(canvas_id, user.id, permission):
+                # Check permission (handle both user object and user dict)
+                user_id = user.id if hasattr(user, 'id') else user.get('id')
+                if not check_canvas_permission(canvas_id, user_id, permission):
                     emit('error', {'message': f'{permission.title()} permission required'})
                     return
                 
