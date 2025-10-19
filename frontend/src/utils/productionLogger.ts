@@ -116,7 +116,7 @@ class ProductionLogger {
     }
 
     // Log aggregated results
-    for (const [key, data] of groupedLogs) {
+    for (const [_key, data] of groupedLogs) {
       if (data.count > 1) {
         const duration = (data.lastSeen - data.firstSeen) / 1000
         const aggregatedMessage = `[AGGREGATED] ${data.message} (occurred ${data.count} times in ${duration.toFixed(1)}s)`
