@@ -2,6 +2,7 @@ from flask_socketio import emit, join_room, leave_room
 from app.services.auth_service import AuthService
 from app.extensions import redis_client
 from app.utils.production_logger import production_logger
+from app.utils.railway_logger import railway_logger, log_socket_event, log_cursor_event
 from app.schemas.validation_schemas import CursorMoveEventSchema
 from app.middleware.rate_limiting import check_socket_rate_limit
 from app.utils.validators import ValidationError
@@ -33,27 +34,27 @@ def register_cursor_handlers(socketio):
             raise e
     
     def authenticate_socket_user(id_token):
-        """Authenticate user for Socket.IO events (verbose for debugging)."""
+        """Authenticate user for Socket.IO events (Railway-optimized logging)."""
         try:
-            print(f"=== Socket.IO Cursor Authentication Debug ===")
-            print(f"Token length: {len(id_token) if id_token else 0}")
+            # Use Railway-optimized logging instead of print statements
+            railway_logger.log('cursor', 10, f"Cursor authentication attempt, token length: {len(id_token) if id_token else 0}")
             
             auth_service = AuthService()
             decoded_token = auth_service.verify_token(id_token)
-            print(f"Token verified for user: {decoded_token.get('uid', 'unknown')}")
+            user_id = decoded_token.get('uid', 'unknown')
+            railway_logger.log('cursor', 10, f"Token verified for user: {user_id}")
             
             user = auth_service.get_user_by_id(decoded_token['uid'])
             if not user:
-                print("User not found in database, registering...")
+                railway_logger.log('cursor', 10, "User not found in database, registering...")
                 user = auth_service.register_user(id_token)
-                print(f"User registered: {user.email}")
+                railway_logger.log('cursor', 10, f"User registered: {user.email}")
             else:
-                print(f"User found in database: {user.email}")
+                railway_logger.log('cursor', 10, f"User found in database: {user.email}")
             
             return user
         except Exception as e:
-            print(f"Socket.IO cursor authentication failed: {str(e)}")
-            print(f"Exception type: {type(e)}")
+            railway_logger.log('cursor', 40, f"Socket.IO cursor authentication failed: {str(e)}")
             raise e
     
     @socketio.on('cursor_move')
@@ -85,11 +86,11 @@ def register_cursor_handlers(socketio):
             
             # Check rate limiting
             if not check_socket_rate_limit(user.id, 'cursor_move'):
-                production_logger.log_error(f"Cursor move rate limit exceeded for user {user.id}")
+                railway_logger.log('cursor', 40, f"Cursor move rate limit exceeded for user {user.id}")
                 return
             
-            # Log cursor movement (rate limited)
-            production_logger.log_cursor_move(user.id, position)
+            # Log cursor movement with Railway optimization (high sampling)
+            log_cursor_event(user.id, 'move')
             
             # Store cursor position in Redis
             if redis_client:
@@ -114,9 +115,9 @@ def register_cursor_handlers(socketio):
             }, room=canvas_id, include_self=False)
             
         except ValidationError as e:
-            production_logger.log_error(f"Cursor move validation failed: {e.messages}")
+            railway_logger.log('cursor', 40, f"Cursor move validation failed: {e.messages}")
         except Exception as e:
-            production_logger.log_error(f"Cursor move handler error", e)
+            railway_logger.log('cursor', 40, f"Cursor move handler error: {str(e)}")
             emit('error', {'message': str(e)})
     
     @socketio.on('cursor_leave')

@@ -3,33 +3,34 @@ from app.services.auth_service import AuthService
 from app.extensions import redis_client
 from app.services.sanitization_service import SanitizationService
 from app.middleware.rate_limiting import check_socket_rate_limit
+from app.utils.railway_logger import railway_logger, log_socket_event
 import json
 
 def register_presence_handlers(socketio):
     """Register presence-related Socket.IO event handlers."""
     
     def authenticate_socket_user(id_token):
-        """Authenticate user for Socket.IO events."""
+        """Authenticate user for Socket.IO events (Railway-optimized logging)."""
         try:
-            print(f"=== Socket.IO Presence Authentication Debug ===")
-            print(f"Token length: {len(id_token) if id_token else 0}")
+            # Use Railway-optimized logging instead of print statements
+            railway_logger.log('presence', 10, f"Presence authentication attempt, token length: {len(id_token) if id_token else 0}")
             
             auth_service = AuthService()
             decoded_token = auth_service.verify_token(id_token)
-            print(f"Token verified for user: {decoded_token.get('uid', 'unknown')}")
+            user_id = decoded_token.get('uid', 'unknown')
+            railway_logger.log('presence', 10, f"Token verified for user: {user_id}")
             
             user = auth_service.get_user_by_id(decoded_token['uid'])
             if not user:
-                print("User not found in database, registering...")
+                railway_logger.log('presence', 10, "User not found in database, registering...")
                 user = auth_service.register_user(id_token)
-                print(f"User registered: {user.email}")
+                railway_logger.log('presence', 10, f"User registered: {user.email}")
             else:
-                print(f"User found in database: {user.email}")
+                railway_logger.log('presence', 10, f"User found in database: {user.email}")
             
             return user
         except Exception as e:
-            print(f"Socket.IO presence authentication failed: {str(e)}")
-            print(f"Exception type: {type(e)}")
+            railway_logger.log('presence', 40, f"Socket.IO presence authentication failed: {str(e)}")
             raise e
     
     @socketio.on('user_online')
