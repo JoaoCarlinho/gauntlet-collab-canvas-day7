@@ -7,7 +7,16 @@ from flasgger import Swagger
 import time
 from .config import Config
 from .extensions import db, socketio, cors, migrate
-from .config.logging_config import LoggingConfig
+try:
+    from .config.logging_config import LoggingConfig
+except ImportError:
+    # Fallback logging configuration if logging_config is not available
+    class LoggingConfig:
+        @staticmethod
+        def setup_logging(app):
+            import logging
+            app.logger.setLevel(logging.INFO)
+            print("Using fallback logging configuration")
 
 def create_app(config_class=Config):
     app = Flask(__name__)

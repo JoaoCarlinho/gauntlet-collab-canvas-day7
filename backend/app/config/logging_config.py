@@ -8,7 +8,10 @@ import logging
 import os
 import sys
 from logging.handlers import RotatingFileHandler
-from app.utils.production_logger import production_logger
+try:
+    from app.utils.production_logger import production_logger
+except ImportError:
+    production_logger = None
 
 class LoggingConfig:
     """Centralized logging configuration."""
