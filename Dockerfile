@@ -26,4 +26,4 @@ EXPOSE 5000
 #   CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health/')" || exit 1
 
 # Start the application with error handling
-CMD ["python", "simple_start.py"]
+CMD ["python", "minimal_app.py"]
