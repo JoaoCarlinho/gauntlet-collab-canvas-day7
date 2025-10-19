@@ -1,7 +1,7 @@
 from flask_socketio import emit, join_room, leave_room
 from app.services.auth_service import AuthService
 from app.extensions import redis_client
-from app.utils.logger import SmartLogger
+from app.utils.production_logger import production_logger
 from app.schemas.validation_schemas import CursorMoveEventSchema
 from app.middleware.rate_limiting import check_socket_rate_limit
 from app.utils.validators import ValidationError
@@ -12,7 +12,7 @@ def register_cursor_handlers(socketio):
     """Register cursor-related Socket.IO event handlers."""
     
     # Initialize logger
-    cursor_logger = SmartLogger('cursor_events', 'INFO')
+    # Use production logger for optimized logging
     
     def authenticate_socket_user_quiet(id_token):
         """Authenticate user with minimal logging."""
@@ -23,13 +23,13 @@ def register_cursor_handlers(socketio):
             
             if not user:
                 user = auth_service.register_user(id_token)
-                cursor_logger.log_auth(user.id, "registered")
+                production_logger.log_auth(user.id, "registered")
             else:
-                cursor_logger.log_auth(user.id, "authenticated")
+                production_logger.log_auth(user.id, "authenticated")
             
             return user
         except Exception as e:
-            cursor_logger.log_error(f"Authentication failed", e)
+            production_logger.log_error(f"Authentication failed", e)
             raise e
     
     def authenticate_socket_user(id_token):
@@ -68,7 +68,7 @@ def register_cursor_handlers(socketio):
             try:
                 validated_data = schema.load(sanitized_data)
             except ValidationError as e:
-                cursor_logger.log_error(f"Cursor move validation failed: {e.messages}")
+                production_logger.log_error(f"Cursor move validation failed: {e.messages}")
                 return
             
             canvas_id = validated_data['canvas_id']
@@ -80,16 +80,16 @@ def register_cursor_handlers(socketio):
             try:
                 user = authenticate_socket_user_quiet(id_token)
             except Exception as e:
-                cursor_logger.log_error(f"Cursor authentication failed", e)
+                production_logger.log_error(f"Cursor authentication failed", e)
                 return
             
             # Check rate limiting
             if not check_socket_rate_limit(user.id, 'cursor_move'):
-                cursor_logger.log_error(f"Cursor move rate limit exceeded for user {user.id}")
+                production_logger.log_error(f"Cursor move rate limit exceeded for user {user.id}")
                 return
             
             # Log cursor movement (rate limited)
-            cursor_logger.log_cursor_move(user.id, position)
+            production_logger.log_cursor_move(user.id, position)
             
             # Store cursor position in Redis
             if redis_client:
@@ -114,9 +114,9 @@ def register_cursor_handlers(socketio):
             }, room=canvas_id, include_self=False)
             
         except ValidationError as e:
-            cursor_logger.log_error(f"Cursor move validation failed: {e.messages}")
+            production_logger.log_error(f"Cursor move validation failed: {e.messages}")
         except Exception as e:
-            cursor_logger.log_error(f"Cursor move handler error", e)
+            production_logger.log_error(f"Cursor move handler error", e)
             emit('error', {'message': str(e)})
     
     @socketio.on('cursor_leave')
@@ -133,7 +133,7 @@ def register_cursor_handlers(socketio):
             try:
                 user = authenticate_socket_user_quiet(id_token)
             except Exception as e:
-                cursor_logger.log_error(f"Cursor leave authentication failed", e)
+                production_logger.log_error(f"Cursor leave authentication failed", e)
                 return
             
             # Remove cursor from Redis
@@ -147,7 +147,7 @@ def register_cursor_handlers(socketio):
             }, room=canvas_id, include_self=False)
             
         except Exception as e:
-            cursor_logger.log_error(f"Cursor leave handler error", e)
+            production_logger.log_error(f"Cursor leave handler error", e)
             emit('error', {'message': str(e)})
     
     @socketio.on('get_cursors')
@@ -164,7 +164,7 @@ def register_cursor_handlers(socketio):
             try:
                 user = authenticate_socket_user_quiet(id_token)
             except Exception as e:
-                cursor_logger.log_error(f"Get cursors authentication failed", e)
+                production_logger.log_error(f"Get cursors authentication failed", e)
                 return
             
             # Get all active cursors from Redis
@@ -186,5 +186,5 @@ def register_cursor_handlers(socketio):
             })
             
         except Exception as e:
-            cursor_logger.log_error(f"Get cursors handler error", e)
+            production_logger.log_error(f"Get cursors handler error", e)
             emit('error', {'message': str(e)})

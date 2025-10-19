@@ -8,6 +8,7 @@ import functools
 import time
 from typing import Dict, Any, Optional, Callable
 from flask_socketio import emit
+from flask import request
 from app.services.auth_service import AuthService
 from app.services.canvas_service import CanvasService
 from app.extensions import redis_client
@@ -179,6 +180,66 @@ def check_socket_rate_limit(user_id: str, event_type: str) -> bool:
         
     except Exception as e:
         security_logger.log_error(f"Rate limit check failed: {str(e)}", e)
+        # Allow on error (fail open)
+        return True
+
+
+def check_anonymous_rate_limit(rate_limit_key: str, event_type: str) -> bool:
+    """
+    Check rate limit for anonymous users based on IP address.
+    
+    Args:
+        rate_limit_key: Rate limit key (e.g., "anonymous:ip:event_type")
+        event_type: Type of Socket.IO event
+        
+    Returns:
+        True if within rate limit, False if exceeded
+    """
+    try:
+        if not redis_client:
+            # Allow if Redis not available (fallback)
+            return True
+        
+        # More restrictive limits for anonymous users
+        anonymous_limits = {
+            'cursor_move': {'limit': 10, 'window': 60},  # 10 per minute
+            'object_update': {'limit': 5, 'window': 60},  # 5 per minute
+            'join_canvas': {'limit': 3, 'window': 60},   # 3 per minute
+            'default': {'limit': 5, 'window': 60}        # 5 per minute default
+        }
+        
+        rate_config = anonymous_limits.get(event_type, anonymous_limits['default'])
+        limit = rate_config['limit']
+        window = rate_config['window']
+        
+        # Create rate limit key
+        key = f"rate_limit:anonymous:{rate_limit_key}"
+        
+        # Check current count
+        current_count = redis_client.get(key)
+        
+        if current_count is None:
+            # First request in window
+            redis_client.setex(key, window, 1)
+            return True
+        
+        current_count = int(current_count)
+        
+        if current_count >= limit:
+            # Rate limit exceeded
+            security_logger.log_security(
+                rate_limit_key, 
+                f"anonymous_rate_limit_exceeded_{event_type}", 
+                f"Limit: {limit}/{window}s, Current: {current_count}"
+            )
+            return False
+        
+        # Increment counter
+        redis_client.incr(key)
+        return True
+        
+    except Exception as e:
+        security_logger.log_error(f"Anonymous rate limit check failed: {str(e)}", e)
         # Allow on error (fail open)
         return True
 
@@ -373,26 +434,43 @@ def rate_limit_socket_event(event_type: str):
             try:
                 user = data.get('_authenticated_user')
                 if not user:
-                    emit('error', {'message': 'Authentication required for rate limiting'})
-                    return
-                
-                # Check rate limit
-                if not check_socket_rate_limit(user.id, event_type):
-                    rate_config = SOCKET_RATE_LIMITS.get(event_type, {})
-                    limit = rate_config.get('limit', 'unknown')
-                    window = rate_config.get('window', 'unknown')
-                    security_logger.log_warning(f"Rate limit exceeded for user {user.id} on event {event_type}")
-                    emit('error', {
-                        'message': f'Rate limit exceeded. Limit: {limit} requests per {window} seconds',
-                        'type': 'rate_limit_error'
-                    })
-                    return
+                    # For unauthenticated events, use a default rate limit based on IP or session
+                    # This prevents abuse while allowing basic functionality
+                    client_ip = request.environ.get('REMOTE_ADDR', 'unknown')
+                    rate_limit_key = f"anonymous:{client_ip}:{event_type}"
+                    
+                    # Apply a more restrictive rate limit for anonymous users
+                    if not check_anonymous_rate_limit(rate_limit_key, event_type):
+                        security_logger.log_warning(f"Anonymous rate limit exceeded for IP {client_ip} on event {event_type}")
+                        emit('error', {
+                            'message': 'Rate limit exceeded. Please authenticate for higher limits.',
+                            'type': 'rate_limit_error',
+                            'code': 'ANONYMOUS_RATE_LIMIT'
+                        })
+                        return
+                else:
+                    # Check rate limit for authenticated users
+                    if not check_socket_rate_limit(user.id, event_type):
+                        rate_config = SOCKET_RATE_LIMITS.get(event_type, {})
+                        limit = rate_config.get('limit', 'unknown')
+                        window = rate_config.get('window', 'unknown')
+                        security_logger.log_warning(f"Rate limit exceeded for user {user.id} on event {event_type}")
+                        emit('error', {
+                            'message': f'Rate limit exceeded. Limit: {limit} requests per {window} seconds',
+                            'type': 'rate_limit_error',
+                            'code': 'AUTHENTICATED_RATE_LIMIT'
+                        })
+                        return
                 
                 return func(data, *args, **kwargs)
                 
             except Exception as e:
                 security_logger.log_error(f"Rate limit check error: {str(e)}", e)
-                emit('error', {'message': 'Rate limit check failed'})
+                emit('error', {
+                    'message': 'Rate limit check failed',
+                    'type': 'rate_limit_error',
+                    'code': 'RATE_LIMIT_CHECK_ERROR'
+                })
                 return
         
         return wrapper

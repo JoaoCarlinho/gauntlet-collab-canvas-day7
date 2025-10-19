@@ -6,10 +6,14 @@ from flask_migrate import Migrate
 from flasgger import Swagger
 from .config import Config
 from .extensions import db, socketio, cors, migrate
+from .config.logging_config import LoggingConfig
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
+    # Setup optimized logging configuration
+    LoggingConfig.setup_logging(app)
     
     # Initialize extensions
     db.init_app(app)
@@ -216,9 +220,13 @@ def create_app(config_class=Config):
         except Exception as e:
             print(f"Error creating database tables: {e}")
     
-    # Add health check endpoint
+    # Add health check endpoints
     @app.route('/health')
     def health_check():
+        return {'status': 'healthy', 'message': 'CollabCanvas API is running'}, 200
+    
+    @app.route('/api/health')
+    def api_health_check():
         return {'status': 'healthy', 'message': 'CollabCanvas API is running'}, 200
     
     @app.route('/test-firebase')

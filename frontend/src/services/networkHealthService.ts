@@ -6,6 +6,7 @@
 
 import { errorLogger } from '../utils/errorLogger'
 import { retryWithCondition, isRetryableError } from '../utils/retryLogic'
+import { productionLogger } from '../utils/productionLogger'
 import toast from 'react-hot-toast'
 
 export interface NetworkStatus {
@@ -110,7 +111,7 @@ class NetworkHealthService {
       this.performHealthCheck()
     }, this.config.checkInterval)
 
-    console.log('Network health monitoring started')
+    productionLogger.info('Network health monitoring started')
   }
 
   /**
@@ -122,7 +123,7 @@ class NetworkHealthService {
       this.checkInterval = null
     }
     this.isMonitoring = false
-    console.log('Network health monitoring stopped')
+    productionLogger.info('Network health monitoring stopped')
   }
 
   /**
@@ -291,11 +292,11 @@ class NetworkHealthService {
     this.networkStatus.isOnline = isOnline
 
     if (isOnline) {
-      console.log('Network connection restored')
+      productionLogger.info('Network connection restored')
       toast.success('Connection restored', { duration: 3000 })
       this.performHealthCheck()
     } else {
-      console.log('Network connection lost')
+      productionLogger.warning('Network connection lost')
       toast.error('Network connection lost. Some features may be limited.', { duration: 5000 })
     }
 
@@ -409,7 +410,7 @@ class NetworkHealthService {
         try {
           callback(data)
         } catch (error) {
-          console.error('Error in network health listener:', error)
+          productionLogger.error('Error in network health listener', error)
         }
       })
     }

@@ -72,8 +72,21 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     DEBUG = False
     FLASK_ENV = 'production'
-    # Minimal logging for production
+    # Optimized logging for Railway production
     SOCKETIO_LOGGER = False
     SOCKETIO_ENGINEIO_LOGGER = False
     LOG_LEVEL = 'WARNING'
     CURSOR_LOG_LEVEL = 'ERROR'  # Only log cursor errors in production
+    
+    # Railway logging optimization
+    RAILWAY_LOG_OPTIMIZATION = True
+    MAX_LOGS_PER_MINUTE = 200
+    LOG_AGGREGATION_ENABLED = True
+    LOG_RATE_LIMITING_ENABLED = True
+    
+    # Component-specific log levels
+    SOCKET_IO_LOG_LEVEL = 'ERROR'
+    AI_AGENT_LOG_LEVEL = 'ERROR'
+    NETWORK_HEALTH_LOG_LEVEL = 'ERROR'
+    CURSOR_EVENTS_LOG_LEVEL = 'ERROR'
+    OBJECT_UPDATE_LOG_LEVEL = 'ERROR'
