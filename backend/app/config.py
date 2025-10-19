@@ -24,7 +24,7 @@ class Config:
     # CORS Configuration
     CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5173').split(',')
     
-    # Socket.IO Logging Configuration
+    # Socket.IO Logging Configuration (disabled by default for production)
     SOCKETIO_LOGGER = os.environ.get('SOCKETIO_LOGGER', 'false').lower() == 'true'
     SOCKETIO_ENGINEIO_LOGGER = os.environ.get('SOCKETIO_ENGINEIO_LOGGER', 'false').lower() == 'true'
     
@@ -72,21 +72,25 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     DEBUG = False
     FLASK_ENV = 'production'
-    # Optimized logging for Railway production
-    SOCKETIO_LOGGER = False
-    SOCKETIO_ENGINEIO_LOGGER = False
-    LOG_LEVEL = 'WARNING'
+    
+    # Aggressive logging reduction for Railway production
+    SOCKETIO_LOGGER = False  # Completely disable Socket.IO logging
+    SOCKETIO_ENGINEIO_LOGGER = False  # Completely disable Engine.IO logging
+    LOG_LEVEL = 'ERROR'  # Only log errors in production
     CURSOR_LOG_LEVEL = 'ERROR'  # Only log cursor errors in production
     
-    # Railway logging optimization
+    # Railway logging optimization - more aggressive
     RAILWAY_LOG_OPTIMIZATION = True
-    MAX_LOGS_PER_MINUTE = 200
+    MAX_LOGS_PER_MINUTE = 50  # Reduced from 200 to 50
     LOG_AGGREGATION_ENABLED = True
     LOG_RATE_LIMITING_ENABLED = True
     
-    # Component-specific log levels
+    # Component-specific log levels - all set to ERROR only
     SOCKET_IO_LOG_LEVEL = 'ERROR'
     AI_AGENT_LOG_LEVEL = 'ERROR'
     NETWORK_HEALTH_LOG_LEVEL = 'ERROR'
     CURSOR_EVENTS_LOG_LEVEL = 'ERROR'
     OBJECT_UPDATE_LOG_LEVEL = 'ERROR'
+    AUTH_LOG_LEVEL = 'ERROR'
+    CANVAS_LOG_LEVEL = 'ERROR'
+    COLLABORATION_LOG_LEVEL = 'ERROR'

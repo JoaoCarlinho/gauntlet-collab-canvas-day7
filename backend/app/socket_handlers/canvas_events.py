@@ -11,9 +11,10 @@ from app.middleware.socket_security import (
 from app.utils.validators import ValidationError
 from app.services.sanitization_service import SanitizationService
 from app.utils.logger import SmartLogger
+from app.utils.railway_logger import railway_logger, log_socket_event, log_auth_event, log_canvas_event, log_object_event
 from app.socket_handlers.error_handlers import (
     handle_socket_error, handle_authentication_error, handle_validation_error,
-    handle_permission_error, log_socket_event, emit_error_response
+    handle_permission_error, emit_error_response
 )
 import json
 
@@ -23,26 +24,25 @@ def register_canvas_handlers(socketio):
     def authenticate_socket_user(id_token):
         """Authenticate user for Socket.IO events."""
         try:
-            print(f"=== Socket.IO Authentication Debug ===")
-            print(f"Token length: {len(id_token) if id_token else 0}")
-            print(f"Token starts with: {id_token[:50] if id_token else 'None'}...")
+            # Use Railway-optimized logging instead of print statements
+            railway_logger.log('socket_io', 10, f"Socket.IO authentication attempt, token length: {len(id_token) if id_token else 0}")
             
             auth_service = AuthService()
             decoded_token = auth_service.verify_token(id_token)
-            print(f"Token verified for user: {decoded_token.get('uid', 'unknown')}")
+            user_id = decoded_token.get('uid', 'unknown')
+            railway_logger.log('socket_io', 10, f"Token verified for user: {user_id}")
             
             user = auth_service.get_user_by_id(decoded_token['uid'])
             if not user:
-                print("User not found in database, registering...")
+                railway_logger.log('socket_io', 10, "User not found in database, registering...")
                 user = auth_service.register_user(id_token)
-                print(f"User registered: {user.email}")
+                log_auth_event(user_id, 'register', True)
             else:
-                print(f"User found in database: {user.email}")
+                log_auth_event(user_id, 'authenticate', True)
             
             return user
         except Exception as e:
-            print(f"Socket.IO authentication failed: {str(e)}")
-            print(f"Exception type: {type(e)}")
+            railway_logger.log('socket_io', 40, f"Socket.IO authentication failed: {str(e)}")
             raise e
     
     @socketio.on('join_canvas')
@@ -73,7 +73,7 @@ def register_canvas_handlers(socketio):
             
         except Exception as e:
             handle_socket_error(e, 'join_canvas', data.get('_authenticated_user', {}).get('id'))
-            log_socket_event('join_canvas', data.get('_authenticated_user', {}).get('id'), False)
+            log_socket_event('canvas', 'join_canvas', False)
     
     @socketio.on('leave_canvas')
     @secure_socket_event('leave_canvas', 'view')
@@ -94,7 +94,7 @@ def register_canvas_handlers(socketio):
             
         except Exception as e:
             handle_socket_error(e, 'leave_canvas', data.get('_authenticated_user', {}).get('id'))
-            log_socket_event('leave_canvas', data.get('_authenticated_user', {}).get('id'), False)
+            log_socket_event('canvas', 'leave_canvas', False)
     
     @socketio.on('object_created')
     @secure_socket_event('object_created', 'edit')
@@ -114,12 +114,16 @@ def register_canvas_handlers(socketio):
                 created_by=user.id
             )
             
+            # Log successful object creation
+            log_object_event(canvas_id, 'created', object_data['type'], True)
+            
             # Broadcast to all users in the canvas room (including the creator)
             emit('object_created', {
                 'object': canvas_object.to_dict()
             }, room=canvas_id, include_self=True)
             
         except Exception as e:
+            log_object_event(canvas_id, 'created', object_data.get('type', 'unknown'), False)
             emit('error', {'message': str(e)})
     
     @socketio.on('object_updated')
