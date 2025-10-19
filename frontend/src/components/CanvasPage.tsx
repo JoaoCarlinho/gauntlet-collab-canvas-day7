@@ -16,6 +16,7 @@ import { updateQueueManager, QueueStats } from '../services/updateQueueManager'
 import { connectionMonitor } from '../services/connectionMonitor'
 import { offlineManager } from '../services/offlineManager'
 import { objectUpdateDebouncer } from '../utils/debounce'
+import { enhancedErrorHandler } from '../services/enhancedErrorHandler'
 // import { batchUpdateManager, useBatchUpdates } from '../utils/batchUpdates'
 // import { socketEventOptimizer, useSocketOptimization } from '../utils/socketOptimizer'
 import { isDevelopmentMode, devModeDelay } from '../utils/devMode'
@@ -463,14 +464,15 @@ const CanvasPage: React.FC = () => {
       setConnectionStatus('error')
       
       // Use enhanced error handler for better error management
-      const { enhancedErrorHandler } = require('../services/enhancedErrorHandler')
       enhancedErrorHandler.handleSocketError(data.error, {
         operation: 'socket_connection',
         component: 'CanvasPage',
         canvasId: canvasId,
         additionalData: {
           errorType: data.type,
-          timestamp: data.timestamp
+          timestamp: data.timestamp,
+          errorId: data.error?.error_id,
+          eventType: data.error?.event_type
         }
       })
     })
@@ -490,7 +492,6 @@ const CanvasPage: React.FC = () => {
       })
       
       // Use enhanced error handler for better error management
-      const { enhancedErrorHandler } = require('../services/enhancedErrorHandler')
       enhancedErrorHandler.handleSocketError(data.error, {
         operation: 'object_update',
         component: 'CanvasPage',
