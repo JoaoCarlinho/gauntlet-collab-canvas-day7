@@ -15,7 +15,8 @@ class AISecurityService:
     """Service for securing AI Agent operations."""
     
     def __init__(self):
-        self.logger = SmartLogger('ai_security_service', 'INFO')
+        # Use WARNING level to reduce log volume on Railway
+        self.logger = SmartLogger('ai_security_service', 'WARNING')
         self.sanitization_service = SanitizationService()
         
         # Security patterns for prompt injection detection

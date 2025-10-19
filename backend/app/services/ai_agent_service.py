@@ -15,13 +15,39 @@ class AIAgentService:
     """Service for AI-powered canvas creation."""
     
     def __init__(self):
-        self.logger = SmartLogger('ai_agent_service', 'INFO')
-        self.openai_client = openai.OpenAI(
-            api_key=os.environ.get('OPENAI_API_KEY')
-        )
-        self.auth_service = AuthService()
-        self.performance_service = AIPerformanceService()
-        self.security_service = AISecurityService()
+        # Use WARNING level to reduce log volume on Railway
+        self.logger = SmartLogger('ai_agent_service', 'WARNING')
+        
+        # Check OpenAI API key
+        api_key = os.environ.get('OPENAI_API_KEY')
+        if not api_key:
+            self.logger.log_error("OPENAI_API_KEY environment variable not set")
+            raise ValueError("OpenAI API key is required but not configured")
+        
+        try:
+            # Initialize OpenAI client with minimal configuration
+            self.openai_client = openai.OpenAI(
+                api_key=api_key,
+                timeout=30.0,  # 30 second timeout
+                max_retries=2
+            )
+            # Only log success in development
+            if os.environ.get('FLASK_ENV') == 'development':
+                self.logger.log_info("OpenAI client initialized successfully")
+        except Exception as e:
+            self.logger.log_error(f"Failed to initialize OpenAI client: {str(e)}", e)
+            raise
+        
+        try:
+            self.auth_service = AuthService()
+            self.performance_service = AIPerformanceService()
+            self.security_service = AISecurityService()
+            # Only log success in development
+            if os.environ.get('FLASK_ENV') == 'development':
+                self.logger.log_info("AI Agent Service dependencies initialized successfully")
+        except Exception as e:
+            self.logger.log_error(f"Failed to initialize AI Agent Service dependencies: {str(e)}", e)
+            raise
     
     def create_canvas_from_query(
         self, 
@@ -33,7 +59,19 @@ class AIAgentService:
     ) -> Dict[str, Any]:
         """Create canvas objects from natural language query."""
         try:
+            # Only log detailed info in development
+            if os.environ.get('FLASK_ENV') == 'development':
+                self.logger.log_info(f"Starting AI canvas creation for user {user_id} with query: {query[:100]}...")
+            
+            # Validate input parameters
+            if not query or not query.strip():
+                raise ValueError("Query cannot be empty")
+            if not user_id or not user_id.strip():
+                raise ValueError("User ID cannot be empty")
+            
             # Sanitize and validate user query
+            if os.environ.get('FLASK_ENV') == 'development':
+                self.logger.log_info("Sanitizing user query...")
             sanitized_query = self.security_service.sanitize_user_query(query)
             
             # Optimize request and check for common patterns
@@ -100,7 +138,19 @@ class AIAgentService:
             return result
             
         except Exception as e:
+            import traceback
+            error_details = {
+                'error': str(e),
+                'error_type': type(e).__name__,
+                'traceback': traceback.format_exc(),
+                'query': query[:100] if query else 'None',
+                'user_id': user_id,
+                'canvas_id': canvas_id,
+                'style': style,
+                'color_scheme': color_scheme
+            }
             self.logger.log_error(f"AI canvas creation failed: {str(e)}", e)
+            self.logger.log_error(f"Error details: {error_details}")
             raise
     
     def _generate_ai_response(self, query: str, style: str, color_scheme: str) -> str:

@@ -1,8 +1,10 @@
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin
 from datetime import datetime, timezone
 import os
 from marshmallow import ValidationError
 from app.services.ai_agent_service import AIAgentService
+from app.services.ai_agent_simple import SimpleAIAgentService
 from app.services.auth_service import require_auth
 from app.schemas.ai_agent_schemas import (
     CanvasCreationRequestSchema, 
@@ -13,9 +15,10 @@ from app.middleware.rate_limiting import ai_rate_limit
 from app.utils.logger import SmartLogger
 
 ai_agent_bp = Blueprint('ai_agent', __name__, url_prefix='/api/ai-agent')
-logger = SmartLogger('ai_agent_routes', 'INFO')
+logger = SmartLogger('ai_agent_routes', 'WARNING')
 
-@ai_agent_bp.route('/create-canvas', methods=['POST'])
+@ai_agent_bp.route('/create-canvas', methods=['POST', 'OPTIONS'])
+@cross_origin(origins=['*'], supports_credentials=True)
 @require_auth
 @ai_rate_limit('create_canvas')
 def create_canvas_with_ai(current_user):
@@ -86,8 +89,12 @@ def create_canvas_with_ai(current_user):
         schema = CanvasCreationRequestSchema()
         data = schema.load(request.json)
         
-        # Initialize AI agent service
-        ai_service = AIAgentService()
+        # Initialize AI agent service (try simple service first)
+        try:
+            ai_service = SimpleAIAgentService()
+        except Exception as e:
+            logger.log_error(f"Simple AI service failed, falling back to full service: {str(e)}", e)
+            ai_service = AIAgentService()
         
         # Process the query and generate canvas objects
         result = ai_service.create_canvas_from_query(
@@ -98,7 +105,9 @@ def create_canvas_with_ai(current_user):
             color_scheme=data.get('colorScheme', 'default')
         )
         
-        logger.log_info(f"AI canvas created successfully for user {current_user.id}")
+        # Only log success in development
+        if os.environ.get('FLASK_ENV') == 'development':
+            logger.log_info(f"AI canvas created successfully for user {current_user.id}")
         
         return jsonify({
             'success': True,

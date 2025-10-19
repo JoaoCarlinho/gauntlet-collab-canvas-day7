@@ -17,7 +17,8 @@ class AIPerformanceService:
     """Service for optimizing AI Agent performance."""
     
     def __init__(self):
-        self.logger = SmartLogger('ai_performance_service', 'INFO')
+        # Use WARNING level to reduce log volume on Railway
+        self.logger = SmartLogger('ai_performance_service', 'WARNING')
         self.request_cache = {}
         self.performance_metrics = {
             'total_requests': 0,
