@@ -3,11 +3,15 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { signInWithGoogleRedirect } from '../services/firebase'
 import { AlertCircle, RefreshCw } from 'lucide-react'
+import EmailPasswordForm from './EmailPasswordForm'
+import AuthenticationMethodSelector from './AuthenticationMethodSelector'
 
 const LoginPage: React.FC = () => {
   const { isAuthenticated, signIn, isLoading } = useAuth()
   const [showFallback, setShowFallback] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
+  const [authMethod, setAuthMethod] = useState<'google' | 'email'>('google')
+  const [emailMode, setEmailMode] = useState<'login' | 'register'>('login')
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />
@@ -55,7 +59,15 @@ const LoginPage: React.FC = () => {
             Real-time collaborative canvas for teams. Create, share, and collaborate on visual designs.
           </p>
           
-          {!showFallback ? (
+          {/* Authentication Method Selection */}
+          <AuthenticationMethodSelector
+            selectedMethod={authMethod}
+            onMethodChange={setAuthMethod}
+          />
+          
+          {/* Authentication Forms */}
+          {authMethod === 'google' ? (
+            !showFallback ? (
             // Primary sign-in button
             <button
               onClick={handleSignIn}
@@ -126,6 +138,17 @@ const LoginPage: React.FC = () => {
                 </button>
               </div>
             </div>
+          )
+          ) : (
+            // Email/Password form
+            <EmailPasswordForm
+              mode={emailMode}
+              onModeChange={setEmailMode}
+              onSuccess={() => {
+                // Success is handled by the auth hook
+                console.log('Email/password authentication successful')
+              }}
+            />
           )}
           
           <div className="mt-8 text-xs text-gray-500">

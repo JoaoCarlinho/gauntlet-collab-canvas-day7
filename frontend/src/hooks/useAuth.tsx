@@ -8,7 +8,12 @@ import {
   AuthenticationError,
   refreshFirebaseToken,
   isUserAuthenticated,
-  initializeAuthPersistence
+  initializeAuthPersistence,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateUserPassword,
+  reauthenticateWithEmailAndPassword
 } from '../services/firebase'
 import { authAPI } from '../services/api'
 import { User, AuthState } from '../types'
@@ -19,6 +24,12 @@ interface AuthContextType extends AuthState {
   signOut: () => Promise<void>
   refreshUser: () => Promise<void>
   checkAuthState: () => void
+  // Email/Password authentication methods
+  signInWithEmailPassword: (email: string, password: string) => Promise<void>
+  registerWithEmailPassword: (email: string, password: string) => Promise<void>
+  resetPassword: (email: string) => Promise<void>
+  updatePassword: (newPassword: string) => Promise<void>
+  reauthenticateWithEmailPassword: (email: string, password: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -379,6 +390,129 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [])
 
+  // Email/Password Authentication Methods
+
+  const signInWithEmailPassword = async (email: string, password: string): Promise<void> => {
+    try {
+      setIsLoading(true)
+      console.log('=== Email/Password Sign-in Started ===')
+      
+      const firebaseUser = await signInWithEmailAndPassword(email, password)
+      await processUserAuthentication(firebaseUser)
+      
+      console.log('=== Email/Password Sign-in Completed ===')
+    } catch (error) {
+      console.error('Email/password sign-in failed:', error)
+      
+      if (error instanceof AuthenticationError) {
+        toast.error(error.message)
+      } else {
+        toast.error('Sign-in failed. Please try again.')
+      }
+      
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const registerWithEmailPassword = async (email: string, password: string): Promise<void> => {
+    try {
+      setIsLoading(true)
+      console.log('=== Email/Password Registration Started ===')
+      
+      const firebaseUser = await createUserWithEmailAndPassword(email, password)
+      await processUserAuthentication(firebaseUser)
+      
+      toast.success('Account created successfully!')
+      console.log('=== Email/Password Registration Completed ===')
+    } catch (error) {
+      console.error('Email/password registration failed:', error)
+      
+      if (error instanceof AuthenticationError) {
+        toast.error(error.message)
+      } else {
+        toast.error('Registration failed. Please try again.')
+      }
+      
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const resetPassword = async (email: string): Promise<void> => {
+    try {
+      setIsLoading(true)
+      console.log('=== Password Reset Started ===')
+      
+      await sendPasswordResetEmail(email)
+      toast.success('Password reset email sent! Check your inbox.')
+      
+      console.log('=== Password Reset Completed ===')
+    } catch (error) {
+      console.error('Password reset failed:', error)
+      
+      if (error instanceof AuthenticationError) {
+        toast.error(error.message)
+      } else {
+        toast.error('Failed to send password reset email. Please try again.')
+      }
+      
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const updatePassword = async (newPassword: string): Promise<void> => {
+    try {
+      setIsLoading(true)
+      console.log('=== Password Update Started ===')
+      
+      await updateUserPassword(newPassword)
+      toast.success('Password updated successfully!')
+      
+      console.log('=== Password Update Completed ===')
+    } catch (error) {
+      console.error('Password update failed:', error)
+      
+      if (error instanceof AuthenticationError) {
+        toast.error(error.message)
+      } else {
+        toast.error('Failed to update password. Please try again.')
+      }
+      
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const reauthenticateWithEmailPassword = async (email: string, password: string): Promise<void> => {
+    try {
+      setIsLoading(true)
+      console.log('=== Re-authentication Started ===')
+      
+      await reauthenticateWithEmailAndPassword(email, password)
+      toast.success('Re-authentication successful!')
+      
+      console.log('=== Re-authentication Completed ===')
+    } catch (error) {
+      console.error('Re-authentication failed:', error)
+      
+      if (error instanceof AuthenticationError) {
+        toast.error(error.message)
+      } else {
+        toast.error('Re-authentication failed. Please try again.')
+      }
+      
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -387,6 +521,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     refreshUser,
     checkAuthState,
+    // Email/Password authentication methods
+    signInWithEmailPassword,
+    registerWithEmailPassword,
+    resetPassword,
+    updatePassword,
+    reauthenticateWithEmailPassword,
   }
 
   return (
