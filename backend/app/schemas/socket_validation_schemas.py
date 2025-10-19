@@ -50,11 +50,11 @@ class ObjectCreateEventSchema(Schema):
         object_data = data.get('object')
         if object_data:
             try:
-                # Validate object type
-                object_type = object_data.get('object_type')
+                # Validate object type (frontend sends 'type', not 'object_type')
+                object_type = object_data.get('type')
                 if object_type:
                     InputValidator.validate_enum_value(
-                        object_type, 'object_type',
+                        object_type, 'type',
                         ['rectangle', 'circle', 'text', 'heart', 'star', 'diamond', 'line', 'arrow']
                     )
                 

@@ -140,17 +140,33 @@ class ObjectCreationService {
           resolve(data.object)
         }
 
-        // Listen for failure
-        const onFailure = (data: { error: any }) => {
+        // Listen for failure (backend emits 'error' events)
+        const onFailure = (data: { message: string; type?: string }) => {
           clearTimeout(timeout)
           socketService.off('object_created', onSuccess)
-          socketService.off('object_creation_failed', onFailure)
-          reject(new Error(data.error?.message || 'Socket creation failed'))
+          socketService.off('error', onFailure)
+          
+          // Classify error type for better handling
+          const errorMessage = data.message || 'Socket creation failed'
+          const error = new Error(errorMessage)
+          
+          // Add error classification
+          if (errorMessage.includes('User or canvas ID missing')) {
+            error.name = 'ValidationError'
+          } else if (errorMessage.includes('Authentication')) {
+            error.name = 'AuthenticationError'
+          } else if (errorMessage.includes('permission')) {
+            error.name = 'PermissionError'
+          } else {
+            error.name = 'SocketError'
+          }
+          
+          reject(error)
         }
 
         // Set up listeners
         socketService.on('object_created', onSuccess)
-        socketService.on('object_creation_failed', onFailure)
+        socketService.on('error', onFailure)
 
         // Send the creation request
         socketService.createObject(canvasId, idToken, object)

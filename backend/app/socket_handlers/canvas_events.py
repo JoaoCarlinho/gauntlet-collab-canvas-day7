@@ -106,6 +106,7 @@ def register_canvas_handlers(socketio):
             object_data = data.get('object')
             
             # Create object in database
+            canvas_service = CanvasService()
             canvas_object = canvas_service.create_canvas_object(
                 canvas_id=canvas_id,
                 object_type=object_data['type'],
