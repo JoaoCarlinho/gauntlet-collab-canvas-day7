@@ -7,9 +7,17 @@ class SocketService {
   private socket: Socket | null = null
   private listeners: Map<string, Function[]> = new Map()
   private debugMode = import.meta.env.VITE_DEBUG_SOCKET === 'true'
+  private connectionState: 'disconnected' | 'connecting' | 'connected' | 'reconnecting' = 'disconnected'
+  private connectionAttempts = 0
+  private lastConnectionTime: number | null = null
+  private connectionQuality: 'excellent' | 'good' | 'poor' | 'unknown' = 'unknown'
 
   connect(idToken?: string) {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+    
+    // Update connection state
+    this.connectionState = 'connecting'
+    this.connectionAttempts++
     
     // Check if we're in development mode
     const isDevelopment = import.meta.env.DEV || 
@@ -23,6 +31,8 @@ class SocketService {
       console.log('API URL:', API_URL)
       console.log('Development mode:', isDevelopment)
       console.log('Token length:', idToken?.length || 0)
+      console.log('Connection state:', this.connectionState)
+      console.log('Connection attempts:', this.connectionAttempts)
     }
     
     const socketConfig: any = {
@@ -48,41 +58,63 @@ class SocketService {
     this.socket = io(API_URL, socketConfig)
 
     this.socket.on('connect', () => {
+      this.connectionState = 'connected'
+      this.connectionAttempts = 0
+      this.lastConnectionTime = Date.now()
+      this.connectionQuality = 'excellent' // Reset quality on successful connection
+      
       if (this.debugMode) {
         console.log('=== Socket.IO Connected Successfully ===')
         console.log('Socket ID:', this.socket?.id)
+        console.log('Connection state:', this.connectionState)
+        console.log('Connection attempts:', this.connectionAttempts)
       }
       
       // Notify connection monitor of successful connection
       this.emit('connection_restored', {
         socketId: this.socket?.id,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        connectionState: this.connectionState,
+        connectionQuality: this.connectionQuality
       })
     })
 
     this.socket.on('disconnect', (reason) => {
+      this.connectionState = 'disconnected'
+      this.connectionQuality = 'poor'
+      
       if (this.debugMode) {
         console.log('=== Socket.IO Disconnected ===')
         console.log('Reason:', reason)
+        console.log('Connection state:', this.connectionState)
       }
       
       // Notify connection monitor of disconnection
       this.emit('connection_lost', {
         reason,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        connectionState: this.connectionState,
+        connectionQuality: this.connectionQuality
       })
     })
 
     // Track reconnection attempts
     this.socket.on('reconnect_attempt', (attemptNumber) => {
+      this.connectionState = 'reconnecting'
+      this.connectionAttempts = attemptNumber
+      this.connectionQuality = 'poor'
+      
       if (this.debugMode) {
         console.log('=== Socket.IO Reconnection Attempt ===')
         console.log('Attempt:', attemptNumber)
+        console.log('Connection state:', this.connectionState)
       }
       
       this.emit('reconnection_attempt', {
         attempt: attemptNumber,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        connectionState: this.connectionState,
+        connectionQuality: this.connectionQuality
       })
     })
 
@@ -507,6 +539,43 @@ class SocketService {
   // Update optimization configuration
   updateOptimizationConfig(config: any) {
     socketEventOptimizer.updateConfig(config)
+  }
+
+  // Connection state management methods
+  getConnectionState(): 'disconnected' | 'connecting' | 'connected' | 'reconnecting' {
+    return this.connectionState
+  }
+
+  getConnectionQuality(): 'excellent' | 'good' | 'poor' | 'unknown' {
+    return this.connectionQuality
+  }
+
+  getConnectionAttempts(): number {
+    return this.connectionAttempts
+  }
+
+  getLastConnectionTime(): number | null {
+    return this.lastConnectionTime
+  }
+
+  isConnected(): boolean {
+    return this.connectionState === 'connected' && this.socket?.connected === true
+  }
+
+  isConnecting(): boolean {
+    return this.connectionState === 'connecting' || this.connectionState === 'reconnecting'
+  }
+
+  getConnectionInfo() {
+    return {
+      state: this.connectionState,
+      quality: this.connectionQuality,
+      attempts: this.connectionAttempts,
+      lastConnectionTime: this.lastConnectionTime,
+      socketId: this.socket?.id,
+      connected: this.socket?.connected,
+      transport: this.socket?.io?.engine?.transport?.name
+    }
   }
 }
 
