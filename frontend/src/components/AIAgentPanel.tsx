@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAIAgent } from '../hooks/useAIAgent';
 import { useNotifications } from '../hooks/useNotifications';
-import { socketService } from '../services/socket';
+import { objectCreationService } from '../services/objectCreationService';
 import { useAuth } from '../hooks/useAuth';
 
 interface AIAgentPanelProps {
@@ -44,12 +44,24 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
           const token = localStorage.getItem('idToken');
           
           if (token) {
-            // Add each object to the canvas
+            // Add each object to the canvas with fallback mechanism
             for (const obj of result.canvas.objects) {
-              socketService.createObject(currentCanvasId, token, {
-                type: obj.object_type,
-                properties: obj.properties
-              });
+              try {
+                const creationResult = await objectCreationService.createObject(
+                  currentCanvasId, 
+                  token, 
+                  {
+                    type: obj.object_type,
+                    properties: obj.properties
+                  }
+                );
+                
+                if (!creationResult.success) {
+                  console.error('Failed to create AI object:', creationResult.error);
+                }
+              } catch (error) {
+                console.error('Error creating AI object:', error);
+              }
             }
           }
         }

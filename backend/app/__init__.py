@@ -105,7 +105,7 @@ def create_app(config_class=Config):
     
     socketio.init_app(
         app, 
-        cors_allowed_origins="*",  # Temporary wildcard for Socket.IO
+        cors_allowed_origins=allowed_origins,  # Use same CORS origins as Flask app
         manage_session=False,
         logger=app.config.get('SOCKETIO_LOGGER', False),  # Environment controlled
         engineio_logger=app.config.get('SOCKETIO_ENGINEIO_LOGGER', False),  # Environment controlled
@@ -205,20 +205,46 @@ def create_app(config_class=Config):
     # Add Socket.IO connection authentication
     @socketio.on('connect')
     def handle_connect(auth=None):
-        """Handle Socket.IO connection."""
-        # Only log in development mode
-        if app.config.get('DEBUG', False):
-            print("=== Socket.IO Connection Established ===")
-            print(f"Auth data: {auth}")
-        
-        # Ensure Firebase is initialized
+        """Handle Socket.IO connection with proper authentication."""
         try:
-            from app.services.auth_service import AuthService
-            auth_service = AuthService()
+            # Only log in development mode
             if app.config.get('DEBUG', False):
-                print("Firebase Admin SDK is properly initialized for Socket.IO")
+                print("=== Socket.IO Connection Attempt ===")
+                print(f"Auth data: {auth}")
+            
+            # Check if we're in development mode (skip auth)
+            is_development = app.config.get('DEBUG', False) or app.config.get('FLASK_ENV') == 'development'
+            
+            if is_development:
+                print("Development mode: Allowing Socket.IO connection without authentication")
+                return True
+            
+            # Production mode: require authentication
+            if not auth or not auth.get('token'):
+                print("Socket.IO connection rejected: No authentication token provided")
+                return False
+            
+            # Verify the Firebase token
+            try:
+                from app.services.auth_service import AuthService
+                auth_service = AuthService()
+                decoded_token = auth_service.verify_token(auth['token'])
+                
+                # Get or create user
+                user = auth_service.get_user_by_id(decoded_token['uid'])
+                if not user:
+                    user = auth_service.register_user(auth['token'])
+                
+                print(f"Socket.IO connection authenticated for user: {user.email}")
+                return True
+                
+            except Exception as e:
+                print(f"Socket.IO authentication failed: {str(e)}")
+                return False
+                
         except Exception as e:
-            print(f"Firebase initialization check failed: {e}")
+            print(f"Socket.IO connection error: {str(e)}")
+            return False
     
     @socketio.on('disconnect')
     def handle_disconnect():
