@@ -21,9 +21,9 @@ ENV PYTHONPATH=/app
 # Expose port
 EXPOSE 5000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health/')" || exit 1
+# Health check disabled for Railway deployment
+# HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+#   CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health/')" || exit 1
 
 # Start the application
 CMD ["python", "run.py"]
