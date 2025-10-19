@@ -16,5 +16,8 @@
 // Import commands.js using ES2015 syntax:
 import './commands'
 
+// Import authentication helpers for production testing
+import './auth-helpers'
+
 // Alternatively you can use CommonJS syntax:
 // require('./commands')

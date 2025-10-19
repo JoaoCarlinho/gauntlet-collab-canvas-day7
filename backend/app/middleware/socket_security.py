@@ -364,15 +364,21 @@ def require_socket_auth(func: Callable) -> Callable:
         try:
             from flask import session
             
+            # Debug session information
+            security_logger.log_info(f"Socket event authentication check - Session keys: {list(session.keys())}")
+            security_logger.log_info(f"Socket event authentication check - Data keys: {list(data.keys()) if data else 'None'}")
+            
             # Get user from session (set during connection)
             user_data = session.get('authenticated_user')
             if not user_data:
                 security_logger.log_warning("Socket event missing authenticated user context")
+                security_logger.log_warning(f"Session contents: {dict(session)}")
                 emit('error', {'message': 'User not authenticated', 'type': 'auth_error'})
                 return
             
             # Add user to data for use in handler
             data['_authenticated_user'] = user_data
+            security_logger.log_info(f"Socket event authenticated for user: {user_data.get('email', 'unknown')}")
             
             return func(data, *args, **kwargs)
             
