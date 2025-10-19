@@ -6,6 +6,7 @@
 
 import { networkHealthService, NetworkStatus } from './networkHealthService'
 import { errorLogger } from '../utils/errorLogger'
+import { productionLogger } from '../utils/productionLogger'
 import toast from 'react-hot-toast'
 
 export interface OfflineAction {
@@ -100,7 +101,7 @@ class OfflineModeService {
    * Handle network lost
    */
   private handleNetworkLost(): void {
-    console.log('Network lost - entering offline mode')
+    productionLogger.warning('Network lost - entering offline mode')
     toast.error('Connection lost. Working in offline mode.', { duration: 5000 })
     this.notifyListeners('offlineMode', { isOffline: true })
   }
@@ -109,7 +110,7 @@ class OfflineModeService {
    * Handle network restored
    */
   private handleNetworkRestored(): void {
-    console.log('Network restored - exiting offline mode')
+    productionLogger.info('Network restored - exiting offline mode')
     toast.success('Connection restored. Syncing changes...', { duration: 3000 })
     this.notifyListeners('offlineMode', { isOffline: false })
     
@@ -158,7 +159,7 @@ class OfflineModeService {
     this.saveOfflineData()
     this.updateOfflineStatus()
 
-    console.log('Added offline action:', offlineAction.type, offlineAction.id)
+    productionLogger.debug('Added offline action', { type: offlineAction.type, id: offlineAction.id })
     return offlineAction.id
   }
 
@@ -178,7 +179,7 @@ class OfflineModeService {
     this.saveOfflineData()
     this.updateOfflineStatus()
 
-    console.log('Created offline canvas:', canvasId)
+    productionLogger.info('Created offline canvas', { canvasId })
   }
 
   /**
@@ -211,7 +212,7 @@ class OfflineModeService {
    */
   async syncOfflineActions(): Promise<SyncResult> {
     if (this.syncInProgress) {
-      console.log('Sync already in progress')
+      productionLogger.warning('Sync already in progress')
       return {
         success: false,
         syncedActions: 0,
@@ -222,7 +223,7 @@ class OfflineModeService {
     }
 
     if (this.offlineActions.length === 0) {
-      console.log('No offline actions to sync')
+      productionLogger.info('No offline actions to sync')
       return {
         success: true,
         syncedActions: 0,
@@ -238,7 +239,7 @@ class OfflineModeService {
     let failedActions = 0
     const errors: string[] = []
 
-    console.log(`Starting sync of ${this.offlineActions.length} offline actions`)
+    productionLogger.info(`Starting sync of ${this.offlineActions.length} offline actions`)
 
     try {
       // Process actions in batches
