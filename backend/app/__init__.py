@@ -8,7 +8,7 @@ import time
 from .config import Config
 from .extensions import db, socketio, cors, migrate
 try:
-    from .config.logging_config import LoggingConfig
+    from .config_modules.logging_config import LoggingConfig
 except ImportError:
     # Fallback logging configuration if logging_config is not available
     class LoggingConfig:
