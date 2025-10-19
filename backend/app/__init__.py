@@ -4,6 +4,7 @@ from flask_socketio import SocketIO
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flasgger import Swagger
+import time
 from .config import Config
 from .extensions import db, socketio, cors, migrate
 from .config.logging_config import LoggingConfig
@@ -11,6 +12,9 @@ from .config.logging_config import LoggingConfig
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
+    # Track startup time for health checks
+    app.config['START_TIME'] = time.time()
     
     # Setup optimized logging configuration
     LoggingConfig.setup_logging(app)
@@ -163,6 +167,7 @@ def create_app(config_class=Config):
     from .routes.test_execution import test_execution_bp
     from .routes.cors_debug import cors_debug_bp
     from .routes.test_cors import test_cors_bp
+    from .routes.health import health_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(canvas_bp, url_prefix='/api/canvas')
@@ -174,6 +179,7 @@ def create_app(config_class=Config):
     app.register_blueprint(test_execution_bp, url_prefix='/api/test-execution')
     app.register_blueprint(cors_debug_bp, url_prefix='/api/debug')
     app.register_blueprint(test_cors_bp, url_prefix='/api/test')
+    app.register_blueprint(health_bp)
     
     # Initialize rate limiting
     from .middleware.rate_limiting import init_rate_limiting, init_socket_rate_limiting
