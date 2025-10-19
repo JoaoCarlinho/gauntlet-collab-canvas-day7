@@ -60,10 +60,17 @@ def create_app(config_class=Config):
         vary_header=True
     )
     
-    # Add security headers
+    # Add CORS and security headers
     @app.after_request
-    def add_security_headers(response):
-        """Add security headers to all responses."""
+    def add_headers(response):
+        """Add CORS and security headers to all responses."""
+        # Import CORS middleware
+        from .middleware.cors_middleware import add_cors_headers
+        
+        # Add CORS headers first
+        response = add_cors_headers(response)
+        
+        # Add security headers
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-XSS-Protection'] = '1; mode=block'
@@ -71,6 +78,13 @@ def create_app(config_class=Config):
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"
         return response
+    
+    # Handle preflight requests globally
+    @app.before_request
+    def handle_preflight():
+        """Handle CORS preflight requests globally."""
+        from .middleware.cors_middleware import handle_preflight
+        return handle_preflight()
     
     socketio.init_app(
         app, 
@@ -139,6 +153,7 @@ def create_app(config_class=Config):
     from .routes.collaboration import collaboration_bp
     from .routes.ai_agent import ai_agent_bp
     from .routes.cors_debug import cors_debug_bp
+    from .routes.test_cors import test_cors_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(canvas_bp, url_prefix='/api/canvas')
@@ -146,6 +161,7 @@ def create_app(config_class=Config):
     app.register_blueprint(collaboration_bp, url_prefix='/api/collaboration')
     app.register_blueprint(ai_agent_bp, url_prefix='/api/ai-agent')
     app.register_blueprint(cors_debug_bp, url_prefix='/api/debug')
+    app.register_blueprint(test_cors_bp, url_prefix='/api/test')
     
     # Initialize rate limiting
     from .middleware.rate_limiting import init_rate_limiting, init_socket_rate_limiting
