@@ -17,36 +17,23 @@ class SocketService {
                          window.location.hostname === 'localhost' ||
                          window.location.hostname === '127.0.0.1'
     
-    // Check if we're on Railway (production)
-    const isRailway = API_URL.includes('railway.app')
-    
     // Only log in debug mode
     if (this.debugMode) {
       console.log('=== Socket.IO Connection Debug ===')
       console.log('API URL:', API_URL)
       console.log('Development mode:', isDevelopment)
-      console.log('Railway deployment:', isRailway)
       console.log('Token length:', idToken?.length || 0)
     }
     
     const socketConfig: any = {
-      // Railway-optimized configuration: polling first, then websocket
-      transports: isRailway ? ['polling'] : ['polling', 'websocket'], // Polling-only for Railway
-      upgrade: !isRailway, // Disable upgrade on Railway
-      rememberUpgrade: false, // Don't remember failed upgrades on Railway
-      timeout: isRailway ? 45000 : 30000, // Longer timeout for Railway
+      transports: ['polling', 'websocket'],
+      upgrade: true,
+      rememberUpgrade: true,
+      timeout: 20000,
       forceNew: true,
       reconnection: true,
-      reconnectionDelay: isRailway ? 3000 : 2000, // Longer delay for Railway
-      reconnectionAttempts: isRailway ? 2 : 3, // Fewer attempts for Railway
-      // Railway-specific settings
-      autoConnect: true,
-      multiplex: false,
-      // Add proper headers for Railway
-      extraHeaders: isRailway ? {
-        'X-Forwarded-Proto': 'https',
-        'X-Forwarded-For': window.location.hostname
-      } : {}
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5
     }
     
     // Only add auth token if not in development mode
@@ -61,27 +48,19 @@ class SocketService {
     this.socket = io(API_URL, socketConfig)
 
     this.socket.on('connect', () => {
-      console.log('✅ Socket.IO connected successfully')
-      console.log('Socket ID:', this.socket?.id)
-      console.log('Transport:', this.socket?.io.engine.transport.name)
-      
       if (this.debugMode) {
         console.log('=== Socket.IO Connected Successfully ===')
         console.log('Socket ID:', this.socket?.id)
-        console.log('Transport:', this.socket?.io.engine.transport.name)
       }
       
       // Notify connection monitor of successful connection
       this.emit('connection_restored', {
         socketId: this.socket?.id,
-        timestamp: Date.now(),
-        transport: this.socket?.io.engine.transport.name
+        timestamp: Date.now()
       })
     })
 
     this.socket.on('disconnect', (reason) => {
-      console.log('❌ Socket.IO disconnected:', reason)
-      
       if (this.debugMode) {
         console.log('=== Socket.IO Disconnected ===')
         console.log('Reason:', reason)
@@ -140,12 +119,8 @@ class SocketService {
     // Always log errors, regardless of debug mode
     this.socket.on('connect_error', (error) => {
       console.error('=== Socket.IO Connection Error ===')
-      console.error('Error type:', typeof error)
+      console.error('Error:', error)
       console.error('Error message:', error.message)
-      console.error('Error code:', error.code)
-      console.error('Error description:', error.description)
-      console.error('Error context:', error.context)
-      console.error('Full error object:', JSON.stringify(error, null, 2))
       
       const context: ErrorContext = {
         operation: 'socket_connection',
@@ -153,34 +128,24 @@ class SocketService {
         additionalData: { 
           type: 'connection_error', 
           socketId: this.socket?.id,
-          errorMessage: error.message,
-          errorCode: error.code,
-          errorDescription: error.description,
-          errorType: typeof error
+          errorMessage: error.message
         }
       }
       
       const errorId = errorLogger.logError(error, context)
-      this.emit('socket_error', { 
-        error: {
-          message: error.message,
-          code: error.code,
-          description: error.description,
-          type: typeof error
-        }, 
-        timestamp: Date.now(), 
-        type: 'connection_error', 
-        errorId 
-      })
+      this.emit('socket_error', { error, timestamp: Date.now(), type: 'connection_error', errorId })
     })
 
     this.socket.on('error', (error) => {
       console.error('=== Socket.IO Error ===')
       console.error('Error type:', typeof error)
-      console.error('Error message:', error.message)
-      console.error('Error code:', error.code)
-      console.error('Error description:', error.description)
+      console.error('Error message:', error?.message || 'No message')
+      console.error('Error code:', error?.code || 'No code')
+      console.error('Error description:', error?.description || 'No description')
       console.error('Full error object:', JSON.stringify(error, null, 2))
+      console.error('Socket ID:', this.socket?.id)
+      console.error('Socket connected:', this.socket?.connected)
+      console.error('Socket transport:', this.socket?.io?.engine?.transport?.name)
       
       const context: ErrorContext = {
         operation: 'general',
@@ -188,25 +153,27 @@ class SocketService {
         additionalData: { 
           type: 'general_error', 
           socketId: this.socket?.id,
-          errorMessage: error.message,
-          errorCode: error.code,
-          errorDescription: error.description,
-          errorType: typeof error
+          errorType: typeof error,
+          errorMessage: error?.message,
+          errorCode: error?.code,
+          socketConnected: this.socket?.connected,
+          transport: this.socket?.io?.engine?.transport?.name
         }
       }
       
       const errorId = errorLogger.logError(error, context)
       // Emit error event for components to handle
       this.emit('socket_error', { 
-        error: {
-          message: error.message,
-          code: error.code,
-          description: error.description,
-          type: typeof error
-        }, 
+        error, 
         timestamp: Date.now(), 
         type: 'general_error', 
-        errorId 
+        errorId,
+        details: {
+          message: error?.message,
+          code: error?.code,
+          socketId: this.socket?.id,
+          connected: this.socket?.connected
+        }
       })
     })
 

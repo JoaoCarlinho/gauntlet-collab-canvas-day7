@@ -9,6 +9,7 @@ import { socketService } from '../services/socket'
 import { Canvas, CanvasObject, CursorData } from '../types'
 import { errorLogger } from '../utils/errorLogger'
 import { objectUpdateService } from '../services/objectUpdateService'
+import { objectCreationService } from '../services/objectCreationService'
 import { optimisticUpdateManager } from '../services/optimisticUpdateManager'
 import { loadingStateManager } from '../services/loadingStateManager'
 import { stateSyncManager, StateConflict } from '../services/stateSyncManager'
@@ -1457,7 +1458,7 @@ const CanvasPage: React.FC = () => {
     }
   }
 
-  const handleStageMouseUp = () => {
+  const handleStageMouseUp = async () => {
     if (isDrawing && newObject) {
       if (isDevelopmentMode()) {
         // In development mode, add object directly to local state
@@ -1473,11 +1474,37 @@ const CanvasPage: React.FC = () => {
         
         setObjects(prev => [...prev, canvasObject])
       } else if (idToken) {
-        // In production, create object via socket
-        socketService.createObject(canvasId!, idToken, {
-          type: newObject.object_type!,
-          properties: newObject.properties!
-        })
+        // In production, create object with fallback mechanism
+        try {
+          const result = await objectCreationService.createObject(
+            canvasId!, 
+            idToken, 
+            {
+              type: newObject.object_type!,
+              properties: newObject.properties!
+            },
+            {
+              onProgress: (attempt, method) => {
+                console.log(`Creating object via ${method} (attempt ${attempt})`)
+              }
+            }
+          )
+
+          if (result.success) {
+            console.log(`Object created successfully via ${result.method}`)
+            // Object will be added to state via socket event or manual addition
+            if (result.method === 'rest' && result.object) {
+              // If created via REST API, add to local state manually
+              setObjects(prev => [...prev, result.object!])
+            }
+          } else {
+            console.error('Failed to create object:', result.error)
+            toast.error('Failed to create object. Please try again.')
+          }
+        } catch (error) {
+          console.error('Object creation error:', error)
+          toast.error('Failed to create object. Please try again.')
+        }
       }
       
       setNewObject(null)
