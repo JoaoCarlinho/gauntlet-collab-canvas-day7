@@ -5,7 +5,7 @@
  */
 
 import { networkHealthService, NetworkStatus } from './networkHealthService'
-import { errorLogger, ErrorContext } from '../utils/errorLogger'
+import { errorLogger } from '../utils/errorLogger'
 import toast from 'react-hot-toast'
 
 export interface OfflineAction {
@@ -43,7 +43,6 @@ class OfflineModeService {
   private listeners: Map<string, Function[]> = new Map()
   private readonly STORAGE_KEY = 'collabcanvas_offline_data'
   private readonly MAX_OFFLINE_ACTIONS = 1000
-  private readonly MAX_OFFLINE_CANVASES = 50
 
   constructor() {
     this.initializeOfflineMode()
@@ -301,7 +300,7 @@ class OfflineModeService {
       console.error('Sync failed:', error)
       
       errorLogger.logError(error, {
-        operation: 'offline_sync',
+        operation: 'general',
         timestamp: Date.now(),
         additionalData: {
           actionCount: this.offlineActions.length,

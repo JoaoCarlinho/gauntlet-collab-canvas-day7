@@ -4,7 +4,7 @@
  * Provides fallback mechanisms and user feedback
  */
 
-import { errorLogger, ErrorContext } from '../utils/errorLogger'
+import { errorLogger } from '../utils/errorLogger'
 import { retryWithCondition, isRetryableError } from '../utils/retryLogic'
 import toast from 'react-hot-toast'
 
@@ -129,8 +129,6 @@ class NetworkHealthService {
    * Perform comprehensive health check
    */
   async performHealthCheck(): Promise<void> {
-    const startTime = Date.now()
-
     try {
       // Check basic connectivity
       await this.checkBasicConnectivity()
@@ -179,7 +177,7 @@ class NetworkHealthService {
    */
   private async testBasicConnectivity(): Promise<boolean> {
     try {
-      const response = await fetch('https://www.google.com/favicon.ico', {
+      await fetch('https://www.google.com/favicon.ico', {
         method: 'HEAD',
         mode: 'no-cors',
         cache: 'no-cache'
@@ -238,7 +236,7 @@ class NetworkHealthService {
       })
     } else {
       this.updateServiceHealth('socket', {
-        status: 'disconnected',
+        status: 'unhealthy',
         lastError: 'Socket not connected',
         lastCheck: Date.now()
       })
@@ -310,14 +308,14 @@ class NetworkHealthService {
   private handleHealthCheckError(error: any): void {
     this.networkStatus.errorCount++
     
-    errorLogger.logError(error, {
-      operation: 'network_health_check',
-      timestamp: Date.now(),
-      additionalData: {
-        errorCount: this.networkStatus.errorCount,
-        retryCount: this.networkStatus.retryCount
-      }
-    })
+      errorLogger.logError(error, {
+        operation: 'general',
+        timestamp: Date.now(),
+        additionalData: {
+          errorCount: this.networkStatus.errorCount,
+          retryCount: this.networkStatus.retryCount
+        }
+      })
 
     // If we have too many errors, mark as unhealthy
     if (this.networkStatus.errorCount > 3) {
@@ -432,7 +430,7 @@ class NetworkHealthService {
 
     return retryWithCondition(
       operation,
-      (error, attempt) => {
+      (error: any, attempt: number) => {
         // Don't retry if network is offline
         if (!this.networkStatus.isOnline) {
           return false
@@ -447,15 +445,11 @@ class NetworkHealthService {
         return isRetryableError(error) && attempt < maxRetries
       },
       {
-        maxRetries,
-        retryDelay,
-        onRetry: (attempt, error) => {
-          console.log(`Retrying operation (attempt ${attempt}/${maxRetries}):`, error.message)
-        }
+        baseDelay: retryDelay
       }
     ).then(result => {
       if (result.success) {
-        return result.data
+        return result.data!
       } else {
         throw result.error
       }

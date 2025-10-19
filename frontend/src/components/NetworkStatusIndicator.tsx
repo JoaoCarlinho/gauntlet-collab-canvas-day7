@@ -10,13 +10,11 @@ import toast from 'react-hot-toast'
 
 interface NetworkStatusIndicatorProps {
   className?: string
-  showDetails?: boolean
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 }
 
 const NetworkStatusIndicator: React.FC<NetworkStatusIndicatorProps> = ({
   className = '',
-  showDetails = false,
   position = 'top-right'
 }) => {
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(networkHealthService.getNetworkStatus())
@@ -32,7 +30,7 @@ const NetworkStatusIndicator: React.FC<NetworkStatusIndicatorProps> = ({
       setNetworkStatus(status)
     }
 
-    const handleOfflineMode = (data: { isOffline: boolean }) => {
+    const handleOfflineMode = () => {
       setOfflineStatus(offlineModeService.getOfflineStatus())
     }
 
@@ -133,7 +131,7 @@ const NetworkStatusIndicator: React.FC<NetworkStatusIndicatorProps> = ({
     if (offlineStatus.actionCount > 0) {
       offlineModeService.syncOfflineActions()
     } else {
-      toast.info('No offline changes to sync', { duration: 2000 })
+      toast('No offline changes to sync', { duration: 2000, icon: 'ℹ️' })
     }
   }
 

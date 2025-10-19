@@ -4,13 +4,13 @@
  * and user-friendly feedback
  */
 
-import { networkHealthService, NetworkStatus } from './networkHealthService'
-import { errorLogger, ErrorContext } from '../utils/errorLogger'
+import { networkHealthService } from './networkHealthService'
+import { errorLogger, ErrorContext as LoggerErrorContext } from '../utils/errorLogger'
 import { isRetryableError } from '../utils/retryLogic'
 import toast from 'react-hot-toast'
 
 export interface ErrorContext {
-  operation: string
+  operation: 'object_update' | 'object_create' | 'object_delete' | 'socket_connection' | 'general'
   component?: string
   userId?: string
   canvasId?: string
@@ -52,14 +52,12 @@ class EnhancedErrorHandler {
     const {
       showToast = true,
       logError = true,
-      retryable = true,
       fallbackAction,
-      userMessage,
-      severity = 'medium'
+      userMessage
     } = options
 
     // Classify the error
-    const classification = this.classifyError(error, context)
+    const classification = this.classifyError(error)
 
     // Update error tracking
     this.updateErrorTracking(context.operation, classification.severity)
@@ -89,7 +87,7 @@ class EnhancedErrorHandler {
   /**
    * Classify error based on type and context
    */
-  private classifyError(error: any, context: ErrorContext): ErrorClassification {
+  private classifyError(error: any): ErrorClassification {
     const errorMessage = error?.message || error?.toString() || 'Unknown error'
     const statusCode = error?.response?.status || error?.status
 
@@ -204,21 +202,21 @@ class EnhancedErrorHandler {
   /**
    * Check if error is server-related
    */
-  private isServerError(error: any, statusCode?: number): boolean {
+  private isServerError(_error: any, statusCode?: number): boolean {
     return statusCode ? statusCode >= 500 : false
   }
 
   /**
    * Check if error is client-related
    */
-  private isClientError(error: any, statusCode?: number): boolean {
+  private isClientError(_error: any, statusCode?: number): boolean {
     return statusCode ? statusCode >= 400 && statusCode < 500 : false
   }
 
   /**
    * Get network error severity
    */
-  private getNetworkErrorSeverity(error: any): 'low' | 'medium' | 'high' | 'critical' {
+  private getNetworkErrorSeverity(_error: any): 'low' | 'medium' | 'high' | 'critical' {
     const networkStatus = networkHealthService.getNetworkStatus()
     
     if (!networkStatus.isOnline) {
@@ -252,7 +250,7 @@ class EnhancedErrorHandler {
   /**
    * Get network error message
    */
-  private getNetworkErrorMessage(error: any): string {
+  private getNetworkErrorMessage(_error: any): string {
     const networkStatus = networkHealthService.getNetworkStatus()
     
     if (!networkStatus.isOnline) {
@@ -292,7 +290,7 @@ class EnhancedErrorHandler {
    */
   private showUserFeedback(
     classification: ErrorClassification,
-    context: ErrorContext,
+    _context: ErrorContext,
     customMessage?: string
   ): void {
     const message = customMessage || classification.userMessage
@@ -334,15 +332,15 @@ class EnhancedErrorHandler {
    * Log error with context
    */
   private logError(error: any, context: ErrorContext, classification: ErrorClassification): void {
-    const errorContext: ErrorContext = {
+    const errorContext: LoggerErrorContext = {
       operation: context.operation,
-      component: context.component,
-      userId: context.userId,
-      canvasId: context.canvasId,
-      objectId: context.objectId,
       timestamp: context.timestamp,
       additionalData: {
         ...context.additionalData,
+        component: context.component,
+        userId: context.userId,
+        canvasId: context.canvasId,
+        objectId: context.objectId,
         errorType: classification.type,
         severity: classification.severity,
         retryable: classification.retryable,
@@ -389,7 +387,7 @@ class EnhancedErrorHandler {
    */
   handleSocketError(error: any, context: Partial<ErrorContext> = {}): void {
     const fullContext: ErrorContext = {
-      operation: 'socket_operation',
+      operation: 'socket_connection',
       timestamp: Date.now(),
       ...context
     }
@@ -412,7 +410,7 @@ class EnhancedErrorHandler {
    */
   handleAPIError(error: any, context: Partial<ErrorContext> = {}): void {
     const fullContext: ErrorContext = {
-      operation: 'api_request',
+      operation: 'general',
       timestamp: Date.now(),
       ...context
     }
