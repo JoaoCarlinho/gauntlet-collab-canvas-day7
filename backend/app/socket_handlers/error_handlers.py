@@ -7,6 +7,7 @@ from flask_socketio import emit
 from app.utils.logger import SmartLogger
 import traceback
 import json
+import time
 
 # Initialize logger
 error_logger = SmartLogger('socket_error_handler', 'INFO')
@@ -33,6 +34,27 @@ def handle_socket_error(error, event_type=None, user_id=None, additional_data=No
         }
         
         error_logger.log_error(f"Socket.IO error in {event_type}: {str(error)}", error, error_context)
+        
+        # Create structured error response
+        error_response = {
+            'error': {
+                'message': str(error),
+                'type': type(error).__name__,
+                'timestamp': int(time.time() * 1000),
+                'event_type': event_type,
+                'user_id': user_id,
+                'error_id': f"err_{int(time.time() * 1000)}_{hash(str(error)) % 10000:04d}"
+            },
+            'timestamp': int(time.time() * 1000),
+            'type': 'general_error'
+        }
+        
+        # Add additional data if provided
+        if additional_data:
+            error_response['error']['additional_data'] = additional_data
+        
+        # Emit structured error response
+        emit('socket_error', error_response)
         
         # Determine error type and provide appropriate response
         if isinstance(error, ConnectionError):
