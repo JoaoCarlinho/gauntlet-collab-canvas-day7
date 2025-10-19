@@ -10,7 +10,13 @@ import {
   User,
   setPersistence,
   browserLocalPersistence,
-  browserSessionPersistence
+  browserSessionPersistence,
+  signInWithEmailAndPassword as firebaseSignInWithEmailAndPassword,
+  createUserWithEmailAndPassword as firebaseCreateUserWithEmailAndPassword,
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
+  updatePassword as firebaseUpdatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider
 } from 'firebase/auth'
 
 // Check if we're in development mode and should skip Firebase initialization
@@ -150,6 +156,26 @@ const getAuthErrorMessage = (error: AuthError): string => {
       return 'Please sign in again to complete this action.'
     case 'auth/web-storage-unsupported':
       return 'Your browser does not support the required authentication features. Please try a different browser.'
+    case 'auth/invalid-credential':
+      return 'Invalid email or password. Please check your credentials and try again.'
+    case 'auth/user-disabled':
+      return 'This account has been disabled. Please contact support.'
+    case 'auth/too-many-requests':
+      return 'Too many failed attempts. Please try again later.'
+    case 'auth/operation-not-allowed':
+      return 'Email/password sign-in is not enabled. Please contact support.'
+    case 'auth/email-already-in-use':
+      return 'An account with this email already exists. Please sign in instead.'
+    case 'auth/weak-password':
+      return 'Password is too weak. Please choose a stronger password with at least 6 characters.'
+    case 'auth/invalid-email':
+      return 'Invalid email address. Please check and try again.'
+    case 'auth/user-not-found':
+      return 'No account found with this email address. Please check your email or create a new account.'
+    case 'auth/wrong-password':
+      return 'Incorrect password. Please try again.'
+    case 'auth/requires-recent-login':
+      return 'Please sign in again to complete this action.'
     default:
       return 'An unexpected error occurred during sign-in. This may be due to browser compatibility issues. Please try using a different browser or contact support.'
   }
@@ -377,4 +403,192 @@ export const isUserAuthenticated = (): boolean => {
   })
   
   return !!(currentUser && hasToken)
+}
+
+// Email/Password Authentication Functions
+
+export const signInWithEmailAndPassword = async (email: string, password: string): Promise<User> => {
+  try {
+    console.log('Attempting email/password sign-in...')
+    console.log('Email:', email)
+    
+    if (isDevelopment) {
+      console.log('Development mode: Mocking email/password sign-in')
+      // Return a mock user for development
+      return {
+        uid: 'dev-user-email',
+        email: email,
+        displayName: 'Development User',
+        getIdToken: () => Promise.resolve('dev-token-email')
+      } as any
+    }
+    
+    const result = await firebaseSignInWithEmailAndPassword(auth, email, password)
+    console.log('Email/password sign-in successful')
+    console.log('User:', {
+      uid: result.user.uid,
+      email: result.user.email,
+      displayName: result.user.displayName
+    })
+    
+    return result.user
+  } catch (error) {
+    console.error('Email/password sign-in failed:', error)
+    
+    if (error instanceof Error && 'code' in error) {
+      const authError = error as AuthError
+      const userMessage = getAuthErrorMessage(authError)
+      throw new AuthenticationError(userMessage, authError.code, authError)
+    }
+    
+    throw new AuthenticationError(
+      'An unexpected error occurred during email/password sign-in. Please try again.',
+      'unknown',
+      error as AuthError
+    )
+  }
+}
+
+export const createUserWithEmailAndPassword = async (email: string, password: string): Promise<User> => {
+  try {
+    console.log('Attempting email/password registration...')
+    console.log('Email:', email)
+    
+    if (isDevelopment) {
+      console.log('Development mode: Mocking email/password registration')
+      // Return a mock user for development
+      return {
+        uid: 'dev-user-email-new',
+        email: email,
+        displayName: 'New Development User',
+        getIdToken: () => Promise.resolve('dev-token-email-new')
+      } as any
+    }
+    
+    const result = await firebaseCreateUserWithEmailAndPassword(auth, email, password)
+    console.log('Email/password registration successful')
+    console.log('User:', {
+      uid: result.user.uid,
+      email: result.user.email,
+      displayName: result.user.displayName
+    })
+    
+    return result.user
+  } catch (error) {
+    console.error('Email/password registration failed:', error)
+    
+    if (error instanceof Error && 'code' in error) {
+      const authError = error as AuthError
+      const userMessage = getAuthErrorMessage(authError)
+      throw new AuthenticationError(userMessage, authError.code, authError)
+    }
+    
+    throw new AuthenticationError(
+      'An unexpected error occurred during registration. Please try again.',
+      'unknown',
+      error as AuthError
+    )
+  }
+}
+
+export const sendPasswordResetEmail = async (email: string): Promise<void> => {
+  try {
+    console.log('Sending password reset email...')
+    console.log('Email:', email)
+    
+    if (isDevelopment) {
+      console.log('Development mode: Mocking password reset email')
+      return
+    }
+    
+    await firebaseSendPasswordResetEmail(auth, email)
+    console.log('Password reset email sent successfully')
+  } catch (error) {
+    console.error('Password reset email failed:', error)
+    
+    if (error instanceof Error && 'code' in error) {
+      const authError = error as AuthError
+      const userMessage = getAuthErrorMessage(authError)
+      throw new AuthenticationError(userMessage, authError.code, authError)
+    }
+    
+    throw new AuthenticationError(
+      'An unexpected error occurred while sending password reset email. Please try again.',
+      'unknown',
+      error as AuthError
+    )
+  }
+}
+
+export const updateUserPassword = async (newPassword: string): Promise<void> => {
+  try {
+    console.log('Updating user password...')
+    
+    if (isDevelopment) {
+      console.log('Development mode: Mocking password update')
+      return
+    }
+    
+    const currentUser = auth.currentUser
+    if (!currentUser) {
+      throw new AuthenticationError(
+        'No user is currently signed in.',
+        'auth/no-current-user'
+      )
+    }
+    
+    await firebaseUpdatePassword(currentUser, newPassword)
+    console.log('Password updated successfully')
+  } catch (error) {
+    console.error('Password update failed:', error)
+    
+    if (error instanceof Error && 'code' in error) {
+      const authError = error as AuthError
+      const userMessage = getAuthErrorMessage(authError)
+      throw new AuthenticationError(userMessage, authError.code, authError)
+    }
+    
+    throw new AuthenticationError(
+      'An unexpected error occurred while updating password. Please try again.',
+      'unknown',
+      error as AuthError
+    )
+  }
+}
+
+export const reauthenticateWithEmailAndPassword = async (email: string, password: string): Promise<void> => {
+  try {
+    console.log('Re-authenticating user with email/password...')
+    
+    if (isDevelopment) {
+      console.log('Development mode: Mocking re-authentication')
+      return
+    }
+    
+    const currentUser = auth.currentUser
+    if (!currentUser) {
+      throw new AuthenticationError(
+        'No user is currently signed in.',
+        'auth/no-current-user'
+      )
+    }
+    
+    const credential = EmailAuthProvider.credential(email, password)
+    await reauthenticateWithCredential(currentUser, credential)
+    console.log('Re-authentication successful')
+  } catch (error) {
+    console.error('Re-authentication failed:', error)
+    
+    if (error instanceof Error && 'code' in error) {
+      const authError = error as AuthError
+      const userMessage = getAuthErrorMessage(authError)
+      throw new AuthenticationError(userMessage, authError.code, authError)
+    }
+    
+    throw new AuthenticationError(
+      'An unexpected error occurred during re-authentication. Please try again.',
+      'unknown',
+      error as AuthError
+    )
+  }
 }
