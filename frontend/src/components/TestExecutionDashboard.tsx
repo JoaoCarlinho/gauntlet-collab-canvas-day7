@@ -113,7 +113,7 @@ const TestExecutionDashboard: React.FC<TestExecutionDashboardProps> = ({ isOpen,
               authenticatorData: btoa(String.fromCharCode(...new Uint8Array((credential.response as any).authenticatorData))),
               clientDataJSON: btoa(String.fromCharCode(...new Uint8Array((credential.response as any).clientDataJSON))),
               signature: btoa(String.fromCharCode(...new Uint8Array((credential.response as any).signature))),
-              userHandle: (credential.response as any).userHandle ? btoa(String.fromCharCode(...new Uint8Array((credential.response as any).userHandle))) : null
+              userHandle: (credential.response as any).userHandle ? btoa(String.fromCharCode(...new Uint8Array((credential.response as any).userHandle!))) : null
             }
           }
         })
