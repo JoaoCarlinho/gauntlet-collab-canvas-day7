@@ -4,8 +4,11 @@ import { getApiUrl } from '../utils/env';
 export const EnvDebug: React.FC = () => {
   const apiUrl = getApiUrl();
   
-  // Only show in development and not during Cypress tests
-  if (import.meta.env.MODE !== 'development' || (window as any).Cypress) {
+  // Only show in development and not during tests
+  if (import.meta.env.MODE !== 'development' || 
+      (window as any).Cypress || 
+      (window as any).playwright ||
+      navigator.userAgent.includes('Playwright')) {
     return null;
   }
   
