@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { User, Canvas, CanvasObject, Invitation } from '../types'
 import { getApiUrl } from '../utils/env'
+import { authService } from './authService'
 
 const API_URL = getApiUrl()
 
@@ -15,8 +16,8 @@ const api = axios.create({
   timeout: 10000, // 10 second timeout
 })
 
-// Add auth token to requests (skip in development mode)
-api.interceptors.request.use((config) => {
+// Enhanced auth token interceptor with automatic refresh
+api.interceptors.request.use(async (config) => {
   // Check if we're in development mode
   const isDevelopment = import.meta.env.DEV || 
                        import.meta.env.VITE_DEBUG_MODE === 'true' ||
@@ -25,9 +26,17 @@ api.interceptors.request.use((config) => {
   
   // Skip authentication in development mode
   if (!isDevelopment) {
-    const token = localStorage.getItem('idToken')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    try {
+      // Get valid token with automatic refresh
+      const token = await authService.getValidToken()
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      } else {
+        console.warn('No valid token available for API request')
+      }
+    } catch (error) {
+      console.error('Failed to get valid token for API request:', error)
+      // Continue without token - let the server handle the auth error
     }
   } else {
     console.log('Development mode: Skipping authentication for API request')
@@ -45,13 +54,13 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Add response interceptor for better error handling
+// Enhanced response interceptor with authentication error handling
 api.interceptors.response.use(
   (response) => {
     console.log('API response received:', response.status, response.config.url)
     return response
   },
-  (error) => {
+  async (error) => {
     // Filter out non-critical errors from browser extensions or third-party services
     const url = error.config?.url || ''
     const isExternalError = url.includes('/jwt') || url.includes('chrome-extension') || url.includes('moz-extension')
@@ -63,6 +72,24 @@ api.interceptors.response.use(
         message: error.message,
         data: error.response?.data
       })
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        console.warn('Authentication error - attempting token refresh')
+        try {
+          await authService.forceTokenRefresh()
+          // Retry the original request with new token
+          const newToken = await authService.getValidToken()
+          if (newToken && error.config) {
+            error.config.headers.Authorization = `Bearer ${newToken}`
+            return api.request(error.config)
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError)
+          // Clear auth state if refresh fails
+          authService.clearAuth()
+        }
+      }
       
       // Handle specific error cases
       if (error.response?.status === 404) {
@@ -129,11 +156,32 @@ export const canvasAPI = {
     const response = await api.get(`/canvas/${canvasId}/objects`)
     return response.data
   },
+
+  // Z-index management methods (convenience access)
+  updateObjectZIndex: async (objectId: string, zIndex: number): Promise<{ object: CanvasObject }> => {
+    return objectsAPI.updateObjectZIndex(objectId, zIndex)
+  },
+
+  bringObjectToFront: async (objectId: string): Promise<{ object: CanvasObject }> => {
+    return objectsAPI.bringObjectToFront(objectId)
+  },
+
+  sendObjectToBack: async (objectId: string): Promise<{ object: CanvasObject }> => {
+    return objectsAPI.sendObjectToBack(objectId)
+  },
+
+  moveObjectUp: async (objectId: string): Promise<{ object: CanvasObject }> => {
+    return objectsAPI.moveObjectUp(objectId)
+  },
+
+  moveObjectDown: async (objectId: string): Promise<{ object: CanvasObject }> => {
+    return objectsAPI.moveObjectDown(objectId)
+  },
 }
 
 // Objects API
 export const objectsAPI = {
-  createObject: async (data: { canvas_id: string; object_type: string; properties: Record<string, any> }): Promise<{ object: CanvasObject }> => {
+  createObject: async (data: { canvas_id: string; object_type: string; properties: Record<string, any>; z_index_behavior?: string }): Promise<{ object: CanvasObject }> => {
     const response = await api.post('/objects', data)
     return response.data
   },
@@ -150,6 +198,32 @@ export const objectsAPI = {
   
   deleteObject: async (objectId: string): Promise<void> => {
     await api.delete(`/objects/${objectId}`)
+  },
+
+  // Z-index management methods
+  updateObjectZIndex: async (objectId: string, zIndex: number): Promise<{ object: CanvasObject }> => {
+    const response = await api.put(`/objects/${objectId}/z-index`, { z_index: zIndex })
+    return response.data
+  },
+
+  bringObjectToFront: async (objectId: string): Promise<{ object: CanvasObject }> => {
+    const response = await api.post(`/objects/${objectId}/bring-to-front`)
+    return response.data
+  },
+
+  sendObjectToBack: async (objectId: string): Promise<{ object: CanvasObject }> => {
+    const response = await api.post(`/objects/${objectId}/send-to-back`)
+    return response.data
+  },
+
+  moveObjectUp: async (objectId: string): Promise<{ object: CanvasObject }> => {
+    const response = await api.post(`/objects/${objectId}/move-up`)
+    return response.data
+  },
+
+  moveObjectDown: async (objectId: string): Promise<{ object: CanvasObject }> => {
+    const response = await api.post(`/objects/${objectId}/move-down`)
+    return response.data
   },
 }
 

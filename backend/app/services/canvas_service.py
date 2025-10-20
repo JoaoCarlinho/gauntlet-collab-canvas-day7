@@ -104,8 +104,8 @@ class CanvasService:
         
         return permission is not None
     
-    def create_canvas_object(self, canvas_id, object_type, properties, created_by):
-        """Create a new canvas object with comprehensive validation."""
+    def create_canvas_object(self, canvas_id, object_type, properties, created_by, z_index_behavior='top'):
+        """Create a new canvas object with comprehensive validation and z-index management."""
         try:
             # Validate canvas exists
             canvas = self.get_canvas_by_id(canvas_id)
@@ -141,19 +141,23 @@ class CanvasService:
             # Validate properties structure based on object type
             self._validate_object_properties(object_type, properties_dict)
             
+            # Calculate z-index based on behavior
+            z_index = self._calculate_z_index(canvas_id, properties_dict, z_index_behavior)
+            
             # Create canvas object
             canvas_object = CanvasObject(
                 id=str(uuid.uuid4()),
                 canvas_id=canvas_id,
                 object_type=object_type,
                 properties=json.dumps(properties_dict) if isinstance(properties_dict, dict) else properties,
+                z_index=z_index,
                 created_by=created_by
             )
             
             db.session.add(canvas_object)
             db.session.commit()
             
-            railway_logger.log('canvas', 10, f"Canvas object created: {canvas_object.id} of type {object_type}")
+            railway_logger.log('canvas', 10, f"Canvas object created: {canvas_object.id} of type {object_type} with z-index {z_index}")
             return canvas_object
             
         except Exception as e:
@@ -221,6 +225,70 @@ class CanvasService:
             railway_logger.log('canvas', 40, f"Object properties validation failed: {str(e)}")
             raise e
     
+    def _calculate_z_index(self, canvas_id, properties, behavior='top'):
+        """Calculate z-index for new object based on behavior and existing objects."""
+        try:
+            # Get all existing objects on the canvas
+            existing_objects = self.get_canvas_objects(canvas_id)
+            
+            if not existing_objects:
+                return 0  # First object gets z-index 0
+            
+            # Get position from properties
+            position = self._extract_position(properties)
+            if not position:
+                # If no position, just use top behavior
+                return max(obj.z_index for obj in existing_objects) + 1
+            
+            # Find overlapping objects (within 50 pixels)
+            overlapping_objects = []
+            for obj in existing_objects:
+                obj_props = obj.get_properties()
+                obj_position = self._extract_position(obj_props)
+                if obj_position and self._is_overlapping(position, obj_position, threshold=50):
+                    overlapping_objects.append(obj)
+            
+            if behavior == 'top':
+                # Always place on top
+                return max(obj.z_index for obj in existing_objects) + 1
+            elif behavior == 'bottom':
+                # Always place at bottom
+                return min(obj.z_index for obj in existing_objects) - 1
+            elif behavior == 'smart':
+                # Place above overlapping objects, below non-overlapping
+                if overlapping_objects:
+                    max_overlapping_z = max(obj.z_index for obj in overlapping_objects)
+                    return max_overlapping_z + 1
+                else:
+                    # No overlapping objects, place at top
+                    return max(obj.z_index for obj in existing_objects) + 1
+            else:
+                # Default to top
+                return max(obj.z_index for obj in existing_objects) + 1
+                
+        except Exception as e:
+            railway_logger.log('canvas', 40, f"Z-index calculation failed: {str(e)}")
+            # Fallback to top behavior
+            existing_objects = self.get_canvas_objects(canvas_id)
+            if existing_objects:
+                return max(obj.z_index for obj in existing_objects) + 1
+            return 0
+    
+    def _extract_position(self, properties):
+        """Extract position from object properties."""
+        if 'x' in properties and 'y' in properties:
+            return {'x': properties['x'], 'y': properties['y']}
+        elif 'x1' in properties and 'y1' in properties:
+            return {'x': properties['x1'], 'y': properties['y1']}
+        return None
+    
+    def _is_overlapping(self, pos1, pos2, threshold=50):
+        """Check if two positions are overlapping within threshold."""
+        if not pos1 or not pos2:
+            return False
+        distance = ((pos1['x'] - pos2['x']) ** 2 + (pos1['y'] - pos2['y']) ** 2) ** 0.5
+        return distance < threshold
+    
     def get_canvas_objects(self, canvas_id):
         """Get all objects for a canvas."""
         return CanvasObject.query.filter_by(canvas_id=canvas_id).all()
@@ -250,3 +318,77 @@ class CanvasService:
         db.session.commit()
         
         return True
+    
+    def update_object_z_index(self, object_id, z_index):
+        """Update object z-index."""
+        canvas_object = CanvasObject.query.filter_by(id=object_id).first()
+        if not canvas_object:
+            return None
+        
+        canvas_object.z_index = z_index
+        canvas_object.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return canvas_object
+    
+    def bring_object_to_front(self, object_id):
+        """Bring object to front (highest z-index)."""
+        canvas_object = CanvasObject.query.filter_by(id=object_id).first()
+        if not canvas_object:
+            return None
+        
+        # Get all objects on the same canvas
+        canvas_objects = self.get_canvas_objects(canvas_object.canvas_id)
+        if not canvas_objects:
+            return canvas_object
+        
+        # Set to highest z-index + 1
+        max_z_index = max(obj.z_index for obj in canvas_objects)
+        canvas_object.z_index = max_z_index + 1
+        canvas_object.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return canvas_object
+    
+    def send_object_to_back(self, object_id):
+        """Send object to back (lowest z-index)."""
+        canvas_object = CanvasObject.query.filter_by(id=object_id).first()
+        if not canvas_object:
+            return None
+        
+        # Get all objects on the same canvas
+        canvas_objects = self.get_canvas_objects(canvas_object.canvas_id)
+        if not canvas_objects:
+            return canvas_object
+        
+        # Set to lowest z-index - 1
+        min_z_index = min(obj.z_index for obj in canvas_objects)
+        canvas_object.z_index = min_z_index - 1
+        canvas_object.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return canvas_object
+    
+    def move_object_up(self, object_id):
+        """Move object up one layer."""
+        canvas_object = CanvasObject.query.filter_by(id=object_id).first()
+        if not canvas_object:
+            return None
+        
+        canvas_object.z_index += 1
+        canvas_object.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return canvas_object
+    
+    def move_object_down(self, object_id):
+        """Move object down one layer."""
+        canvas_object = CanvasObject.query.filter_by(id=object_id).first()
+        if not canvas_object:
+            return None
+        
+        canvas_object.z_index -= 1
+        canvas_object.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return canvas_object

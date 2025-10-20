@@ -102,7 +102,7 @@ class OfflineModeService {
    */
   private handleNetworkLost(): void {
     productionLogger.warning('Network lost - entering offline mode')
-    toast.error('Connection lost. Working in offline mode.', { duration: 5000 })
+    // Connection monitoring - toast notifications suppressed
     this.notifyListeners('offlineMode', { isOffline: true })
   }
 
@@ -111,7 +111,7 @@ class OfflineModeService {
    */
   private handleNetworkRestored(): void {
     productionLogger.info('Network restored - exiting offline mode')
-    toast.success('Connection restored. Syncing changes...', { duration: 3000 })
+    // Connection monitoring - toast notifications suppressed
     this.notifyListeners('offlineMode', { isOffline: false })
     
     // Start syncing after a short delay

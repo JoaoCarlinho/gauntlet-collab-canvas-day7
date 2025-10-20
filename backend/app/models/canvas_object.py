@@ -9,6 +9,7 @@ class CanvasObject(db.Model):
     canvas_id = db.Column(db.String(36), db.ForeignKey('canvases.id'), nullable=False)
     object_type = db.Column(db.String(50), nullable=False)  # 'rectangle', 'circle', 'text'
     properties = db.Column(db.Text, nullable=False)  # JSON string
+    z_index = db.Column(db.Integer, default=0, nullable=False)  # Z-index for layering
     created_by = db.Column(db.String(128), db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -36,6 +37,7 @@ class CanvasObject(db.Model):
             'canvas_id': self.canvas_id,
             'object_type': self.object_type,
             'properties': self.get_properties(),
+            'z_index': self.z_index,
             'created_by': self.created_by,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None

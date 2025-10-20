@@ -131,7 +131,7 @@ const NetworkStatusIndicator: React.FC<NetworkStatusIndicatorProps> = ({
 
   const handleRefresh = () => {
     networkHealthService.performHealthCheck()
-    toast.success('Checking connection...', { duration: 2000 })
+    // Connection monitoring - toast notifications suppressed
   }
 
   const handleSync = () => {

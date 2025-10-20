@@ -99,6 +99,7 @@ export interface CanvasObject {
   canvas_id: string
   object_type: 'rectangle' | 'circle' | 'text' | 'heart' | 'star' | 'diamond' | 'line' | 'arrow'
   properties: CanvasObjectProperties
+  z_index: number
   created_by: string
   created_at: string
   updated_at: string
