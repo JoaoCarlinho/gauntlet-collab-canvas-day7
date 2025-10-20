@@ -10,15 +10,31 @@ def add_cors_headers(response):
         'https://gauntlet-collab-canvas-day7.vercel.app',
         'https://collabcanvas-mvp-day7.vercel.app',
         'https://gauntlet-collab-canvas-24hr.vercel.app',
+        'https://gauntlet-collab-canvas-24hr.vercel.app',
         'http://localhost:3000',
         'http://localhost:5173'
     ]
     
-    # If origin is in allowed list, use it; otherwise use wildcard for debugging
-    if origin in allowed_origins:
+    # Check if origin matches any allowed pattern
+    origin_allowed = False
+    if origin:
+        # Check exact match
+        if origin in allowed_origins:
+            origin_allowed = True
+        # Check Vercel pattern
+        elif origin.endswith('.vercel.app'):
+            origin_allowed = True
+        # Check Railway pattern
+        elif origin.endswith('.up.railway.app'):
+            origin_allowed = True
+        # Check localhost patterns
+        elif origin.startswith('http://localhost:') or origin.startswith('https://localhost:'):
+            origin_allowed = True
+    
+    if origin_allowed:
         response.headers['Access-Control-Allow-Origin'] = origin
     else:
-        # Temporary wildcard for debugging - REMOVE IN PRODUCTION
+        # Use wildcard for debugging - this should be more restrictive in production
         response.headers['Access-Control-Allow-Origin'] = '*'
     
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS, PATCH'

@@ -77,8 +77,8 @@ export default defineConfig({
   ],
 
   // Global setup and teardown
-  globalSetup: require.resolve('./playwright-tests/global-setup.ts'),
-  globalTeardown: require.resolve('./playwright-tests/global-teardown.ts'),
+  globalSetup: './playwright-tests/global-setup.ts',
+  globalTeardown: './playwright-tests/global-teardown.ts',
 
   // Web server configuration for local testing
   webServer: process.env.CI ? undefined : {

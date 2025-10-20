@@ -46,21 +46,48 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
           if (token) {
             // Add each object to the canvas with fallback mechanism
             for (const obj of result.canvas.objects) {
+              // Handle both object_type and type fields from AI response
+              const objectType = obj.object_type || (obj as any).type;
+              const objectProperties = obj.properties || obj;
+              
+              if (!objectType) {
+                console.error('AI object missing type field:', obj);
+                continue;
+              }
+              
               try {
                 const creationResult = await objectCreationService.createObject(
                   currentCanvasId, 
                   token, 
                   {
-                    type: obj.object_type,
-                    properties: obj.properties
+                    type: objectType,
+                    properties: objectProperties
                   }
                 );
                 
                 if (!creationResult.success) {
                   console.error('Failed to create AI object:', creationResult.error);
+                  console.error('Object data:', { type: objectType, properties: objectProperties });
+                  
+                  // Add notification for failed object creation
+                  addNotification({
+                    type: 'warning',
+                    title: 'Object Creation Failed',
+                    message: `Failed to create ${objectType} object: ${creationResult.error}`
+                  });
+                } else {
+                  console.log('AI object created successfully:', creationResult.object?.id);
                 }
               } catch (error) {
                 console.error('Error creating AI object:', error);
+                console.error('Object data:', { type: objectType, properties: objectProperties });
+                
+                // Add notification for error
+                addNotification({
+                  type: 'error',
+                  title: 'Object Creation Error',
+                  message: `Error creating ${objectType} object: ${error instanceof Error ? error.message : 'Unknown error'}`
+                });
               }
             }
           }
@@ -82,10 +109,26 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
         }
       }
     } catch (err) {
+      console.error('AI Agent error:', err);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to create canvas. Please try again.';
+      if (err instanceof Error) {
+        if (err.message.includes('Invalid object data')) {
+          errorMessage = 'AI generated invalid object data. Please try a different request.';
+        } else if (err.message.includes('authentication')) {
+          errorMessage = 'Authentication error. Please refresh the page and try again.';
+        } else if (err.message.includes('network') || err.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else {
+          errorMessage = `Error: ${err.message}`;
+        }
+      }
+      
       addNotification({
         type: 'error',
         title: 'AI Canvas Creation Failed',
-        message: 'Failed to create canvas. Please try again.'
+        message: errorMessage
       });
     }
   };

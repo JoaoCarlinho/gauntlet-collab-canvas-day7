@@ -75,11 +75,11 @@ class SocketIOClientOptimizer {
       reconnectionAttempts: 5, // More attempts since polling is less efficient
       reconnectionDelayMax: 10000, // 10 seconds
       maxReconnectionAttempts: 5,
-      compression: true,
-      compressionThreshold: 512, // 512 bytes
-      maxMessageSize: 500000, // 500KB
-      pingTimeout: 30, // 30 seconds
-      pingInterval: 20 // 20 seconds
+      compression: false, // Disable compression to avoid protocol issues
+      compressionThreshold: 0, // No compression
+      maxMessageSize: 1000000, // 1MB - increase to handle larger messages
+      pingTimeout: 60, // 60 seconds - increase timeout
+      pingInterval: 25 // 25 seconds - match server configuration
     }
   }
 
