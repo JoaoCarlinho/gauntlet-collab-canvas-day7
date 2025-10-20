@@ -6,6 +6,7 @@ from marshmallow import ValidationError
 from app.services.ai_agent_service import AIAgentService
 from app.services.ai_agent_simple import SimpleAIAgentService
 from app.services.auth_service import require_auth
+from app.services.prompt_service import PromptService
 from app.schemas.ai_agent_schemas import (
     CanvasCreationRequestSchema, 
     AIAgentHealthResponseSchema,
@@ -437,5 +438,244 @@ def get_security_metrics(current_user):
         return jsonify({
             'success': False,
             'error': 'Failed to get security metrics',
+            'message': str(e)
+        }), 500
+
+@ai_agent_bp.route('/prompts', methods=['GET'])
+@require_auth
+@ai_rate_limit('models')
+def get_user_prompts(current_user):
+    """
+    Get user's prompt history.
+    
+    ---
+    tags:
+      - AI Agent
+    security:
+      - Bearer: []
+    parameters:
+      - in: query
+        name: limit
+        type: integer
+        default: 50
+        description: Maximum number of prompts to return
+      - in: query
+        name: offset
+        type: integer
+        default: 0
+        description: Number of prompts to skip
+      - in: query
+        name: status
+        type: string
+        enum: [pending, processing, completed, failed]
+        description: Filter by status
+    responses:
+      200:
+        description: Prompts retrieved successfully
+      401:
+        description: Unauthorized
+      500:
+        description: Internal server error
+    """
+    try:
+        prompt_service = PromptService()
+        
+        # Get query parameters
+        limit = min(int(request.args.get('limit', 50)), 100)
+        offset = int(request.args.get('offset', 0))
+        status_filter = request.args.get('status')
+        
+        prompts = prompt_service.get_user_prompts(
+            user_id=current_user.id,
+            limit=limit,
+            offset=offset,
+            status_filter=status_filter
+        )
+        
+        return jsonify({
+            'success': True,
+            'prompts': [prompt.to_dict() for prompt in prompts],
+            'count': len(prompts)
+        }), 200
+        
+    except Exception as e:
+        logger.log_error(f"Failed to get user prompts: {str(e)}", e)
+        return jsonify({
+            'success': False,
+            'error': 'Failed to get prompts',
+            'message': str(e)
+        }), 500
+
+@ai_agent_bp.route('/prompts/<prompt_id>', methods=['GET'])
+@require_auth
+@ai_rate_limit('models')
+def get_prompt_by_id(current_user, prompt_id):
+    """
+    Get a specific prompt with associated canvases.
+    
+    ---
+    tags:
+      - AI Agent
+    security:
+      - Bearer: []
+    parameters:
+      - in: path
+        name: prompt_id
+        type: string
+        required: true
+        description: Prompt ID
+    responses:
+      200:
+        description: Prompt retrieved successfully
+      401:
+        description: Unauthorized
+      404:
+        description: Prompt not found
+      500:
+        description: Internal server error
+    """
+    try:
+        prompt_service = PromptService()
+        prompt = prompt_service.get_prompt_with_canvases(prompt_id)
+        
+        if not prompt:
+            return jsonify({
+                'success': False,
+                'error': 'Prompt not found'
+            }), 404
+        
+        # Check authorization
+        if prompt.user_id != current_user.id:
+            return jsonify({
+                'success': False,
+                'error': 'Access denied'
+            }), 403
+        
+        # Get canvases associated with this prompt
+        canvases = [canvas.to_dict() for canvas in prompt.canvases.all()]
+        
+        prompt_dict = prompt.to_dict()
+        prompt_dict['canvases'] = canvases
+        
+        return jsonify({
+            'success': True,
+            'prompt': prompt_dict
+        }), 200
+        
+    except Exception as e:
+        logger.log_error(f"Failed to get prompt: {str(e)}", e)
+        return jsonify({
+            'success': False,
+            'error': 'Failed to get prompt',
+            'message': str(e)
+        }), 500
+
+@ai_agent_bp.route('/prompts/<prompt_id>', methods=['DELETE'])
+@require_auth
+@ai_rate_limit('models')
+def delete_prompt(current_user, prompt_id):
+    """
+    Delete a prompt.
+    
+    ---
+    tags:
+      - AI Agent
+    security:
+      - Bearer: []
+    parameters:
+      - in: path
+        name: prompt_id
+        type: string
+        required: true
+        description: Prompt ID
+      - in: query
+        name: delete_canvases
+        type: boolean
+        default: false
+        description: Whether to delete associated canvases
+    responses:
+      200:
+        description: Prompt deleted successfully
+      401:
+        description: Unauthorized
+      404:
+        description: Prompt not found
+      500:
+        description: Internal server error
+    """
+    try:
+        prompt_service = PromptService()
+        prompt = prompt_service.get_prompt_by_id(prompt_id)
+        
+        if not prompt:
+            return jsonify({
+                'success': False,
+                'error': 'Prompt not found'
+            }), 404
+        
+        # Check authorization
+        if prompt.user_id != current_user.id:
+            return jsonify({
+                'success': False,
+                'error': 'Access denied'
+            }), 403
+        
+        delete_canvases = request.args.get('delete_canvases', 'false').lower() == 'true'
+        
+        success = prompt_service.delete_prompt(prompt_id, delete_canvases=delete_canvases)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Prompt deleted successfully'
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to delete prompt'
+            }), 500
+        
+    except Exception as e:
+        logger.log_error(f"Failed to delete prompt: {str(e)}", e)
+        return jsonify({
+            'success': False,
+            'error': 'Failed to delete prompt',
+            'message': str(e)
+        }), 500
+
+@ai_agent_bp.route('/prompts/stats', methods=['GET'])
+@require_auth
+@ai_rate_limit('models')
+def get_prompt_stats(current_user):
+    """
+    Get statistics about user's prompts.
+    
+    ---
+    tags:
+      - AI Agent
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Statistics retrieved successfully
+      401:
+        description: Unauthorized
+      500:
+        description: Internal server error
+    """
+    try:
+        prompt_service = PromptService()
+        stats = prompt_service.get_prompts_stats(current_user.id)
+        
+        return jsonify({
+            'success': True,
+            'stats': stats
+        }), 200
+        
+    except Exception as e:
+        logger.log_error(f"Failed to get prompt stats: {str(e)}", e)
+        return jsonify({
+            'success': False,
+            'error': 'Failed to get statistics',
             'message': str(e)
         }), 500

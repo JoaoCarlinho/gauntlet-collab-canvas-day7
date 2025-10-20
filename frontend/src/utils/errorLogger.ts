@@ -3,7 +3,7 @@
  */
 
 export interface ErrorContext {
-  operation: 'object_update' | 'object_create' | 'object_delete' | 'socket_connection' | 'general'
+  operation: 'object_update' | 'object_create' | 'object_delete' | 'socket_connection' | 'general' | 'ai_generation'
   objectId?: string
   objectType?: string
   canvasId?: string

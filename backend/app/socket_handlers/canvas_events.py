@@ -20,7 +20,12 @@ from app.utils.socket_message_validator import SocketMessageValidator
 import json
 
 def register_canvas_handlers(socketio):
-    """Register canvas-related Socket.IO event handlers."""
+    """Register canvas-related Socket.IO event handlers.
+    
+    Note: AI generation events (ai_generation_started, ai_generation_completed, 
+    ai_generation_failed) are emitted from AIAgentService and listened to by the frontend.
+    They are not handled as incoming socket events here.
+    """
     
     def authenticate_socket_user(id_token):
         """Authenticate user for Socket.IO events."""
@@ -45,6 +50,28 @@ def register_canvas_handlers(socketio):
         except Exception as e:
             railway_logger.log('socket_io', 40, f"Socket.IO authentication failed: {str(e)}")
             raise e
+    
+    @socketio.on('join_user_room')
+    @secure_socket_event('join_user_room', 'view')
+    def handle_join_user_room(data):
+        """Handle user joining their personal room for AI generation updates."""
+        try:
+            user = data.get('_authenticated_user')
+            user_room = f'user_{user.id}'
+            
+            # Join the user's personal room
+            join_room(user_room)
+            
+            railway_logger.log('socket_io', 10, f"User {user.id} joined personal room: {user_room}")
+            
+            emit('joined_user_room', {
+                'room': user_room,
+                'user_id': user.id
+            })
+            
+        except Exception as e:
+            handle_socket_error(e, 'join_user_room', data.get('_authenticated_user', {}).get('id'))
+            log_socket_event('user', 'join_user_room', False)
     
     @socketio.on('join_canvas')
     @secure_socket_event('join_canvas', 'view')

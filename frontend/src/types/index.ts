@@ -7,11 +7,28 @@ export interface User {
   updated_at: string
 }
 
+export interface Prompt {
+  id: string
+  user_id: string
+  instructions: string
+  style: 'modern' | 'corporate' | 'creative' | 'minimal'
+  color_scheme: 'pastel' | 'vibrant' | 'monochrome' | 'default'
+  model_used: string | null
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  request_metadata: Record<string, any>
+  error_message: string | null
+  created_at: string
+  updated_at: string
+  canvas_count: number
+  canvases?: Canvas[]
+}
+
 export interface Canvas {
   id: string
   title: string
   description: string
   owner_id: string
+  prompt_id?: string | null
   is_public: boolean
   created_at: string
   updated_at: string
