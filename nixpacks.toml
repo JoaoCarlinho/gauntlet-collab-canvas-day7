@@ -2,10 +2,11 @@
 # Completely Docker-free deployment using Railway's native Python infrastructure
 
 [phases.setup]
-nixPkgs = ["python39", "pip"]
+nixPkgs = ["python311", "python311Packages.pip"]
 
 [phases.install]
 cmds = [
+  "cd backend && pip install --upgrade pip",
   "cd backend && pip install --no-cache-dir --disable-pip-version-check -r requirements.txt"
 ]
 
