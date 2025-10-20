@@ -2721,7 +2721,6 @@ const CanvasPage: React.FC = () => {
         const props = obj.properties
         return (
           <TextEditorOverlay
-            container={stageContainer}
             containerRect={stageContainerRect}
             transform={stageTransform}
             x={props.x || 0}

@@ -7,7 +7,6 @@ interface TransformInfo {
 }
 
 interface TextEditorOverlayProps {
-  container: HTMLDivElement | null
   containerRect: DOMRect | null
   transform: TransformInfo
   x: number
@@ -21,7 +20,6 @@ interface TextEditorOverlayProps {
 }
 
 const TextEditorOverlay: React.FC<TextEditorOverlayProps> = ({
-  container,
   containerRect,
   transform,
   x,
