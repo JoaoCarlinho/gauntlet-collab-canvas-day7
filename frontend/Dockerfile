@@ -4,17 +4,20 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better layer caching
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev dependencies for build)
+RUN npm ci --frozen-lockfile
 
 # Copy source code
 COPY . .
 
 # Build the application
 RUN npm run build:railway
+
+# Clean up dev dependencies to reduce image size
+RUN npm prune --production
 
 # Production stage
 FROM node:18-alpine AS runner

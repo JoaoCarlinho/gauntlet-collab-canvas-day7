@@ -7,6 +7,7 @@ import { useSocket } from '../hooks/useSocket'
 import { canvasAPI } from '../services/api'
 import { socketService } from '../services/socket'
 import { Canvas, CanvasObject, CursorData } from '../types'
+import { ErrorWithDetails, FailedUpdate as FailedUpdateType } from '../types/common'
 import { errorLogger } from '../utils/errorLogger'
 import { objectUpdateService } from '../services/objectUpdateService'
 import { objectCreationService } from '../services/objectCreationService'
@@ -114,7 +115,7 @@ const CanvasPage: React.FC = () => {
   }>({ visible: false, x: 0, y: 0 })
   
   // Error handling state
-  const [failedUpdates, setFailedUpdates] = useState<Map<string, { error: any; timestamp: number; retryCount: number }>>(new Map())
+  const [failedUpdates, setFailedUpdates] = useState<Map<string, FailedUpdateType>>(new Map())
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'error'>('connected')
   const [showDebugPanel, setShowDebugPanel] = useState(false)
   
@@ -548,7 +549,7 @@ const CanvasPage: React.FC = () => {
     })
 
     // Presence events
-    socketService.on('user_joined', (data: { user: any }) => {
+    socketService.on('user_joined', (data: { user: { name: string; id: string } }) => {
       toast.success(`${data.user.name} joined the canvas`)
     })
 
@@ -563,7 +564,7 @@ const CanvasPage: React.FC = () => {
     })
 
     // Error event listeners
-    socketService.on('socket_error', (data: { error: any; timestamp: number; type: string }) => {
+    socketService.on('socket_error', (data: { error: ErrorWithDetails; timestamp: number; type: string }) => {
       console.error('Socket error received:', data)
       setConnectionStatus('error')
       
@@ -581,7 +582,7 @@ const CanvasPage: React.FC = () => {
       })
     })
 
-    socketService.on('object_update_failed', (data: { object_id: string; error: any; message?: string }) => {
+    socketService.on('object_update_failed', (data: { object_id: string; error: ErrorWithDetails; message?: string }) => {
       console.error('Object update failed:', data)
       
       // Track failed update for retry mechanism
@@ -608,14 +609,14 @@ const CanvasPage: React.FC = () => {
       })
     })
 
-    socketService.on('object_create_failed', (data: { object_type: string; error: any; message?: string }) => {
+    socketService.on('object_create_failed', (data: { object_type: string; error: ErrorWithDetails; message?: string }) => {
       console.error('Object creation failed:', data)
       
       const errorMessage = data.message || `Failed to create ${data.object_type}`
       toast.error(errorMessage, { duration: 4000 })
     })
 
-    socketService.on('object_delete_failed', (data: { object_id: string; error: any; message?: string }) => {
+    socketService.on('object_delete_failed', (data: { object_id: string; error: ErrorWithDetails; message?: string }) => {
       console.error('Object deletion failed:', data)
       
       const errorMessage = data.message || 'Failed to delete object'
