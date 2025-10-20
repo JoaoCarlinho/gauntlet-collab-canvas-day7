@@ -6,6 +6,35 @@
 import { socketService } from './socket'
 import { socketIOClientOptimizer } from '../utils/socketioClientOptimizer'
 
+// Create a simple EventEmitter-like class for browser compatibility
+class SimpleEventEmitter {
+  private listeners: Map<string, Function[]> = new Map()
+
+  on(event: string, listener: Function) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, [])
+    }
+    this.listeners.get(event)!.push(listener)
+  }
+
+  off(event: string, listener: Function) {
+    const eventListeners = this.listeners.get(event)
+    if (eventListeners) {
+      const index = eventListeners.indexOf(listener)
+      if (index > -1) {
+        eventListeners.splice(index, 1)
+      }
+    }
+  }
+
+  emit(event: string, ...args: any[]) {
+    const eventListeners = this.listeners.get(event)
+    if (eventListeners) {
+      eventListeners.forEach(listener => listener(...args))
+    }
+  }
+}
+
 export interface ConnectionQualityMetrics {
   parseErrorRate: number
   connectionDropRate: number
@@ -18,12 +47,12 @@ export interface ConnectionQualityMetrics {
 }
 
 export interface ConnectionEvent {
-  type: 'connect' | 'disconnect' | 'reconnect' | 'parse_error' | 'message_sent' | 'message_received'
+  type: 'connect' | 'disconnect' | 'reconnect' | 'parse_error' | 'message_sent' | 'message_received' | 'connection_error' | 'connection_lost' | 'connection_restored'
   timestamp: number
   data?: any
 }
 
-class ConnectionQualityMonitor {
+class ConnectionQualityMonitor extends SimpleEventEmitter {
   private connectionEvents: ConnectionEvent[] = []
   private maxEventHistory = 1000
   private monitoringInterval: number | null = null
