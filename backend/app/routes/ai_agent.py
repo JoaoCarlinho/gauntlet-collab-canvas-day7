@@ -7,6 +7,9 @@ from app.services.ai_agent_service import AIAgentService
 from app.services.ai_agent_simple import SimpleAIAgentService
 from app.services.auth_service import require_auth
 from app.services.prompt_service import PromptService
+from app.services.ai_job_service import AIJobService
+from app.models.ai_job import AIJob
+from app.extensions import db
 from app.schemas.ai_agent_schemas import (
     CanvasCreationRequestSchema, 
     AIAgentHealthResponseSchema,
@@ -24,7 +27,7 @@ logger = SmartLogger('ai_agent_routes', 'WARNING')
 @ai_rate_limit('create_canvas')
 def create_canvas_with_ai(current_user):
     """
-    Create canvas objects using AI agent based on user query.
+    Create canvas objects using AI agent with background processing.
     
     ---
     tags:
@@ -57,26 +60,23 @@ def create_canvas_with_ai(current_user):
             canvas_id:
               type: string
               description: Optional existing canvas ID to add objects to
+            priority:
+              type: integer
+              default: 0
+              description: Job priority (higher number = higher priority)
     responses:
-      200:
-        description: Canvas created successfully
+      202:
+        description: Job created successfully
         schema:
           type: object
           properties:
             success:
               type: boolean
-            canvas:
-              type: object
-              properties:
-                id:
-                  type: string
-                title:
-                  type: string
-                objects:
-                  type: array
-                  items:
-                    type: object
+            job_id:
+              type: string
             message:
+              type: string
+            status:
               type: string
       400:
         description: Invalid request data
@@ -90,51 +90,24 @@ def create_canvas_with_ai(current_user):
         schema = CanvasCreationRequestSchema()
         data = schema.load(request.json)
         
-        # Initialize AI agent service (try fallback service first to avoid OpenAI issues)
-        try:
-            from app.services.ai_agent_fallback import FallbackAIAgentService
-            ai_service = FallbackAIAgentService()
-            logger.log_info("Using fallback AI service (no OpenAI dependency)")
-        except Exception as e:
-            logger.log_error(f"Fallback AI service failed, trying robust service: {str(e)}", e)
-            try:
-                from app.services.ai_agent_robust import RobustAIAgentService
-                ai_service = RobustAIAgentService()
-            except Exception as e2:
-                logger.log_error(f"Robust AI service failed, trying simple service: {str(e2)}", e2)
-                try:
-                    ai_service = SimpleAIAgentService()
-                except Exception as e3:
-                    logger.log_error(f"Simple AI service failed, trying full service: {str(e3)}", e3)
-                    try:
-                        ai_service = AIAgentService()
-                    except Exception as e4:
-                        logger.log_error(f"All AI services failed, using emergency fallback: {str(e4)}", e4)
-                        # Emergency fallback - create a simple canvas without AI
-                        return self._create_emergency_canvas(data, current_user)
-        
-        # Process the query and generate canvas objects
-        result = ai_service.create_canvas_from_query(
-            query=data['instructions'],
+        # Create background job
+        job_service = AIJobService()
+        job_id = job_service.create_canvas_job(
             user_id=current_user.id,
-            canvas_id=data.get('canvas_id'),
-            style=data.get('style', 'modern'),
-            color_scheme=data.get('colorScheme', 'default')
+            request_data=data,
+            priority=data.get('priority', 0)
         )
         
         # Only log success in development
         if os.environ.get('FLASK_ENV') == 'development':
-            logger.log_info(f"AI canvas created successfully for user {current_user.id}")
+            logger.log_info(f"AI canvas job created for user {current_user.id}")
         
         return jsonify({
             'success': True,
-            'canvas': {
-                'id': result['canvas_id'],
-                'title': result['title'],
-                'objects': result['objects']
-            },
-            'message': result['message']
-        }), 200
+            'job_id': job_id,
+            'message': 'Canvas creation job started',
+            'status': 'queued'
+        }), 202  # Accepted
         
     except ValidationError as e:
         logger.log_warning(f"Validation error in AI canvas creation: {e.messages}")
@@ -153,7 +126,7 @@ def create_canvas_with_ai(current_user):
         }), 400
         
     except Exception as e:
-        logger.log_error(f"AI canvas creation failed: {str(e)}", e)
+        logger.log_error(f"Failed to create AI canvas job: {str(e)}", e)
         return jsonify({
             'success': False,
             'error': 'Failed to create canvas',
@@ -221,6 +194,136 @@ def _create_emergency_canvas(data, current_user):
                 'message': 'Unable to create canvas at this time'
             }), 500
 
+# Add new endpoints for job management
+@ai_agent_bp.route('/job/<job_id>/status', methods=['GET'])
+@cross_origin(origins=['*'], supports_credentials=True)
+@require_auth
+def get_job_status(current_user, job_id):
+    """Get status of AI job."""
+    try:
+        job_service = AIJobService()
+        job = job_service.get_job(job_id, current_user.id)
+        
+        if not job:
+            return jsonify({'error': 'Job not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'job': job.to_dict()
+        })
+        
+    except Exception as e:
+        logger.log_error(f"Failed to get job status: {str(e)}", e)
+        return jsonify({'error': str(e)}), 500
+
+@ai_agent_bp.route('/job/<job_id>/result', methods=['GET'])
+@cross_origin(origins=['*'], supports_credentials=True)
+@require_auth
+def get_job_result(current_user, job_id):
+    """Get result of completed AI job."""
+    try:
+        job_service = AIJobService()
+        job = job_service.get_job(job_id, current_user.id)
+        
+        if not job:
+            return jsonify({'error': 'Job not found'}), 404
+        
+        if job.status != 'completed':
+            return jsonify({'error': 'Job not completed'}), 400
+        
+        return jsonify({
+            'success': True,
+            'result': job.result_data
+        })
+        
+    except Exception as e:
+        logger.log_error(f"Failed to get job result: {str(e)}", e)
+        return jsonify({'error': str(e)}), 500
+
+@ai_agent_bp.route('/job/<job_id>/cancel', methods=['POST'])
+@cross_origin(origins=['*'], supports_credentials=True)
+@require_auth
+def cancel_job(current_user, job_id):
+    """Cancel an AI job."""
+    try:
+        job_service = AIJobService()
+        success = job_service.cancel_job(job_id, current_user.id)
+        
+        if not success:
+            return jsonify({'error': 'Job cannot be cancelled'}), 400
+        
+        return jsonify({
+            'success': True,
+            'message': 'Job cancelled successfully'
+        })
+        
+    except Exception as e:
+        logger.log_error(f"Failed to cancel job: {str(e)}", e)
+        return jsonify({'error': str(e)}), 500
+
+@ai_agent_bp.route('/job/<job_id>/retry', methods=['POST'])
+@cross_origin(origins=['*'], supports_credentials=True)
+@require_auth
+def retry_job(current_user, job_id):
+    """Retry a failed AI job."""
+    try:
+        job_service = AIJobService()
+        success = job_service.retry_failed_job(job_id, current_user.id)
+        
+        if not success:
+            return jsonify({'error': 'Job cannot be retried'}), 400
+        
+        return jsonify({
+            'success': True,
+            'message': 'Job retry started'
+        })
+        
+    except Exception as e:
+        logger.log_error(f"Failed to retry job: {str(e)}", e)
+        return jsonify({'error': str(e)}), 500
+
+@ai_agent_bp.route('/jobs', methods=['GET'])
+@cross_origin(origins=['*'], supports_credentials=True)
+@require_auth
+def get_user_jobs(current_user):
+    """Get jobs for the current user."""
+    try:
+        limit = request.args.get('limit', 50, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        
+        jobs = AIJob.query.filter_by(user_id=current_user.id)\
+                         .order_by(AIJob.created_at.desc())\
+                         .limit(limit)\
+                         .offset(offset)\
+                         .all()
+        
+        return jsonify({
+            'success': True,
+            'jobs': [job.to_dict() for job in jobs]
+        })
+        
+    except Exception as e:
+        logger.log_error(f"Failed to get user jobs: {str(e)}", e)
+        return jsonify({'error': str(e)}), 500
+
+@ai_agent_bp.route('/jobs/stats', methods=['GET'])
+@cross_origin(origins=['*'], supports_credentials=True)
+@require_auth
+def get_job_statistics(current_user):
+    """Get job processing statistics."""
+    try:
+        job_service = AIJobService()
+        stats = job_service.get_job_statistics()
+        
+        return jsonify({
+            'success': True,
+            'stats': stats
+        })
+        
+    except Exception as e:
+        logger.log_error(f"Failed to get job statistics: {str(e)}", e)
+        return jsonify({'error': str(e)}), 500
+
 @ai_agent_bp.route('/health', methods=['GET'])
 @ai_rate_limit('health')
 def health_check():
@@ -238,32 +341,34 @@ def health_check():
           properties:
             status:
               type: string
-            openai_connected:
-              type: boolean
+            database:
+              type: string
+            job_processor:
+              type: object
             timestamp:
               type: string
       500:
         description: Service is unhealthy
     """
     try:
-        ai_service = AIAgentService()
-        # Test OpenAI connection by listing models
-        models = ai_service.openai_client.models.list()
+        # Check database connection
+        from sqlalchemy import text
+        db.session.execute(text('SELECT 1'))
+        
+        # Check job processor status
+        from app.services.job_processor import job_processor
+        processor_status = job_processor.get_status()
         
         return jsonify({
             'status': 'healthy',
-            'openai_connected': True,
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'model_count': len(models.data) if hasattr(models, 'data') else 0
-        }), 200
-        
+            'database': 'connected',
+            'job_processor': processor_status,
+            'timestamp': datetime.utcnow().isoformat()
+        })
     except Exception as e:
-        logger.log_error(f"AI agent health check failed: {str(e)}", e)
         return jsonify({
             'status': 'unhealthy',
-            'openai_connected': False,
-            'error': str(e),
-            'timestamp': datetime.utcnow().isoformat()
+            'error': str(e)
         }), 500
 
 @ai_agent_bp.route('/models', methods=['GET'])

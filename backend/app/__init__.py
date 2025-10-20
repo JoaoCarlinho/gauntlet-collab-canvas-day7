@@ -333,8 +333,13 @@ def create_app(config_class=Config):
         try:
             db.create_all()
             print("Database tables created successfully")
+            
+            # Start job processor
+            from app.services.job_processor import job_processor
+            job_processor.start()
+            print("Job processor started successfully")
         except Exception as e:
-            print(f"Error creating database tables: {e}")
+            print(f"Error creating database tables or starting job processor: {e}")
     
     # Add health check endpoints
     @app.route('/health')

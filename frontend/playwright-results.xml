@@ -1,0 +1,3276 @@
+<testsuites id="" name="" tests="82" failures="82" skipped="0" errors="0" time="177.220379">
+<testsuite name="auth/user-authentication.spec.ts" timestamp="2025-10-20T03:58:13.491Z" hostname="production-chromium" tests="6" failures="6" skipped="0" time="43.839" errors="0">
+<testcase name="User Authentication Journey › should complete user registration flow" classname="auth/user-authentication.spec.ts" time="10.678">
+<failure message="user-authentication.spec.ts:28:3 should complete user registration flow" type="FAILURE">
+<![CDATA[  [production-chromium] › auth/user-authentication.spec.ts:28:3 › User Authentication Journey › should complete user registration flow 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="email-auth-button"]')
+
+
+      30 |     
+      31 |     // Switch to email authentication method
+    > 32 |     await page.click('[data-testid="email-auth-button"]');
+         |                ^
+      33 |     
+      34 |     // Check if user is already authenticated
+      35 |     const isAuthenticated = await page.evaluate(() => {
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:32:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="User Authentication Journey › should complete user login flow" classname="auth/user-authentication.spec.ts" time="10.684">
+<failure message="user-authentication.spec.ts:59:3 should complete user login flow" type="FAILURE">
+<![CDATA[  [production-chromium] › auth/user-authentication.spec.ts:59:3 › User Authentication Journey › should complete user login flow 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="email-auth-button"]')
+
+
+      61 |     
+      62 |     // Switch to email authentication method
+    > 63 |     await page.click('[data-testid="email-auth-button"]');
+         |                ^
+      64 |     
+      65 |     // Test login flow
+      66 |     await page.click('[data-testid="sign-in-button"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:63:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="User Authentication Journey › should handle authentication errors gracefully" classname="auth/user-authentication.spec.ts" time="10.672">
+<failure message="user-authentication.spec.ts:89:3 should handle authentication errors gracefully" type="FAILURE">
+<![CDATA[  [production-chromium] › auth/user-authentication.spec.ts:89:3 › User Authentication Journey › should handle authentication errors gracefully 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="email-auth-button"]')
+
+
+      91 |     
+      92 |     // Switch to email authentication method
+    > 93 |     await page.click('[data-testid="email-auth-button"]');
+         |                ^
+      94 |     
+      95 |     // Test invalid email
+      96 |     await page.click('[data-testid="sign-in-button"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:93:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="User Authentication Journey › should maintain authentication state across page reloads" classname="auth/user-authentication.spec.ts" time="0.587">
+<failure message="user-authentication.spec.ts:112:3 should maintain authentication state across page reloads" type="FAILURE">
+<![CDATA[  [production-chromium] › auth/user-authentication.spec.ts:112:3 › User Authentication Journey › should maintain authentication state across page reloads 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      118 |     });
+      119 |     
+    > 120 |     expect(isAuthenticated).toBe(true);
+          |                             ^
+      121 |     
+      122 |     // Reload page
+      123 |     await page.reload();
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:120:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="User Authentication Journey › should handle session expiration" classname="auth/user-authentication.spec.ts" time="5.666">
+<failure message="user-authentication.spec.ts:134:3 should handle session expiration" type="FAILURE">
+<![CDATA[  [production-chromium] › auth/user-authentication.spec.ts:134:3 › User Authentication Journey › should handle session expiration 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-testid="login-form"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[data-testid="login-form"]')
+
+
+      145 |     
+      146 |     // Should redirect to login
+    > 147 |     await expect(page.locator('[data-testid="login-form"]')).toBeVisible();
+          |                                                              ^
+      148 |     
+      149 |     // Should clear expired tokens
+      150 |     const token = await page.evaluate(() => {
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:147:62
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="User Authentication Journey › should support logout functionality" classname="auth/user-authentication.spec.ts" time="5.552">
+<failure message="user-authentication.spec.ts:157:3 should support logout functionality" type="FAILURE">
+<![CDATA[  [production-chromium] › auth/user-authentication.spec.ts:157:3 › User Authentication Journey › should support logout functionality 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-testid="user-menu"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[data-testid="user-menu"]')
+
+
+      159 |     
+      160 |     // Verify user is authenticated
+    > 161 |     await expect(page.locator('[data-testid="user-menu"]')).toBeVisible();
+          |                                                             ^
+      162 |     
+      163 |     // Click logout
+      164 |     await page.click('[data-testid="user-menu"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:161:61
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="canvas/canvas-creation-journey.spec.ts" timestamp="2025-10-20T03:58:13.491Z" hostname="production-chromium" tests="7" failures="7" skipped="0" time="76.261" errors="0">
+<testcase name="Canvas Creation Journey › should create a new canvas successfully" classname="canvas/canvas-creation-journey.spec.ts" time="10.845">
+<failure message="canvas-creation-journey.spec.ts:26:3 should create a new canvas successfully" type="FAILURE">
+<![CDATA[  [production-chromium] › canvas/canvas-creation-journey.spec.ts:26:3 › Canvas Creation Journey › should create a new canvas successfully 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      28 |     
+      29 |     // Navigate to canvas creation
+    > 30 |     await page.click('[data-testid="create-canvas-button"]');
+         |                ^
+      31 |     await expect(page.locator('[data-testid="canvas-creation-modal"]')).toBeVisible();
+      32 |     
+      33 |     // Fill canvas details
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:30:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should handle canvas creation validation errors" classname="canvas/canvas-creation-journey.spec.ts" time="10.83">
+<failure message="canvas-creation-journey.spec.ts:54:3 should handle canvas creation validation errors" type="FAILURE">
+<![CDATA[  [production-chromium] › canvas/canvas-creation-journey.spec.ts:54:3 › Canvas Creation Journey › should handle canvas creation validation errors 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      56 |     
+      57 |     // Navigate to canvas creation
+    > 58 |     await page.click('[data-testid="create-canvas-button"]');
+         |                ^
+      59 |     
+      60 |     // Try to create canvas without name
+      61 |     await page.click('[data-testid="create-canvas-submit"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:58:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should create canvas with different permission levels" classname="canvas/canvas-creation-journey.spec.ts" time="10.936">
+<failure message="canvas-creation-journey.spec.ts:74:3 should create canvas with different permission levels" type="FAILURE">
+<![CDATA[  [production-chromium] › canvas/canvas-creation-journey.spec.ts:74:3 › Canvas Creation Journey › should create canvas with different permission levels 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      76 |     
+      77 |     // Test public canvas creation
+    > 78 |     await page.click('[data-testid="create-canvas-button"]');
+         |                ^
+      79 |     await page.fill('[data-testid="canvas-name-input"]', 'Public Test Canvas');
+      80 |     await page.selectOption('[data-testid="canvas-visibility-select"]', 'public');
+      81 |     await page.click('[data-testid="create-canvas-submit"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should allow canvas editing and updates" classname="canvas/canvas-creation-journey.spec.ts" time="10.977">
+<failure message="canvas-creation-journey.spec.ts:101:3 should allow canvas editing and updates" type="FAILURE">
+<![CDATA[  [production-chromium] › canvas/canvas-creation-journey.spec.ts:101:3 › Canvas Creation Journey › should allow canvas editing and updates 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      103 |     
+      104 |     // Create a canvas first
+    > 105 |     await page.click('[data-testid="create-canvas-button"]');
+          |                ^
+      106 |     await page.fill('[data-testid="canvas-name-input"]', 'Editable Test Canvas');
+      107 |     await page.click('[data-testid="create-canvas-submit"]');
+      108 |     
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:105:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should handle canvas deletion" classname="canvas/canvas-creation-journey.spec.ts" time="10.967">
+<failure message="canvas-creation-journey.spec.ts:126:3 should handle canvas deletion" type="FAILURE">
+<![CDATA[  [production-chromium] › canvas/canvas-creation-journey.spec.ts:126:3 › Canvas Creation Journey › should handle canvas deletion 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      128 |     
+      129 |     // Create a canvas first
+    > 130 |     await page.click('[data-testid="create-canvas-button"]');
+          |                ^
+      131 |     await page.fill('[data-testid="canvas-name-input"]', 'Canvas to Delete');
+      132 |     await page.click('[data-testid="create-canvas-submit"]');
+      133 |     
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:130:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should support canvas templates" classname="canvas/canvas-creation-journey.spec.ts" time="10.853">
+<failure message="canvas-creation-journey.spec.ts:153:3 should support canvas templates" type="FAILURE">
+<![CDATA[  [production-chromium] › canvas/canvas-creation-journey.spec.ts:153:3 › Canvas Creation Journey › should support canvas templates 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      155 |     
+      156 |     // Navigate to canvas creation
+    > 157 |     await page.click('[data-testid="create-canvas-button"]');
+          |                ^
+      158 |     
+      159 |     // Select a template
+      160 |     await page.click('[data-testid="template-selector"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:157:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should handle canvas creation with AI assistance" classname="canvas/canvas-creation-journey.spec.ts" time="10.853">
+<failure message="canvas-creation-journey.spec.ts:176:3 should handle canvas creation with AI assistance" type="FAILURE">
+<![CDATA[  [production-chromium] › canvas/canvas-creation-journey.spec.ts:176:3 › Canvas Creation Journey › should handle canvas creation with AI assistance 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      178 |     
+      179 |     // Navigate to canvas creation
+    > 180 |     await page.click('[data-testid="create-canvas-button"]');
+          |                ^
+      181 |     
+      182 |     // Enable AI assistance
+      183 |     await page.click('[data-testid="ai-assistance-toggle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:180:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="collaboration/real-time-collaboration.spec.ts" timestamp="2025-10-20T03:58:13.491Z" hostname="production-chromium" tests="7" failures="7" skipped="0" time="75.987" errors="0">
+<testcase name="Real-time Collaboration Journey › should allow multiple users to join the same canvas" classname="collaboration/real-time-collaboration.spec.ts" time="11.024">
+<failure message="real-time-collaboration.spec.ts:44:3 should allow multiple users to join the same canvas" type="FAILURE">
+<![CDATA[  [production-chromium] › collaboration/real-time-collaboration.spec.ts:44:3 › Real-time Collaboration Journey › should allow multiple users to join the same canvas 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      45 |     // User 1 creates a canvas
+      46 |     await user1Page.goto('/');
+    > 47 |     await user1Page.click('[data-testid="create-canvas-button"]');
+         |                     ^
+      48 |     await user1Page.fill('[data-testid="canvas-name-input"]', 'Collaboration Test Canvas');
+      49 |     await user1Page.selectOption('[data-testid="canvas-visibility-select"]', 'public');
+      50 |     await user1Page.click('[data-testid="create-canvas-submit"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:47:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-chromium/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should synchronize object creation across users" classname="collaboration/real-time-collaboration.spec.ts" time="10.823">
+<failure message="real-time-collaboration.spec.ts:71:3 should synchronize object creation across users" type="FAILURE">
+<![CDATA[  [production-chromium] › collaboration/real-time-collaboration.spec.ts:71:3 › Real-time Collaboration Journey › should synchronize object creation across users 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      75 |     
+      76 |     // Wait for both users to be connected
+    > 77 |     await user1Page.waitForSelector('[data-testid="canvas-container"]');
+         |                     ^
+      78 |     await user2Page.waitForSelector('[data-testid="canvas-container"]');
+      79 |     
+      80 |     // User 1 creates a rectangle
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:77:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-chromium/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should synchronize object modifications across users" classname="collaboration/real-time-collaboration.spec.ts" time="10.799">
+<failure message="real-time-collaboration.spec.ts:101:3 should synchronize object modifications across users" type="FAILURE">
+<![CDATA[  [production-chromium] › collaboration/real-time-collaboration.spec.ts:101:3 › Real-time Collaboration Journey › should synchronize object modifications across users 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      104 |     await user2Page.goto('/dev/canvas/test-canvas');
+      105 |     
+    > 106 |     await user1Page.waitForSelector('[data-testid="canvas-container"]');
+          |                     ^
+      107 |     await user2Page.waitForSelector('[data-testid="canvas-container"]');
+      108 |     
+      109 |     // User 1 creates a rectangle
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:106:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-chromium/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should handle concurrent object creation without conflicts" classname="collaboration/real-time-collaboration.spec.ts" time="10.718">
+<failure message="real-time-collaboration.spec.ts:129:3 should handle concurrent object creation without conflicts" type="FAILURE">
+<![CDATA[  [production-chromium] › collaboration/real-time-collaboration.spec.ts:129:3 › Real-time Collaboration Journey › should handle concurrent object creation without conflicts 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      132 |     await user2Page.goto('/dev/canvas/test-canvas');
+      133 |     
+    > 134 |     await user1Page.waitForSelector('[data-testid="canvas-container"]');
+          |                     ^
+      135 |     await user2Page.waitForSelector('[data-testid="canvas-container"]');
+      136 |     
+      137 |     // Both users create objects simultaneously
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:134:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-chromium/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should show real-time cursor positions" classname="collaboration/real-time-collaboration.spec.ts" time="10.743">
+<failure message="real-time-collaboration.spec.ts:160:3 should show real-time cursor positions" type="FAILURE">
+<![CDATA[  [production-chromium] › collaboration/real-time-collaboration.spec.ts:160:3 › Real-time Collaboration Journey › should show real-time cursor positions 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      163 |     await user2Page.goto('/dev/canvas/test-canvas');
+      164 |     
+    > 165 |     await user1Page.waitForSelector('[data-testid="canvas-container"]');
+          |                     ^
+      166 |     await user2Page.waitForSelector('[data-testid="canvas-container"]');
+      167 |     
+      168 |     // User 1 moves cursor
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:165:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-chromium/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should handle user disconnection and reconnection" classname="collaboration/real-time-collaboration.spec.ts" time="10.896">
+<failure message="real-time-collaboration.spec.ts:181:3 should handle user disconnection and reconnection" type="FAILURE">
+<![CDATA[  [production-chromium] › collaboration/real-time-collaboration.spec.ts:181:3 › Real-time Collaboration Journey › should handle user disconnection and reconnection 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      184 |     await user2Page.goto('/dev/canvas/test-canvas');
+      185 |     
+    > 186 |     await user1Page.waitForSelector('[data-testid="canvas-container"]');
+          |                     ^
+      187 |     await user2Page.waitForSelector('[data-testid="canvas-container"]');
+      188 |     
+      189 |     // User 1 creates an object
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:186:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-chromium/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should handle canvas permissions and access control" classname="collaboration/real-time-collaboration.spec.ts" time="10.984">
+<failure message="real-time-collaboration.spec.ts:214:3 should handle canvas permissions and access control" type="FAILURE">
+<![CDATA[  [production-chromium] › collaboration/real-time-collaboration.spec.ts:214:3 › Real-time Collaboration Journey › should handle canvas permissions and access control 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      215 |     // User 1 creates a private canvas
+      216 |     await user1Page.goto('/');
+    > 217 |     await user1Page.click('[data-testid="create-canvas-button"]');
+          |                     ^
+      218 |     await user1Page.fill('[data-testid="canvas-name-input"]', 'Private Collaboration Canvas');
+      219 |     await user1Page.selectOption('[data-testid="canvas-visibility-select"]', 'private');
+      220 |     await user1Page.click('[data-testid="create-canvas-submit"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:217:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-chromium/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="cross-browser/cross-browser-compatibility.spec.ts" timestamp="2025-10-20T03:58:13.491Z" hostname="production-chromium" tests="10" failures="10" skipped="0" time="102.282" errors="0">
+<testcase name="Cross-Browser Compatibility › should load canvas interface consistently across browsers" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.717">
+<failure message="cross-browser-compatibility.spec.ts:26:3 should load canvas interface consistently across browsers" type="FAILURE">
+<![CDATA[  [production-chromium] › cross-browser/cross-browser-compatibility.spec.ts:26:3 › Cross-Browser Compatibility › should load canvas interface consistently across browsers 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      28 |     
+      29 |     // Wait for canvas to load
+    > 30 |     await page.waitForSelector('[data-testid="canvas-container"]', { timeout: 10000 });
+         |                ^
+      31 |     
+      32 |     // Verify core elements are present
+      33 |     await expect(page.locator('[data-testid="canvas-container"]')).toBeVisible();
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:30:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle canvas interactions consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.758">
+<failure message="cross-browser-compatibility.spec.ts:44:3 should handle canvas interactions consistently" type="FAILURE">
+<![CDATA[  [production-chromium] › cross-browser/cross-browser-compatibility.spec.ts:44:3 › Cross-Browser Compatibility › should handle canvas interactions consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      46 |     
+      47 |     // Wait for canvas to load
+    > 48 |     await page.waitForSelector('.konvajs-content');
+         |                ^
+      49 |     
+      50 |     // Test rectangle tool
+      51 |     await page.click('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:48:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle text rendering consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.747">
+<failure message="cross-browser-compatibility.spec.ts:76:3 should handle text rendering consistently" type="FAILURE">
+<![CDATA[  [production-chromium] › cross-browser/cross-browser-compatibility.spec.ts:76:3 › Cross-Browser Compatibility › should handle text rendering consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      77 |     await page.goto('/dev/canvas/test-canvas');
+      78 |     
+    > 79 |     await page.waitForSelector('.konvajs-content');
+         |                ^
+      80 |     
+      81 |     // Test text tool
+      82 |     await page.click('[data-testid="tool-text"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:79:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle color picker consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.715">
+<failure message="cross-browser-compatibility.spec.ts:101:3 should handle color picker consistently" type="FAILURE">
+<![CDATA[  [production-chromium] › cross-browser/cross-browser-compatibility.spec.ts:101:3 › Cross-Browser Compatibility › should handle color picker consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      102 |     await page.goto('/dev/canvas/test-canvas');
+      103 |     
+    > 104 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      105 |     
+      106 |     // Create an object first
+      107 |     await page.click('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:104:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle keyboard shortcuts consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.771">
+<failure message="cross-browser-compatibility.spec.ts:131:3 should handle keyboard shortcuts consistently" type="FAILURE">
+<![CDATA[  [production-chromium] › cross-browser/cross-browser-compatibility.spec.ts:131:3 › Cross-Browser Compatibility › should handle keyboard shortcuts consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      132 |     await page.goto('/dev/canvas/test-canvas');
+      133 |     
+    > 134 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      135 |     
+      136 |     // Create an object
+      137 |     await page.click('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:134:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle drag and drop consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.678">
+<failure message="cross-browser-compatibility.spec.ts:167:3 should handle drag and drop consistently" type="FAILURE">
+<![CDATA[  [production-chromium] › cross-browser/cross-browser-compatibility.spec.ts:167:3 › Cross-Browser Compatibility › should handle drag and drop consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      168 |     await page.goto('/dev/canvas/test-canvas');
+      169 |     
+    > 170 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      171 |     
+      172 |     // Create an object
+      173 |     await page.click('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:170:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle zoom functionality consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.817">
+<failure message="cross-browser-compatibility.spec.ts:204:3 should handle zoom functionality consistently" type="FAILURE">
+<![CDATA[  [production-chromium] › cross-browser/cross-browser-compatibility.spec.ts:204:3 › Cross-Browser Compatibility › should handle zoom functionality consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      205 |     await page.goto('/dev/canvas/test-canvas');
+      206 |     
+    > 207 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      208 |     
+      209 |     // Test zoom in
+      210 |     await page.click('[data-testid="zoom-in-button"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:207:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle responsive design consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.704">
+<failure message="cross-browser-compatibility.spec.ts:231:3 should handle responsive design consistently" type="FAILURE">
+<![CDATA[  [production-chromium] › cross-browser/cross-browser-compatibility.spec.ts:231:3 › Cross-Browser Compatibility › should handle responsive design consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      243 |       await page.goto('/dev/canvas/test-canvas');
+      244 |       
+    > 245 |       await page.waitForSelector('[data-testid="canvas-container"]');
+          |                  ^
+      246 |       
+      247 |       // Verify canvas is visible and properly sized
+      248 |       await expect(page.locator('[data-testid="canvas-container"]')).toBeVisible();
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:245:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle WebSocket connections consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.702">
+<failure message="cross-browser-compatibility.spec.ts:258:3 should handle WebSocket connections consistently" type="FAILURE">
+<![CDATA[  [production-chromium] › cross-browser/cross-browser-compatibility.spec.ts:258:3 › Cross-Browser Compatibility › should handle WebSocket connections consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      259 |     await page.goto('/dev/canvas/test-canvas');
+      260 |     
+    > 261 |     await page.waitForSelector('[data-testid="canvas-container"]');
+          |                ^
+      262 |     
+      263 |     // Check WebSocket connection status
+      264 |     const connectionStatus = await page.evaluate(() => {
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:261:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle error states consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="5.673">
+<failure message="cross-browser-compatibility.spec.ts:282:3 should handle error states consistently" type="FAILURE">
+<![CDATA[  [production-chromium] › cross-browser/cross-browser-compatibility.spec.ts:282:3 › Cross-Browser Compatibility › should handle error states consistently 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-testid="error-message"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[data-testid="error-message"]')
+
+
+      287 |     
+      288 |     // Should show error state
+    > 289 |     await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
+          |                                                                 ^
+      290 |     
+      291 |     // Take screenshot of error state
+      292 |     await page.screenshot({ 
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:289:65
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="mobile/mobile-compatibility.spec.ts" timestamp="2025-10-20T03:58:13.491Z" hostname="production-chromium" tests="11" failures="11" skipped="0" time="112.213" errors="0">
+<testcase name="Mobile Compatibility › should load canvas interface on mobile devices" classname="mobile/mobile-compatibility.spec.ts" time="10.691">
+<failure message="mobile-compatibility.spec.ts:26:3 should load canvas interface on mobile devices" type="FAILURE">
+<![CDATA[  [production-chromium] › mobile/mobile-compatibility.spec.ts:26:3 › Mobile Compatibility › should load canvas interface on mobile devices 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      31 |     
+      32 |     // Wait for canvas to load
+    > 33 |     await page.waitForSelector('[data-testid="canvas-container"]', { timeout: 10000 });
+         |                ^
+      34 |     
+      35 |     // Verify core elements are present and properly sized
+      36 |     await expect(page.locator('[data-testid="canvas-container"]')).toBeVisible();
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:33:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle touch interactions for object creation" classname="mobile/mobile-compatibility.spec.ts" time="10.669">
+<failure message="mobile-compatibility.spec.ts:56:3 should handle touch interactions for object creation" type="FAILURE">
+<![CDATA[  [production-chromium] › mobile/mobile-compatibility.spec.ts:56:3 › Mobile Compatibility › should handle touch interactions for object creation 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      58 |     await page.goto('/dev/canvas/test-canvas');
+      59 |     
+    > 60 |     await page.waitForSelector('.konvajs-content');
+         |                ^
+      61 |     
+      62 |     // Test touch interaction for rectangle tool
+      63 |     await page.tap('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:60:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle pinch-to-zoom gestures" classname="mobile/mobile-compatibility.spec.ts" time="10.755">
+<failure message="mobile-compatibility.spec.ts:88:3 should handle pinch-to-zoom gestures" type="FAILURE">
+<![CDATA[  [production-chromium] › mobile/mobile-compatibility.spec.ts:88:3 › Mobile Compatibility › should handle pinch-to-zoom gestures 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      90 |     await page.goto('/dev/canvas/test-canvas');
+      91 |     
+    > 92 |     await page.waitForSelector('.konvajs-content');
+         |                ^
+      93 |     
+      94 |     // Simulate pinch-to-zoom gesture
+      95 |     const canvas = page.locator('.konvajs-content');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:92:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle touch drag for object manipulation" classname="mobile/mobile-compatibility.spec.ts" time="10.609">
+<failure message="mobile-compatibility.spec.ts:124:3 should handle touch drag for object manipulation" type="FAILURE">
+<![CDATA[  [production-chromium] › mobile/mobile-compatibility.spec.ts:124:3 › Mobile Compatibility › should handle touch drag for object manipulation 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      126 |     await page.goto('/dev/canvas/test-canvas');
+      127 |     
+    > 128 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      129 |     
+      130 |     // Create an object first
+      131 |     await page.tap('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:128:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile keyboard input" classname="mobile/mobile-compatibility.spec.ts" time="10.673">
+<failure message="mobile-compatibility.spec.ts:159:3 should handle mobile keyboard input" type="FAILURE">
+<![CDATA[  [production-chromium] › mobile/mobile-compatibility.spec.ts:159:3 › Mobile Compatibility › should handle mobile keyboard input 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      161 |     await page.goto('/dev/canvas/test-canvas');
+      162 |     
+    > 163 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      164 |     
+      165 |     // Test text tool with mobile keyboard
+      166 |     await page.tap('[data-testid="tool-text"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:163:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile toolbar interactions" classname="mobile/mobile-compatibility.spec.ts" time="10.629">
+<failure message="mobile-compatibility.spec.ts:185:3 should handle mobile toolbar interactions" type="FAILURE">
+<![CDATA[  [production-chromium] › mobile/mobile-compatibility.spec.ts:185:3 › Mobile Compatibility › should handle mobile toolbar interactions 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-toolbar"]') to be visible
+
+
+      187 |     await page.goto('/dev/canvas/test-canvas');
+      188 |     
+    > 189 |     await page.waitForSelector('[data-testid="canvas-toolbar"]');
+          |                ^
+      190 |     
+      191 |     // Test toolbar collapse/expand on mobile
+      192 |     const toolbar = page.locator('[data-testid="canvas-toolbar"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:189:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile color picker" classname="mobile/mobile-compatibility.spec.ts" time="10.659">
+<failure message="mobile-compatibility.spec.ts:228:3 should handle mobile color picker" type="FAILURE">
+<![CDATA[  [production-chromium] › mobile/mobile-compatibility.spec.ts:228:3 › Mobile Compatibility › should handle mobile color picker 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      230 |     await page.goto('/dev/canvas/test-canvas');
+      231 |     
+    > 232 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      233 |     
+      234 |     // Create an object first
+      235 |     await page.tap('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:232:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile responsive design" classname="mobile/mobile-compatibility.spec.ts" time="10.695">
+<failure message="mobile-compatibility.spec.ts:269:3 should handle mobile responsive design" type="FAILURE">
+<![CDATA[  [production-chromium] › mobile/mobile-compatibility.spec.ts:269:3 › Mobile Compatibility › should handle mobile responsive design 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      281 |       await page.goto('/dev/canvas/test-canvas');
+      282 |       
+    > 283 |       await page.waitForSelector('[data-testid="canvas-container"]');
+          |                  ^
+      284 |       
+      285 |       // Verify canvas is visible and properly sized
+      286 |       await expect(page.locator('[data-testid="canvas-container"]')).toBeVisible();
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:283:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile performance" classname="mobile/mobile-compatibility.spec.ts" time="10.635">
+<failure message="mobile-compatibility.spec.ts:301:3 should handle mobile performance" type="FAILURE">
+<![CDATA[  [production-chromium] › mobile/mobile-compatibility.spec.ts:301:3 › Mobile Compatibility › should handle mobile performance 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      303 |     await page.goto('/dev/canvas/test-canvas');
+      304 |     
+    > 305 |     await page.waitForSelector('[data-testid="canvas-container"]');
+          |                ^
+      306 |     
+      307 |     // Measure page load time
+      308 |     const loadTime = await page.evaluate(() => {
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:305:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile WebSocket connections" classname="mobile/mobile-compatibility.spec.ts" time="10.681">
+<failure message="mobile-compatibility.spec.ts:337:3 should handle mobile WebSocket connections" type="FAILURE">
+<![CDATA[  [production-chromium] › mobile/mobile-compatibility.spec.ts:337:3 › Mobile Compatibility › should handle mobile WebSocket connections 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      339 |     await page.goto('/dev/canvas/test-canvas');
+      340 |     
+    > 341 |     await page.waitForSelector('[data-testid="canvas-container"]');
+          |                ^
+      342 |     
+      343 |     // Check WebSocket connection status
+      344 |     const connectionStatus = await page.evaluate(() => {
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:341:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile error states" classname="mobile/mobile-compatibility.spec.ts" time="5.517">
+<failure message="mobile-compatibility.spec.ts:367:3 should handle mobile error states" type="FAILURE">
+<![CDATA[  [production-chromium] › mobile/mobile-compatibility.spec.ts:367:3 › Mobile Compatibility › should handle mobile error states 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-testid="error-message"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[data-testid="error-message"]')
+
+
+      374 |     
+      375 |     // Should show error state
+    > 376 |     await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
+          |                                                                 ^
+      377 |     
+      378 |     // Verify error message is mobile-friendly
+      379 |     const errorMessage = page.locator('[data-testid="error-message"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:376:65
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth/user-authentication.spec.ts" timestamp="2025-10-20T03:58:13.491Z" hostname="production-mobile" tests="6" failures="6" skipped="0" time="43.35" errors="0">
+<testcase name="User Authentication Journey › should complete user registration flow" classname="auth/user-authentication.spec.ts" time="10.48">
+<failure message="user-authentication.spec.ts:28:3 should complete user registration flow" type="FAILURE">
+<![CDATA[  [production-mobile] › auth/user-authentication.spec.ts:28:3 › User Authentication Journey › should complete user registration flow 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="email-auth-button"]')
+
+
+      30 |     
+      31 |     // Switch to email authentication method
+    > 32 |     await page.click('[data-testid="email-auth-button"]');
+         |                ^
+      33 |     
+      34 |     // Check if user is already authenticated
+      35 |     const isAuthenticated = await page.evaluate(() => {
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:32:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-ca5d5-lete-user-registration-flow-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="User Authentication Journey › should complete user login flow" classname="auth/user-authentication.spec.ts" time="10.545">
+<failure message="user-authentication.spec.ts:59:3 should complete user login flow" type="FAILURE">
+<![CDATA[  [production-mobile] › auth/user-authentication.spec.ts:59:3 › User Authentication Journey › should complete user login flow 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="email-auth-button"]')
+
+
+      61 |     
+      62 |     // Switch to email authentication method
+    > 63 |     await page.click('[data-testid="email-auth-button"]');
+         |                ^
+      64 |     
+      65 |     // Test login flow
+      66 |     await page.click('[data-testid="sign-in-button"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:63:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-43af8-ld-complete-user-login-flow-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="User Authentication Journey › should handle authentication errors gracefully" classname="auth/user-authentication.spec.ts" time="10.554">
+<failure message="user-authentication.spec.ts:89:3 should handle authentication errors gracefully" type="FAILURE">
+<![CDATA[  [production-mobile] › auth/user-authentication.spec.ts:89:3 › User Authentication Journey › should handle authentication errors gracefully 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="email-auth-button"]')
+
+
+      91 |     
+      92 |     // Switch to email authentication method
+    > 93 |     await page.click('[data-testid="email-auth-button"]');
+         |                ^
+      94 |     
+      95 |     // Test invalid email
+      96 |     await page.click('[data-testid="sign-in-button"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:93:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-05e72-ntication-errors-gracefully-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="User Authentication Journey › should maintain authentication state across page reloads" classname="auth/user-authentication.spec.ts" time="0.555">
+<failure message="user-authentication.spec.ts:112:3 should maintain authentication state across page reloads" type="FAILURE">
+<![CDATA[  [production-mobile] › auth/user-authentication.spec.ts:112:3 › User Authentication Journey › should maintain authentication state across page reloads 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      118 |     });
+      119 |     
+    > 120 |     expect(isAuthenticated).toBe(true);
+          |                             ^
+      121 |     
+      122 |     // Reload page
+      123 |     await page.reload();
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:120:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-cddbc-n-state-across-page-reloads-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="User Authentication Journey › should handle session expiration" classname="auth/user-authentication.spec.ts" time="5.539">
+<failure message="user-authentication.spec.ts:134:3 should handle session expiration" type="FAILURE">
+<![CDATA[  [production-mobile] › auth/user-authentication.spec.ts:134:3 › User Authentication Journey › should handle session expiration 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-testid="login-form"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[data-testid="login-form"]')
+
+
+      145 |     
+      146 |     // Should redirect to login
+    > 147 |     await expect(page.locator('[data-testid="login-form"]')).toBeVisible();
+          |                                                              ^
+      148 |     
+      149 |     // Should clear expired tokens
+      150 |     const token = await page.evaluate(() => {
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:147:62
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-25e63-d-handle-session-expiration-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="User Authentication Journey › should support logout functionality" classname="auth/user-authentication.spec.ts" time="5.677">
+<failure message="user-authentication.spec.ts:157:3 should support logout functionality" type="FAILURE">
+<![CDATA[  [production-mobile] › auth/user-authentication.spec.ts:157:3 › User Authentication Journey › should support logout functionality 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-testid="user-menu"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[data-testid="user-menu"]')
+
+
+      159 |     
+      160 |     // Verify user is authenticated
+    > 161 |     await expect(page.locator('[data-testid="user-menu"]')).toBeVisible();
+          |                                                             ^
+      162 |     
+      163 |     // Click logout
+      164 |     await page.click('[data-testid="user-menu"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/auth/user-authentication.spec.ts:161:61
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/auth-user-authentication-U-4abdb-upport-logout-functionality-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="canvas/canvas-creation-journey.spec.ts" timestamp="2025-10-20T03:58:13.491Z" hostname="production-mobile" tests="7" failures="7" skipped="0" time="75.716" errors="0">
+<testcase name="Canvas Creation Journey › should create a new canvas successfully" classname="canvas/canvas-creation-journey.spec.ts" time="10.988">
+<failure message="canvas-creation-journey.spec.ts:26:3 should create a new canvas successfully" type="FAILURE">
+<![CDATA[  [production-mobile] › canvas/canvas-creation-journey.spec.ts:26:3 › Canvas Creation Journey › should create a new canvas successfully 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      28 |     
+      29 |     // Navigate to canvas creation
+    > 30 |     await page.click('[data-testid="create-canvas-button"]');
+         |                ^
+      31 |     await expect(page.locator('[data-testid="canvas-creation-modal"]')).toBeVisible();
+      32 |     
+      33 |     // Fill canvas details
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:30:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-8fdbd-e-a-new-canvas-successfully-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should handle canvas creation validation errors" classname="canvas/canvas-creation-journey.spec.ts" time="10.66">
+<failure message="canvas-creation-journey.spec.ts:54:3 should handle canvas creation validation errors" type="FAILURE">
+<![CDATA[  [production-mobile] › canvas/canvas-creation-journey.spec.ts:54:3 › Canvas Creation Journey › should handle canvas creation validation errors 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      56 |     
+      57 |     // Navigate to canvas creation
+    > 58 |     await page.click('[data-testid="create-canvas-button"]');
+         |                ^
+      59 |     
+      60 |     // Try to create canvas without name
+      61 |     await page.click('[data-testid="create-canvas-submit"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:58:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-7a605--creation-validation-errors-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should create canvas with different permission levels" classname="canvas/canvas-creation-journey.spec.ts" time="10.934">
+<failure message="canvas-creation-journey.spec.ts:74:3 should create canvas with different permission levels" type="FAILURE">
+<![CDATA[  [production-mobile] › canvas/canvas-creation-journey.spec.ts:74:3 › Canvas Creation Journey › should create canvas with different permission levels 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      76 |     
+      77 |     // Test public canvas creation
+    > 78 |     await page.click('[data-testid="create-canvas-button"]');
+         |                ^
+      79 |     await page.fill('[data-testid="canvas-name-input"]', 'Public Test Canvas');
+      80 |     await page.selectOption('[data-testid="canvas-visibility-select"]', 'public');
+      81 |     await page.click('[data-testid="create-canvas-submit"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-46025-different-permission-levels-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should allow canvas editing and updates" classname="canvas/canvas-creation-journey.spec.ts" time="10.907">
+<failure message="canvas-creation-journey.spec.ts:101:3 should allow canvas editing and updates" type="FAILURE">
+<![CDATA[  [production-mobile] › canvas/canvas-creation-journey.spec.ts:101:3 › Canvas Creation Journey › should allow canvas editing and updates 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      103 |     
+      104 |     // Create a canvas first
+    > 105 |     await page.click('[data-testid="create-canvas-button"]');
+          |                ^
+      106 |     await page.fill('[data-testid="canvas-name-input"]', 'Editable Test Canvas');
+      107 |     await page.click('[data-testid="create-canvas-submit"]');
+      108 |     
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:105:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-d4230--canvas-editing-and-updates-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should handle canvas deletion" classname="canvas/canvas-creation-journey.spec.ts" time="10.737">
+<failure message="canvas-creation-journey.spec.ts:126:3 should handle canvas deletion" type="FAILURE">
+<![CDATA[  [production-mobile] › canvas/canvas-creation-journey.spec.ts:126:3 › Canvas Creation Journey › should handle canvas deletion 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      128 |     
+      129 |     // Create a canvas first
+    > 130 |     await page.click('[data-testid="create-canvas-button"]');
+          |                ^
+      131 |     await page.fill('[data-testid="canvas-name-input"]', 'Canvas to Delete');
+      132 |     await page.click('[data-testid="create-canvas-submit"]');
+      133 |     
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:130:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-1d41e-ould-handle-canvas-deletion-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should support canvas templates" classname="canvas/canvas-creation-journey.spec.ts" time="10.67">
+<failure message="canvas-creation-journey.spec.ts:153:3 should support canvas templates" type="FAILURE">
+<![CDATA[  [production-mobile] › canvas/canvas-creation-journey.spec.ts:153:3 › Canvas Creation Journey › should support canvas templates 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      155 |     
+      156 |     // Navigate to canvas creation
+    > 157 |     await page.click('[data-testid="create-canvas-button"]');
+          |                ^
+      158 |     
+      159 |     // Select a template
+      160 |     await page.click('[data-testid="template-selector"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:157:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-c949e-ld-support-canvas-templates-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Canvas Creation Journey › should handle canvas creation with AI assistance" classname="canvas/canvas-creation-journey.spec.ts" time="10.82">
+<failure message="canvas-creation-journey.spec.ts:176:3 should handle canvas creation with AI assistance" type="FAILURE">
+<![CDATA[  [production-mobile] › canvas/canvas-creation-journey.spec.ts:176:3 › Canvas Creation Journey › should handle canvas creation with AI assistance 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      178 |     
+      179 |     // Navigate to canvas creation
+    > 180 |     await page.click('[data-testid="create-canvas-button"]');
+          |                ^
+      181 |     
+      182 |     // Enable AI assistance
+      183 |     await page.click('[data-testid="ai-assistance-toggle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/canvas/canvas-creation-journey.spec.ts:180:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/canvas-canvas-creation-jou-828ba-creation-with-AI-assistance-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="collaboration/real-time-collaboration.spec.ts" timestamp="2025-10-20T03:58:13.491Z" hostname="production-mobile" tests="7" failures="7" skipped="0" time="76.055" errors="0">
+<testcase name="Real-time Collaboration Journey › should allow multiple users to join the same canvas" classname="collaboration/real-time-collaboration.spec.ts" time="11.042">
+<failure message="real-time-collaboration.spec.ts:44:3 should allow multiple users to join the same canvas" type="FAILURE">
+<![CDATA[  [production-mobile] › collaboration/real-time-collaboration.spec.ts:44:3 › Real-time Collaboration Journey › should allow multiple users to join the same canvas 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      45 |     // User 1 creates a canvas
+      46 |     await user1Page.goto('/');
+    > 47 |     await user1Page.click('[data-testid="create-canvas-button"]');
+         |                     ^
+      48 |     await user1Page.fill('[data-testid="canvas-name-input"]', 'Collaboration Test Canvas');
+      49 |     await user1Page.selectOption('[data-testid="canvas-visibility-select"]', 'public');
+      50 |     await user1Page.click('[data-testid="create-canvas-submit"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:47:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-mobile/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-mobile/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-ca144-ers-to-join-the-same-canvas-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should synchronize object creation across users" classname="collaboration/real-time-collaboration.spec.ts" time="10.775">
+<failure message="real-time-collaboration.spec.ts:71:3 should synchronize object creation across users" type="FAILURE">
+<![CDATA[  [production-mobile] › collaboration/real-time-collaboration.spec.ts:71:3 › Real-time Collaboration Journey › should synchronize object creation across users 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      75 |     
+      76 |     // Wait for both users to be connected
+    > 77 |     await user1Page.waitForSelector('[data-testid="canvas-container"]');
+         |                     ^
+      78 |     await user2Page.waitForSelector('[data-testid="canvas-container"]');
+      79 |     
+      80 |     // User 1 creates a rectangle
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:77:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-mobile/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-mobile/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-0f529-bject-creation-across-users-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should synchronize object modifications across users" classname="collaboration/real-time-collaboration.spec.ts" time="10.778">
+<failure message="real-time-collaboration.spec.ts:101:3 should synchronize object modifications across users" type="FAILURE">
+<![CDATA[  [production-mobile] › collaboration/real-time-collaboration.spec.ts:101:3 › Real-time Collaboration Journey › should synchronize object modifications across users 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      104 |     await user2Page.goto('/dev/canvas/test-canvas');
+      105 |     
+    > 106 |     await user1Page.waitForSelector('[data-testid="canvas-container"]');
+          |                     ^
+      107 |     await user2Page.waitForSelector('[data-testid="canvas-container"]');
+      108 |     
+      109 |     // User 1 creates a rectangle
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:106:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-mobile/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-mobile/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-0bf2c--modifications-across-users-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should handle concurrent object creation without conflicts" classname="collaboration/real-time-collaboration.spec.ts" time="10.822">
+<failure message="real-time-collaboration.spec.ts:129:3 should handle concurrent object creation without conflicts" type="FAILURE">
+<![CDATA[  [production-mobile] › collaboration/real-time-collaboration.spec.ts:129:3 › Real-time Collaboration Journey › should handle concurrent object creation without conflicts 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      132 |     await user2Page.goto('/dev/canvas/test-canvas');
+      133 |     
+    > 134 |     await user1Page.waitForSelector('[data-testid="canvas-container"]');
+          |                     ^
+      135 |     await user2Page.waitForSelector('[data-testid="canvas-container"]');
+      136 |     
+      137 |     // Both users create objects simultaneously
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:134:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-mobile/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-mobile/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-65b09--creation-without-conflicts-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should show real-time cursor positions" classname="collaboration/real-time-collaboration.spec.ts" time="10.718">
+<failure message="real-time-collaboration.spec.ts:160:3 should show real-time cursor positions" type="FAILURE">
+<![CDATA[  [production-mobile] › collaboration/real-time-collaboration.spec.ts:160:3 › Real-time Collaboration Journey › should show real-time cursor positions 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      163 |     await user2Page.goto('/dev/canvas/test-canvas');
+      164 |     
+    > 165 |     await user1Page.waitForSelector('[data-testid="canvas-container"]');
+          |                     ^
+      166 |     await user2Page.waitForSelector('[data-testid="canvas-container"]');
+      167 |     
+      168 |     // User 1 moves cursor
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:165:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-mobile/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-mobile/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-5a5aa--real-time-cursor-positions-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should handle user disconnection and reconnection" classname="collaboration/real-time-collaboration.spec.ts" time="10.846">
+<failure message="real-time-collaboration.spec.ts:181:3 should handle user disconnection and reconnection" type="FAILURE">
+<![CDATA[  [production-mobile] › collaboration/real-time-collaboration.spec.ts:181:3 › Real-time Collaboration Journey › should handle user disconnection and reconnection 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      184 |     await user2Page.goto('/dev/canvas/test-canvas');
+      185 |     
+    > 186 |     await user1Page.waitForSelector('[data-testid="canvas-container"]');
+          |                     ^
+      187 |     await user2Page.waitForSelector('[data-testid="canvas-container"]');
+      188 |     
+      189 |     // User 1 creates an object
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:186:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-mobile/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-mobile/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-21a80-connection-and-reconnection-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real-time Collaboration Journey › should handle canvas permissions and access control" classname="collaboration/real-time-collaboration.spec.ts" time="11.074">
+<failure message="real-time-collaboration.spec.ts:214:3 should handle canvas permissions and access control" type="FAILURE">
+<![CDATA[  [production-mobile] › collaboration/real-time-collaboration.spec.ts:214:3 › Real-time Collaboration Journey › should handle canvas permissions and access control 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="create-canvas-button"]')
+
+
+      215 |     // User 1 creates a private canvas
+      216 |     await user1Page.goto('/');
+    > 217 |     await user1Page.click('[data-testid="create-canvas-button"]');
+          |                     ^
+      218 |     await user1Page.fill('[data-testid="canvas-name-input"]', 'Private Collaboration Canvas');
+      219 |     await user1Page.selectOption('[data-testid="canvas-visibility-select"]', 'private');
+      220 |     await user1Page.click('[data-testid="create-canvas-submit"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/collaboration/real-time-collaboration.spec.ts:217:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-mobile/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-mobile/test-failed-2.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/collaboration-real-time-co-1c0c1-missions-and-access-control-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="cross-browser/cross-browser-compatibility.spec.ts" timestamp="2025-10-20T03:58:13.491Z" hostname="production-mobile" tests="10" failures="10" skipped="0" time="101.633" errors="0">
+<testcase name="Cross-Browser Compatibility › should load canvas interface consistently across browsers" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.672">
+<failure message="cross-browser-compatibility.spec.ts:26:3 should load canvas interface consistently across browsers" type="FAILURE">
+<![CDATA[  [production-mobile] › cross-browser/cross-browser-compatibility.spec.ts:26:3 › Cross-Browser Compatibility › should load canvas interface consistently across browsers 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      28 |     
+      29 |     // Wait for canvas to load
+    > 30 |     await page.waitForSelector('[data-testid="canvas-container"]', { timeout: 10000 });
+         |                ^
+      31 |     
+      32 |     // Verify core elements are present
+      33 |     await expect(page.locator('[data-testid="canvas-container"]')).toBeVisible();
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:30:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-75388-onsistently-across-browsers-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle canvas interactions consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.665">
+<failure message="cross-browser-compatibility.spec.ts:44:3 should handle canvas interactions consistently" type="FAILURE">
+<![CDATA[  [production-mobile] › cross-browser/cross-browser-compatibility.spec.ts:44:3 › Cross-Browser Compatibility › should handle canvas interactions consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      46 |     
+      47 |     // Wait for canvas to load
+    > 48 |     await page.waitForSelector('.konvajs-content');
+         |                ^
+      49 |     
+      50 |     // Test rectangle tool
+      51 |     await page.click('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:48:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-0f113-s-interactions-consistently-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle text rendering consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.649">
+<failure message="cross-browser-compatibility.spec.ts:76:3 should handle text rendering consistently" type="FAILURE">
+<![CDATA[  [production-mobile] › cross-browser/cross-browser-compatibility.spec.ts:76:3 › Cross-Browser Compatibility › should handle text rendering consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      77 |     await page.goto('/dev/canvas/test-canvas');
+      78 |     
+    > 79 |     await page.waitForSelector('.konvajs-content');
+         |                ^
+      80 |     
+      81 |     // Test text tool
+      82 |     await page.click('[data-testid="tool-text"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:79:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-f3de2-text-rendering-consistently-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle color picker consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.704">
+<failure message="cross-browser-compatibility.spec.ts:101:3 should handle color picker consistently" type="FAILURE">
+<![CDATA[  [production-mobile] › cross-browser/cross-browser-compatibility.spec.ts:101:3 › Cross-Browser Compatibility › should handle color picker consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      102 |     await page.goto('/dev/canvas/test-canvas');
+      103 |     
+    > 104 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      105 |     
+      106 |     // Create an object first
+      107 |     await page.click('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:104:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-49601-e-color-picker-consistently-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle keyboard shortcuts consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.714">
+<failure message="cross-browser-compatibility.spec.ts:131:3 should handle keyboard shortcuts consistently" type="FAILURE">
+<![CDATA[  [production-mobile] › cross-browser/cross-browser-compatibility.spec.ts:131:3 › Cross-Browser Compatibility › should handle keyboard shortcuts consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      132 |     await page.goto('/dev/canvas/test-canvas');
+      133 |     
+    > 134 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      135 |     
+      136 |     // Create an object
+      137 |     await page.click('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:134:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-de581-oard-shortcuts-consistently-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle drag and drop consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.642">
+<failure message="cross-browser-compatibility.spec.ts:167:3 should handle drag and drop consistently" type="FAILURE">
+<![CDATA[  [production-mobile] › cross-browser/cross-browser-compatibility.spec.ts:167:3 › Cross-Browser Compatibility › should handle drag and drop consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      168 |     await page.goto('/dev/canvas/test-canvas');
+      169 |     
+    > 170 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      171 |     
+      172 |     // Create an object
+      173 |     await page.click('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:170:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-fb653--drag-and-drop-consistently-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle zoom functionality consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.669">
+<failure message="cross-browser-compatibility.spec.ts:204:3 should handle zoom functionality consistently" type="FAILURE">
+<![CDATA[  [production-mobile] › cross-browser/cross-browser-compatibility.spec.ts:204:3 › Cross-Browser Compatibility › should handle zoom functionality consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      205 |     await page.goto('/dev/canvas/test-canvas');
+      206 |     
+    > 207 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      208 |     
+      209 |     // Test zoom in
+      210 |     await page.click('[data-testid="zoom-in-button"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:207:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-26c7e--functionality-consistently-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle responsive design consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.685">
+<failure message="cross-browser-compatibility.spec.ts:231:3 should handle responsive design consistently" type="FAILURE">
+<![CDATA[  [production-mobile] › cross-browser/cross-browser-compatibility.spec.ts:231:3 › Cross-Browser Compatibility › should handle responsive design consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      243 |       await page.goto('/dev/canvas/test-canvas');
+      244 |       
+    > 245 |       await page.waitForSelector('[data-testid="canvas-container"]');
+          |                  ^
+      246 |       
+      247 |       // Verify canvas is visible and properly sized
+      248 |       await expect(page.locator('[data-testid="canvas-container"]')).toBeVisible();
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:245:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-615de-ponsive-design-consistently-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle WebSocket connections consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="10.662">
+<failure message="cross-browser-compatibility.spec.ts:258:3 should handle WebSocket connections consistently" type="FAILURE">
+<![CDATA[  [production-mobile] › cross-browser/cross-browser-compatibility.spec.ts:258:3 › Cross-Browser Compatibility › should handle WebSocket connections consistently 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      259 |     await page.goto('/dev/canvas/test-canvas');
+      260 |     
+    > 261 |     await page.waitForSelector('[data-testid="canvas-container"]');
+          |                ^
+      262 |     
+      263 |     // Check WebSocket connection status
+      264 |     const connectionStatus = await page.evaluate(() => {
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:261:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-b5a97-et-connections-consistently-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cross-Browser Compatibility › should handle error states consistently" classname="cross-browser/cross-browser-compatibility.spec.ts" time="5.571">
+<failure message="cross-browser-compatibility.spec.ts:282:3 should handle error states consistently" type="FAILURE">
+<![CDATA[  [production-mobile] › cross-browser/cross-browser-compatibility.spec.ts:282:3 › Cross-Browser Compatibility › should handle error states consistently 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-testid="error-message"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[data-testid="error-message"]')
+
+
+      287 |     
+      288 |     // Should show error state
+    > 289 |     await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
+          |                                                                 ^
+      290 |     
+      291 |     // Take screenshot of error state
+      292 |     await page.screenshot({ 
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/cross-browser/cross-browser-compatibility.spec.ts:289:65
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/cross-browser-cross-browse-c297c-e-error-states-consistently-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="mobile/mobile-compatibility.spec.ts" timestamp="2025-10-20T03:58:13.491Z" hostname="production-mobile" tests="11" failures="11" skipped="0" time="112.318" errors="0">
+<testcase name="Mobile Compatibility › should load canvas interface on mobile devices" classname="mobile/mobile-compatibility.spec.ts" time="10.648">
+<failure message="mobile-compatibility.spec.ts:26:3 should load canvas interface on mobile devices" type="FAILURE">
+<![CDATA[  [production-mobile] › mobile/mobile-compatibility.spec.ts:26:3 › Mobile Compatibility › should load canvas interface on mobile devices 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      31 |     
+      32 |     // Wait for canvas to load
+    > 33 |     await page.waitForSelector('[data-testid="canvas-container"]', { timeout: 10000 });
+         |                ^
+      34 |     
+      35 |     // Verify core elements are present and properly sized
+      36 |     await expect(page.locator('[data-testid="canvas-container"]')).toBeVisible();
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:33:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8f3f2-interface-on-mobile-devices-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle touch interactions for object creation" classname="mobile/mobile-compatibility.spec.ts" time="10.729">
+<failure message="mobile-compatibility.spec.ts:56:3 should handle touch interactions for object creation" type="FAILURE">
+<![CDATA[  [production-mobile] › mobile/mobile-compatibility.spec.ts:56:3 › Mobile Compatibility › should handle touch interactions for object creation 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      58 |     await page.goto('/dev/canvas/test-canvas');
+      59 |     
+    > 60 |     await page.waitForSelector('.konvajs-content');
+         |                ^
+      61 |     
+      62 |     // Test touch interaction for rectangle tool
+      63 |     await page.tap('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:60:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-8d861-actions-for-object-creation-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle pinch-to-zoom gestures" classname="mobile/mobile-compatibility.spec.ts" time="10.622">
+<failure message="mobile-compatibility.spec.ts:88:3 should handle pinch-to-zoom gestures" type="FAILURE">
+<![CDATA[  [production-mobile] › mobile/mobile-compatibility.spec.ts:88:3 › Mobile Compatibility › should handle pinch-to-zoom gestures 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      90 |     await page.goto('/dev/canvas/test-canvas');
+      91 |     
+    > 92 |     await page.waitForSelector('.konvajs-content');
+         |                ^
+      93 |     
+      94 |     // Simulate pinch-to-zoom gesture
+      95 |     const canvas = page.locator('.konvajs-content');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:92:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-0c6d5-ndle-pinch-to-zoom-gestures-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle touch drag for object manipulation" classname="mobile/mobile-compatibility.spec.ts" time="10.645">
+<failure message="mobile-compatibility.spec.ts:124:3 should handle touch drag for object manipulation" type="FAILURE">
+<![CDATA[  [production-mobile] › mobile/mobile-compatibility.spec.ts:124:3 › Mobile Compatibility › should handle touch drag for object manipulation 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      126 |     await page.goto('/dev/canvas/test-canvas');
+      127 |     
+    > 128 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      129 |     
+      130 |     // Create an object first
+      131 |     await page.tap('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:128:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-6fd39-rag-for-object-manipulation-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile keyboard input" classname="mobile/mobile-compatibility.spec.ts" time="10.633">
+<failure message="mobile-compatibility.spec.ts:159:3 should handle mobile keyboard input" type="FAILURE">
+<![CDATA[  [production-mobile] › mobile/mobile-compatibility.spec.ts:159:3 › Mobile Compatibility › should handle mobile keyboard input 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      161 |     await page.goto('/dev/canvas/test-canvas');
+      162 |     
+    > 163 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      164 |     
+      165 |     // Test text tool with mobile keyboard
+      166 |     await page.tap('[data-testid="tool-text"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:163:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-c2369-andle-mobile-keyboard-input-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile toolbar interactions" classname="mobile/mobile-compatibility.spec.ts" time="10.638">
+<failure message="mobile-compatibility.spec.ts:185:3 should handle mobile toolbar interactions" type="FAILURE">
+<![CDATA[  [production-mobile] › mobile/mobile-compatibility.spec.ts:185:3 › Mobile Compatibility › should handle mobile toolbar interactions 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-toolbar"]') to be visible
+
+
+      187 |     await page.goto('/dev/canvas/test-canvas');
+      188 |     
+    > 189 |     await page.waitForSelector('[data-testid="canvas-toolbar"]');
+          |                ^
+      190 |     
+      191 |     // Test toolbar collapse/expand on mobile
+      192 |     const toolbar = page.locator('[data-testid="canvas-toolbar"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:189:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-d7cba-mobile-toolbar-interactions-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile color picker" classname="mobile/mobile-compatibility.spec.ts" time="10.632">
+<failure message="mobile-compatibility.spec.ts:228:3 should handle mobile color picker" type="FAILURE">
+<![CDATA[  [production-mobile] › mobile/mobile-compatibility.spec.ts:228:3 › Mobile Compatibility › should handle mobile color picker 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('.konvajs-content') to be visible
+
+
+      230 |     await page.goto('/dev/canvas/test-canvas');
+      231 |     
+    > 232 |     await page.waitForSelector('.konvajs-content');
+          |                ^
+      233 |     
+      234 |     // Create an object first
+      235 |     await page.tap('[data-testid="tool-rectangle"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:232:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-56b83--handle-mobile-color-picker-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile responsive design" classname="mobile/mobile-compatibility.spec.ts" time="10.672">
+<failure message="mobile-compatibility.spec.ts:269:3 should handle mobile responsive design" type="FAILURE">
+<![CDATA[  [production-mobile] › mobile/mobile-compatibility.spec.ts:269:3 › Mobile Compatibility › should handle mobile responsive design 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      281 |       await page.goto('/dev/canvas/test-canvas');
+      282 |       
+    > 283 |       await page.waitForSelector('[data-testid="canvas-container"]');
+          |                  ^
+      284 |       
+      285 |       // Verify canvas is visible and properly sized
+      286 |       await expect(page.locator('[data-testid="canvas-container"]')).toBeVisible();
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:283:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-e794d-le-mobile-responsive-design-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile performance" classname="mobile/mobile-compatibility.spec.ts" time="10.689">
+<failure message="mobile-compatibility.spec.ts:301:3 should handle mobile performance" type="FAILURE">
+<![CDATA[  [production-mobile] › mobile/mobile-compatibility.spec.ts:301:3 › Mobile Compatibility › should handle mobile performance 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      303 |     await page.goto('/dev/canvas/test-canvas');
+      304 |     
+    > 305 |     await page.waitForSelector('[data-testid="canvas-container"]');
+          |                ^
+      306 |     
+      307 |     // Measure page load time
+      308 |     const loadTime = await page.evaluate(() => {
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:305:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-64ae5-d-handle-mobile-performance-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile WebSocket connections" classname="mobile/mobile-compatibility.spec.ts" time="10.863">
+<failure message="mobile-compatibility.spec.ts:337:3 should handle mobile WebSocket connections" type="FAILURE">
+<![CDATA[  [production-mobile] › mobile/mobile-compatibility.spec.ts:337:3 › Mobile Compatibility › should handle mobile WebSocket connections 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="canvas-container"]') to be visible
+
+
+      339 |     await page.goto('/dev/canvas/test-canvas');
+      340 |     
+    > 341 |     await page.waitForSelector('[data-testid="canvas-container"]');
+          |                ^
+      342 |     
+      343 |     // Check WebSocket connection status
+      344 |     const connectionStatus = await page.evaluate(() => {
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:341:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-33423-obile-WebSocket-connections-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Mobile Compatibility › should handle mobile error states" classname="mobile/mobile-compatibility.spec.ts" time="5.547">
+<failure message="mobile-compatibility.spec.ts:367:3 should handle mobile error states" type="FAILURE">
+<![CDATA[  [production-mobile] › mobile/mobile-compatibility.spec.ts:367:3 › Mobile Compatibility › should handle mobile error states 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('[data-testid="error-message"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[data-testid="error-message"]')
+
+
+      374 |     
+      375 |     // Should show error state
+    > 376 |     await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
+          |                                                                 ^
+      377 |     
+      378 |     // Verify error message is mobile-friendly
+      379 |     const errorMessage = page.locator('[data-testid="error-message"]');
+        at /Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests/mobile/mobile-compatibility.spec.ts:376:65
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-mobile/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-mobile/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-mobile/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-mobile/video.webm]]
+
+[[ATTACHMENT|test-results/mobile-mobile-compatibilit-2f4fd--handle-mobile-error-states-production-mobile/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>
