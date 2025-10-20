@@ -57,6 +57,8 @@ import ContextMenu from './ContextMenu'
 import { useMultiSelection } from '../hooks/useMultiSelection'
 import { useClipboard } from '../hooks/useClipboard'
 import { useUndoRedo, useUndoRedoShortcuts } from '../hooks/useUndoRedo'
+import { useCoordinateDisplay } from '../hooks/useCoordinateDisplay'
+import CoordinateStatusBar from './CoordinateStatusBar'
 import '../styles/AIAgent.css'
 
 const CanvasPage: React.FC = () => {
@@ -99,6 +101,10 @@ const CanvasPage: React.FC = () => {
   const [multiSelectionState, multiSelectionActions] = useMultiSelection(objects)
   const [clipboardState, clipboardActions] = useClipboard()
   const [undoRedoState, undoRedoActions] = useUndoRedo()
+  
+  // Coordinate display for object placement and selection
+  const coordinateDisplay = useCoordinateDisplay()
+  const [showCoordinates, setShowCoordinates] = useState(true)
   
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{
@@ -359,16 +365,33 @@ const CanvasPage: React.FC = () => {
           multiSelectionActions.clearSelection()
         }
       }
+      
+      // Handle coordinate display toggle (Ctrl/Cmd + I)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+        e.preventDefault()
+        setShowCoordinates(prev => !prev)
+        toast.success(`Coordinate display ${!showCoordinates ? 'enabled' : 'disabled'}`, {
+          duration: 2000,
+          position: 'top-right'
+        })
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isDrawing, editingObjectId, multiSelectionState.selectedObjectIds.size])
+  }, [isDrawing, editingObjectId, multiSelectionState.selectedObjectIds.size, showCoordinates])
 
   // Monitor connection status changes for queue manager
   useEffect(() => {
     updateQueueManager.setConnectionStatus(isConnected)
   }, [isConnected])
+  
+  // Clear coordinate display when no objects are selected and not drawing
+  useEffect(() => {
+    if (!isDrawing && multiSelectionState.selectedObjectIds.size === 0) {
+      coordinateDisplay.clearCoordinates()
+    }
+  }, [isDrawing, multiSelectionState.selectedObjectIds.size])
 
   // Update debounce stats periodically
   useEffect(() => {
@@ -1036,6 +1059,12 @@ const CanvasPage: React.FC = () => {
       // Handle multi-selection with Ctrl/Cmd key
       const isMultiSelect = event?.evt?.ctrlKey || event?.evt?.metaKey
       multiSelectionActions.selectObject(objectId, isMultiSelect)
+      
+      // Show coordinates for selected object(s)
+      setTimeout(() => {
+        const selectedObjects = multiSelectionActions.getSelectedObjects()
+        coordinateDisplay.showSelectedCoordinates(selectedObjects, selectedObjects.length)
+      }, 0)
     }
   }
 
@@ -1134,6 +1163,25 @@ const CanvasPage: React.FC = () => {
     setObjects(prev => prev.map(obj => 
       obj.id === objectId ? { ...obj, x, y } : obj
     ))
+    
+    // End movement tracking
+    coordinateDisplay.endMoving()
+  }
+  
+  const handleObjectDragStart = (objectId: string, x: number, y: number) => {
+    const obj = objects.find(o => o.id === objectId)
+    if (!obj) return
+    
+    const props = obj.properties
+    coordinateDisplay.startMoving(x, y, props.width, props.height, props.radius)
+  }
+  
+  const handleObjectDragMove = (objectId: string, x: number, y: number) => {
+    const obj = objects.find(o => o.id === objectId)
+    if (!obj) return
+    
+    const props = obj.properties
+    coordinateDisplay.updateMovingCoordinates(x, y, props.width, props.height, props.radius)
   }
 
   const performObjectResize = async (objectId: string, newProperties: any) => {
@@ -1249,6 +1297,31 @@ const CanvasPage: React.FC = () => {
     setObjects(prev => prev.map(obj => 
       obj.id === objectId ? { ...obj, properties: { ...obj.properties, ...newProperties } } : obj
     ))
+    
+    // Update coordinate display for resizing
+    const obj = objects.find(o => o.id === objectId)
+    if (obj) {
+      const updatedProps = { ...obj.properties, ...newProperties }
+      coordinateDisplay.updateResizingCoordinates(
+        updatedProps.x,
+        updatedProps.y,
+        updatedProps.width,
+        updatedProps.height,
+        updatedProps.radius
+      )
+    }
+  }
+  
+  const handleObjectResizeStart = (objectId: string) => {
+    const obj = objects.find(o => o.id === objectId)
+    if (obj) {
+      const props = obj.properties
+      coordinateDisplay.startResizing(props.x, props.y, props.width, props.height, props.radius)
+    }
+  }
+  
+  const handleObjectResizeEnd = () => {
+    coordinateDisplay.endResizing()
   }
 
   // Create debounced version of position update
@@ -1695,26 +1768,51 @@ const CanvasPage: React.FC = () => {
 
     // Update new object position
     if (newObject.object_type === 'rectangle') {
+      const newWidth = Math.max(10, point.x - newObject.properties!.x)
+      const newHeight = Math.max(10, point.y - newObject.properties!.y)
+      
       setNewObject(prev => ({
         ...prev,
         properties: {
           ...prev!.properties!,
-          width: Math.max(10, point.x - prev!.properties!.x),
-          height: Math.max(10, point.y - prev!.properties!.y)
+          width: newWidth,
+          height: newHeight
         }
       }))
+      
+      // Update coordinate display
+      coordinateDisplay.showPlacingCoordinates(
+        newObject.properties!.x,
+        newObject.properties!.y,
+        newWidth,
+        newHeight,
+        undefined,
+        'rectangle'
+      )
     } else if (newObject.object_type === 'circle') {
       const radius = Math.sqrt(
         Math.pow(point.x - newObject.properties!.x, 2) + 
         Math.pow(point.y - newObject.properties!.y, 2)
       )
+      const newRadius = Math.max(50, radius)
+      
       setNewObject(prev => ({
         ...prev,
         properties: {
           ...prev!.properties!,
-          radius: Math.max(50, radius) // Increased minimum radius for better visibility
+          radius: newRadius // Increased minimum radius for better visibility
         }
       }))
+      
+      // Update coordinate display
+      coordinateDisplay.showPlacingCoordinates(
+        newObject.properties!.x,
+        newObject.properties!.y,
+        undefined,
+        undefined,
+        newRadius,
+        'circle'
+      )
     } else if (['heart', 'star', 'diamond'].includes(newObject.object_type!)) {
       // For shape tools, update size based on distance from start point
       const width = Math.max(20, Math.abs(point.x - newObject.properties!.x) * 2)
@@ -1830,6 +1928,8 @@ const CanvasPage: React.FC = () => {
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
               onClick={(e) => handleObjectSelect(obj.id, e)}
+              onDragStart={(e) => handleObjectDragStart(obj.id, e.target.x(), e.target.y())}
+              onDragMove={(e) => handleObjectDragMove(obj.id, e.target.x(), e.target.y())}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -1871,6 +1971,8 @@ const CanvasPage: React.FC = () => {
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
               onClick={(e) => handleObjectSelect(obj.id, e)}
+              onDragStart={(e) => handleObjectDragStart(obj.id, e.target.x(), e.target.y())}
+              onDragMove={(e) => handleObjectDragMove(obj.id, e.target.x(), e.target.y())}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -2878,6 +2980,13 @@ const CanvasPage: React.FC = () => {
         canDelete={multiSelectionState.selectedObjectIds.size > 0}
         canUndo={undoRedoState.canUndo}
         canRedo={undoRedoState.canRedo}
+      />
+      
+      {/* Coordinate Status Bar */}
+      <CoordinateStatusBar
+        coordinates={coordinateDisplay.coordinateDisplay}
+        isVisible={coordinateDisplay.isDisplaying && showCoordinates}
+        precision={0}
       />
     </div>
   )
