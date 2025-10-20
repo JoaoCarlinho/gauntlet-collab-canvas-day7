@@ -61,19 +61,20 @@ class SocketIOClientOptimizer {
 
   /**
    * Production configuration optimized for stability
+   * Note: Railway doesn't support WebSocket connections, so we use polling only
    */
   private getProductionConfig(): SocketIOClientConfig {
     return {
-      transports: ['websocket', 'polling'],
-      upgrade: true,
-      rememberUpgrade: true,
+      transports: ['polling'], // Railway doesn't support WebSocket, use polling only
+      upgrade: false, // Disable upgrade attempts since WebSocket doesn't work on Railway
+      rememberUpgrade: false,
       timeout: 20000, // 20 seconds
       forceNew: false,
       reconnection: true,
       reconnectionDelay: 2000, // 2 seconds
-      reconnectionAttempts: 3, // Fewer attempts in production
+      reconnectionAttempts: 5, // More attempts since polling is less efficient
       reconnectionDelayMax: 10000, // 10 seconds
-      maxReconnectionAttempts: 3,
+      maxReconnectionAttempts: 5,
       compression: true,
       compressionThreshold: 512, // 512 bytes
       maxMessageSize: 500000, // 500KB

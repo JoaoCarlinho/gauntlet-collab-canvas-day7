@@ -132,6 +132,10 @@ class SocketService {
       // Record successful reconnection
       socketIOClientOptimizer.recordReconnectionSuccess()
       
+      // Update connection state
+      this.connectionState = 'connected'
+      this.lastConnectionTime = Date.now()
+      
       // Update connection quality based on metrics
       this.connectionQuality = socketIOClientOptimizer.getConnectionQuality()
       
@@ -144,6 +148,13 @@ class SocketService {
       
       this.emit('reconnection_success', {
         attempt: attemptNumber,
+        timestamp: Date.now()
+      })
+      
+      // Emit connection state change
+      this.emit('connection_state_changed', {
+        connectionState: this.connectionState,
+        connectionQuality: this.connectionQuality,
         timestamp: Date.now()
       })
       
@@ -180,18 +191,37 @@ class SocketService {
       console.error('Error:', error)
       console.error('Error message:', error.message)
       
+      // Update connection state
+      this.connectionState = 'disconnected'
+      
       const context: ErrorContext = {
         operation: 'socket_connection',
         timestamp: Date.now(),
         additionalData: { 
           type: 'connection_error', 
           socketId: this.socket?.id,
-          errorMessage: error.message
+          errorMessage: error.message,
+          connectionAttempts: this.connectionAttempts
         }
       }
       
       const errorId = errorLogger.logError(error, context)
-      this.emit('socket_error', { error, timestamp: Date.now(), type: 'connection_error', errorId })
+      this.emit('socket_error', { 
+        error, 
+        timestamp: Date.now(), 
+        type: 'connection_error', 
+        errorId,
+        connectionState: this.connectionState,
+        connectionAttempts: this.connectionAttempts
+      })
+      
+      // Emit connection state change
+      this.emit('connection_state_changed', {
+        connectionState: this.connectionState,
+        connectionQuality: this.connectionQuality,
+        timestamp: Date.now(),
+        error: error.message
+      })
     })
 
     this.socket.on('error', (error) => {

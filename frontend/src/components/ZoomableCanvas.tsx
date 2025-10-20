@@ -12,6 +12,7 @@ interface ZoomableCanvasProps {
   onStageMouseMove?: (e: any) => void
   onStageMouseUp?: (e: any) => void
   onStageMouseDown?: (e: any) => void
+  onContextMenu?: (e: React.MouseEvent) => void
   className?: string
   showZoomControls?: boolean
   zoomControlsPosition?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
@@ -26,6 +27,7 @@ const ZoomableCanvas: React.FC<ZoomableCanvasProps> = ({
   onStageMouseMove,
   onStageMouseUp,
   onStageMouseDown,
+  onContextMenu,
   className = '',
   showZoomControls = true,
   zoomControlsPosition = 'bottom-right',
@@ -199,10 +201,13 @@ const ZoomableCanvas: React.FC<ZoomableCanvasProps> = ({
     }
   }, [handleWheelEvent, handleTouchStartEvent, handleTouchMoveEvent, handleTouchEndEvent, handleTouchCancelEvent])
 
-  // Prevent context menu on right click
+  // Handle context menu
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
-  }, [])
+    if (onContextMenu) {
+      onContextMenu(e)
+    }
+  }, [onContextMenu])
 
   return (
     <div 
