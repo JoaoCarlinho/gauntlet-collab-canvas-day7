@@ -5,7 +5,7 @@ import { getApiUrl } from '../utils/env';
 
 interface AIAgentResponse {
   success: boolean;
-  canvas: {
+  canvas?: {
     id: string;
     title: string;
     objects: CanvasObject[];
@@ -13,6 +13,8 @@ interface AIAgentResponse {
   message: string;
   error?: string;
   request_id?: string;
+  job_id?: string;
+  status?: string;
 }
 
 interface AIAgentRequest {
