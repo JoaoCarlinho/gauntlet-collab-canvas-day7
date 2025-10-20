@@ -48,7 +48,7 @@ import CursorTooltip from './CursorTooltip'
 import PointerIndicator from './PointerIndicator'
 import { getUserColor, getUserInitials, getCursorIcon } from '../utils/cursorUtils'
 import { getCursorManager, CursorState } from '../utils/cursorManager'
-import { useToolbarState, useToolShortcuts, getToolById } from './toolbar'
+import { FloatingToolbar, useToolbarState, useToolShortcuts, getToolById } from './toolbar'
 import { AIAgentButton } from './AIAgentButton'
 import { AIAgentPanel } from './AIAgentPanel'
 import SelectionBox from './SelectionBox'
@@ -80,15 +80,15 @@ const CanvasPage: React.FC = () => {
   
   // Floating toolbar state
   const {
-    // preferences,
+    preferences,
     selectedTool,
-    // isVisible: isToolbarVisible,
-    // updatePreferences,
+    isVisible: isToolbarVisible,
+    updatePreferences,
     selectTool,
-    // toggleVisibility: toggleToolbarVisibility,
-    // updatePosition,
-    // toggleCollapse,
-    // getFilteredTools
+    toggleVisibility: toggleToolbarVisibility,
+    updatePosition,
+    toggleCollapse,
+    getFilteredTools
   } = useToolbarState()
   
   // New state for enhanced object interactions
@@ -2533,7 +2533,7 @@ const CanvasPage: React.FC = () => {
       )}
 
       {/* Floating Drawing Toolbar */}
-      {/* <FloatingToolbar
+      <FloatingToolbar
         position={preferences.position}
         isVisible={isToolbarVisible}
         selectedTool={selectedTool}
@@ -2542,7 +2542,7 @@ const CanvasPage: React.FC = () => {
         onVisibilityToggle={toggleToolbarVisibility}
         onCollapseToggle={toggleCollapse}
         tools={getFilteredTools()}
-        data-testid="toolbar"
+        data-testid="canvas-toolbar"
         preferences={preferences}
         onPreferencesChange={updatePreferences}
       />

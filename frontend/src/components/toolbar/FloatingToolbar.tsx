@@ -20,14 +20,10 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   onCollapseToggle,
   tools,
   preferences,
-  onPreferencesChange
+  onPreferencesChange,
+  'data-testid': dataTestId
 }) => {
-  // Disable during tests to prevent click blocking
-  if ((window as any).Cypress || 
-      (window as any).playwright ||
-      navigator.userAgent.includes('Playwright')) {
-    return null;
-  }
+  // Note: FloatingToolbar is now enabled for tests to support object visibility testing
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [isCollapsed, setIsCollapsed] = useState(preferences.isCollapsed)
@@ -131,6 +127,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
         transform: isDragging ? 'scale(1.02)' : 'scale(1)'
       }}
       onMouseDown={handleMouseDown}
+      data-testid={dataTestId}
     >
       {/* Toolbar Header */}
       <div 
