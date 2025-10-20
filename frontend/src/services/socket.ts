@@ -22,6 +22,7 @@ class SocketService {
     
     // Check if we're in development mode
     const isDevelopment = import.meta.env.DEV || 
+                         import.meta.env.MODE === 'development' ||
                          import.meta.env.VITE_DEBUG_MODE === 'true' ||
                          window.location.hostname === 'localhost' ||
                          window.location.hostname === '127.0.0.1'
@@ -39,10 +40,16 @@ class SocketService {
     // Get optimized Socket.IO configuration
     const socketConfig = socketIOClientOptimizer.getOptimizedConfig()
     
-    // Add additional configuration
+    // Add additional configuration with CORS support
     const enhancedConfig: any = {
       ...socketConfig,
       forceNew: isDevelopment, // Only force new in development
+      withCredentials: true, // Enable credentials for CORS
+      extraHeaders: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      }
     }
     
     // Only add auth token if not in development mode
@@ -193,15 +200,27 @@ class SocketService {
       
       // Update connection state
       this.connectionState = 'disconnected'
+      this.connectionQuality = 'poor'
+      
+      // Handle specific error types
+      let errorType = 'connection_error'
+      if (error.message.includes('CORS')) {
+        errorType = 'cors_error'
+      } else if (error.message.includes('xhr poll error')) {
+        errorType = 'polling_error'
+      } else if (error.message.includes('timeout')) {
+        errorType = 'timeout_error'
+      }
       
       const context: ErrorContext = {
         operation: 'socket_connection',
         timestamp: Date.now(),
         additionalData: { 
-          type: 'connection_error', 
+          type: errorType, 
           socketId: this.socket?.id,
           errorMessage: error.message,
-          connectionAttempts: this.connectionAttempts
+          connectionAttempts: this.connectionAttempts,
+          originalError: error
         }
       }
       
@@ -209,9 +228,10 @@ class SocketService {
       this.emit('socket_error', { 
         error, 
         timestamp: Date.now(), 
-        type: 'connection_error', 
+        type: errorType, 
         errorId,
         connectionState: this.connectionState,
+        connectionQuality: this.connectionQuality,
         connectionAttempts: this.connectionAttempts
       })
       

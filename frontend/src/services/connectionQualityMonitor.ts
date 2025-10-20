@@ -52,6 +52,9 @@ class ConnectionQualityMonitor {
 
     // Initial analysis
     this.analyzeConnectionQuality()
+    
+    // Set up connection recovery monitoring
+    this.setupConnectionRecovery()
   }
 
   /**
@@ -73,6 +76,100 @@ class ConnectionQualityMonitor {
 
     // Remove event listeners
     this.removeEventListeners()
+  }
+
+  /**
+   * Set up connection recovery monitoring
+   */
+  private setupConnectionRecovery(): void {
+    // Monitor for connection failures and attempt recovery
+    const handleConnectionError = (error: any) => {
+      console.log('Connection error detected, analyzing for recovery:', error)
+      
+      // Record the error event
+      this.recordEvent({
+        type: 'connection_error',
+        timestamp: Date.now(),
+        data: error
+      })
+      
+      // Attempt recovery based on error type
+      this.attemptConnectionRecovery(error)
+    }
+    
+    const handleConnectionLost = (data: any) => {
+      console.log('Connection lost, monitoring for recovery:', data)
+      
+      this.recordEvent({
+        type: 'connection_lost',
+        timestamp: Date.now(),
+        data
+      })
+    }
+    
+    const handleConnectionRestored = (data: any) => {
+      console.log('Connection restored:', data)
+      
+      this.recordEvent({
+        type: 'connection_restored',
+        timestamp: Date.now(),
+        data
+      })
+    }
+    
+    // Listen to socket service events
+    socketService.on('socket_error', handleConnectionError)
+    socketService.on('connection_lost', handleConnectionLost)
+    socketService.on('connection_restored', handleConnectionRestored)
+    
+    // Store listeners for cleanup
+    this.eventListeners.set('socket_error', handleConnectionError)
+    this.eventListeners.set('connection_lost', handleConnectionLost)
+    this.eventListeners.set('connection_restored', handleConnectionRestored)
+  }
+
+  /**
+   * Attempt connection recovery based on error type
+   */
+  private attemptConnectionRecovery(error: any): void {
+    const errorType = error.type || 'unknown'
+    
+    switch (errorType) {
+      case 'cors_error':
+        console.log('CORS error detected - this may require server configuration changes')
+        this.emit('recovery_recommendation', {
+          type: 'cors_error',
+          message: 'CORS configuration issue detected. Please check server settings.',
+          severity: 'high'
+        })
+        break
+        
+      case 'polling_error':
+        console.log('Polling error detected - attempting reconnection')
+        this.emit('recovery_recommendation', {
+          type: 'polling_error',
+          message: 'Connection polling failed. Attempting to reconnect...',
+          severity: 'medium'
+        })
+        break
+        
+      case 'timeout_error':
+        console.log('Timeout error detected - connection may be slow')
+        this.emit('recovery_recommendation', {
+          type: 'timeout_error',
+          message: 'Connection timeout detected. Network may be slow.',
+          severity: 'low'
+        })
+        break
+        
+      default:
+        console.log('Unknown connection error:', errorType)
+        this.emit('recovery_recommendation', {
+          type: 'unknown_error',
+          message: 'Unknown connection error detected.',
+          severity: 'medium'
+        })
+    }
   }
 
   /**

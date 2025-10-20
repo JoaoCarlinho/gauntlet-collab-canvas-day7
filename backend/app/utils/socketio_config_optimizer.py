@@ -55,12 +55,27 @@ class SocketIOConfigOptimizer:
         try:
             config = SocketIOConfigOptimizer.OPTIMAL_CONFIG.copy()
             
-            # Set CORS origins from app config
-            config['cors_allowed_origins'] = app.config.get('CORS_ORIGINS', [])
+            # Set CORS origins from app config with fallback
+            cors_origins = app.config.get('CORS_ORIGINS', [])
+            if isinstance(cors_origins, str):
+                cors_origins = [origin.strip() for origin in cors_origins.split(',')]
+            
+            # Add specific Vercel and Railway origins for production
+            production_origins = [
+                "https://gauntlet-collab-canvas-day7.vercel.app",
+                "https://collabcanvas-mvp-day7.vercel.app",
+                "https://gauntlet-collab-canvas-24hr.vercel.app",
+                "https://*.vercel.app",
+                "https://*.up.railway.app"
+            ]
+            
+            # Combine all origins
+            all_origins = cors_origins + production_origins
+            config['cors_allowed_origins'] = all_origins
             
             # Adjust settings based on environment
             if app.config.get('FLASK_ENV') == 'production':
-                # Production optimizations
+                # Production optimizations for Railway deployment
                 config.update({
                     'logger': False,
                     'engineio_logger': False,
@@ -71,6 +86,8 @@ class SocketIOConfigOptimizer:
                     'reconnection_attempts': 3,  # Fewer attempts in production
                     'reconnection_delay': 2000,  # 2 seconds
                     'reconnection_delay_max': 10000,  # 10 seconds
+                    'transports': ['polling'],  # Railway doesn't support WebSocket, use polling only
+                    'allow_upgrades': False,  # Disable upgrade attempts since WebSocket doesn't work on Railway
                 })
             else:
                 # Development optimizations

@@ -47,18 +47,25 @@ class ObjectCreationService {
       throw new Error('Invalid authentication token format')
     }
     
-    if (!object || !object.type) {
-      throw new Error('Invalid object data: missing type')
+    if (!object) {
+      throw new Error('Invalid object data: object is null or undefined')
+    }
+    
+    // Handle both 'type' and 'object_type' fields for AI compatibility
+    const objectType = object.type || (object as any).object_type
+    if (!objectType) {
+      throw new Error('Invalid object data: missing type or object_type field')
     }
     
     // Validate object type
     const validTypes = ['rectangle', 'circle', 'text', 'heart', 'star', 'diamond', 'line', 'arrow']
-    if (!validTypes.includes(object.type)) {
-      throw new Error(`Invalid object type: ${object.type}`)
+    if (!validTypes.includes(objectType)) {
+      throw new Error(`Invalid object type: ${objectType}`)
     }
     
-    // Validate properties
-    if (!object.properties || typeof object.properties !== 'object') {
+    // Validate properties - handle both 'properties' field and direct properties
+    const objectProperties = object.properties || object
+    if (!objectProperties || typeof objectProperties !== 'object') {
       throw new Error('Invalid object properties')
     }
   }
@@ -89,43 +96,50 @@ class ObjectCreationService {
    * Enhanced object data validation
    */
   private validateObjectData(object: { type: string; properties: Record<string, any> }): void {
-    // Validate object type
-    const validTypes = ['rectangle', 'circle', 'text', 'heart', 'star', 'diamond', 'line', 'arrow']
-    if (!validTypes.includes(object.type)) {
-      throw new Error(`Invalid object type: ${object.type}`)
+    // Handle both 'type' and 'object_type' fields for AI compatibility
+    const objectType = object.type || (object as any).object_type
+    if (!objectType) {
+      throw new Error('Invalid object data: missing type or object_type field')
     }
     
-    // Validate properties structure
-    if (!object.properties || typeof object.properties !== 'object') {
+    // Validate object type
+    const validTypes = ['rectangle', 'circle', 'text', 'heart', 'star', 'diamond', 'line', 'arrow']
+    if (!validTypes.includes(objectType)) {
+      throw new Error(`Invalid object type: ${objectType}`)
+    }
+    
+    // Validate properties structure - handle both 'properties' field and direct properties
+    const objectProperties = object.properties || object
+    if (!objectProperties || typeof objectProperties !== 'object') {
       throw new Error('Invalid object properties')
     }
     
     // Validate specific property requirements based on object type
-    switch (object.type) {
+    switch (objectType) {
       case 'rectangle':
       case 'circle':
       case 'star':
       case 'diamond':
-        if (typeof object.properties.x !== 'number' || typeof object.properties.y !== 'number') {
-          throw new Error(`${object.type} requires x and y coordinates`)
+        if (typeof objectProperties.x !== 'number' || typeof objectProperties.y !== 'number') {
+          throw new Error(`${objectType} requires x and y coordinates`)
         }
         break
       case 'line':
       case 'arrow':
-        if (typeof object.properties.x1 !== 'number' || typeof object.properties.y1 !== 'number' ||
-            typeof object.properties.x2 !== 'number' || typeof object.properties.y2 !== 'number') {
-          throw new Error(`${object.type} requires x1, y1, x2, y2 coordinates`)
+        if (typeof objectProperties.x1 !== 'number' || typeof objectProperties.y1 !== 'number' ||
+            typeof objectProperties.x2 !== 'number' || typeof objectProperties.y2 !== 'number') {
+          throw new Error(`${objectType} requires x1, y1, x2, y2 coordinates`)
         }
         break
       case 'text':
-        if (typeof object.properties.text !== 'string') {
+        if (typeof objectProperties.text !== 'string') {
           throw new Error('Text object requires text property')
         }
         break
     }
     
     // Validate property values are reasonable
-    for (const [key, value] of Object.entries(object.properties)) {
+    for (const [key, value] of Object.entries(objectProperties)) {
       if (typeof value === 'number') {
         if (isNaN(value) || !isFinite(value)) {
           throw new Error(`Invalid numeric value for property ${key}: ${value}`)
@@ -138,6 +152,30 @@ class ObjectCreationService {
   }
 
   /**
+   * Normalize object format for AI compatibility
+   */
+  private normalizeObjectFormat(object: any): { type: string; properties: Record<string, any> } {
+    // Handle both 'type' and 'object_type' fields
+    const objectType = object.type || object.object_type
+    if (!objectType) {
+      throw new Error('Invalid object data: missing type or object_type field')
+    }
+    
+    // Handle both 'properties' field and direct properties
+    const objectProperties = object.properties || object
+    
+    // Remove type/object_type from properties if it exists there
+    const cleanProperties = { ...objectProperties }
+    delete cleanProperties.type
+    delete cleanProperties.object_type
+    
+    return {
+      type: objectType,
+      properties: cleanProperties
+    }
+  }
+
+  /**
    * Create object with socket fallback to REST API
    */
   async createObject(
@@ -146,13 +184,16 @@ class ObjectCreationService {
     object: { type: string; properties: Record<string, any> },
     options: CreationOptions = {}
   ): Promise<CreationResult> {
+    // Normalize object format for AI compatibility
+    const normalizedObject = this.normalizeObjectFormat(object)
+    
     // Enhanced authentication context validation
-    this.validateAuthContext(canvasId, idToken, object)
+    this.validateAuthContext(canvasId, idToken, normalizedObject)
     
     // Enhanced object data validation
-    this.validateObjectData(object)
+    this.validateObjectData(normalizedObject)
     
-    const creationKey = `${canvasId}_${object.type}_${Date.now()}`
+    const creationKey = `${canvasId}_${normalizedObject.type}_${Date.now()}`
     
     // Prevent duplicate creations
     if (this.pendingCreations.has(creationKey)) {
@@ -162,7 +203,7 @@ class ObjectCreationService {
     const creationPromise = this.performCreationWithConfirmation(
       canvasId,
       idToken,
-      object,
+      normalizedObject,
       options
     )
 

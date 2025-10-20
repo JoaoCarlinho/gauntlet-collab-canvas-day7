@@ -24,6 +24,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Check if we're in development mode
   const isDevelopment = import.meta.env.DEV || 
+                       import.meta.env.MODE === 'development' ||
                        import.meta.env.VITE_DEBUG_MODE === 'true' ||
                        window.location.hostname === 'localhost' ||
                        window.location.hostname === '127.0.0.1'

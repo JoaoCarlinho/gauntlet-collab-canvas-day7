@@ -7,11 +7,13 @@ export const validateEnvironment = () => {
   
   console.log('Environment validation:');
   console.log('- VITE_API_URL:', apiUrl);
-  console.log('- NODE_ENV:', import.meta.env.NODE_ENV);
+  console.log('- NODE_ENV:', import.meta.env.NODE_ENV || 'undefined');
   console.log('- MODE:', import.meta.env.MODE);
+  console.log('- PROD:', import.meta.env.PROD);
+  console.log('- DEV:', import.meta.env.DEV);
   
   // Production mode should use environment variable
-  if (import.meta.env.MODE === 'production') {
+  if (import.meta.env.MODE === 'production' || import.meta.env.PROD) {
     if (!apiUrl) {
       console.error('VITE_API_URL is required in production mode!');
       console.error('Please set VITE_API_URL environment variable in Vercel dashboard');
