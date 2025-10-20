@@ -133,6 +133,31 @@ def create_app(config_class=Config):
         allow_upgrades=socketio_config['allow_upgrades'],
         transports=socketio_config['transports']
     )
+    
+    # Add custom error handler for transport errors
+    @socketio.on_error_default
+    def default_error_handler(e):
+        """Handle Socket.IO errors with detailed logging."""
+        error_message = str(e)
+        
+        # Log transport-related errors with more detail
+        if 'Invalid transport' in error_message:
+            print(f"=== Socket.IO Transport Error ===")
+            print(f"Error: {error_message}")
+            print(f"Available transports: {socketio_config['transports']}")
+            print(f"Allow upgrades: {socketio_config['allow_upgrades']}")
+            print(f"Client transport attempt detected")
+        else:
+            print(f"=== Socket.IO Error ===")
+            print(f"Error: {error_message}")
+            print(f"Error type: {type(e).__name__}")
+        
+        # Emit error to client for debugging
+        emit('error', {
+            'message': 'Connection error occurred',
+            'type': 'transport_error' if 'Invalid transport' in error_message else 'socket_error',
+            'details': error_message
+        })
     migrate.init_app(app, db)
     
     # Initialize Swagger
@@ -340,16 +365,27 @@ def create_app(config_class=Config):
         if app.config.get('DEBUG', False):
             print("=== Socket.IO Connection Disconnected ===")
     
-    # Create database tables
+    # Create database tables (only if not already created)
     with app.app_context():
         try:
-            db.create_all()
-            print("Database tables created successfully")
+            # Check if tables already exist to prevent duplicate creation
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            existing_tables = inspector.get_table_names()
             
-            # Start job processor
+            if not existing_tables:
+                db.create_all()
+                print("Database tables created successfully")
+            else:
+                print("Database tables already exist, skipping creation")
+            
+            # Start job processor (only if not already running)
             from app.services.job_processor import job_processor
-            job_processor.start()
-            print("Job processor started successfully")
+            if not job_processor.running:
+                job_processor.start()
+                print("Job processor started successfully")
+            else:
+                print("Job processor already running")
         except Exception as e:
             print(f"Error creating database tables or starting job processor: {e}")
     

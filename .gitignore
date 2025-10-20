@@ -120,3 +120,6 @@ dmypy.json
 # planning docs
 dev_plans/
 security-reports/
+
+# screenshots
+frontend/cypress/screenshots/

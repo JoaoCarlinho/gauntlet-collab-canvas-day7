@@ -16,10 +16,15 @@ cache = Cache()
 
 # Cache client for compatibility with existing code
 cache_client = None
+_cache_initialized = False
 
 def init_cache(app):
     """Initialize cache with Railway-compatible configuration."""
-    global cache_client
+    global cache_client, _cache_initialized
+    
+    # Prevent duplicate initialization
+    if _cache_initialized:
+        return
     
     try:
         # Configure Flask-Caching with SimpleCache (in-memory)
@@ -47,6 +52,7 @@ def init_cache(app):
         
         cache.init_app(app, config=cache_config)
         cache_client = cache
+        _cache_initialized = True
         
         # Test cache functionality
         cache.set('test_key', 'test_value', timeout=10)

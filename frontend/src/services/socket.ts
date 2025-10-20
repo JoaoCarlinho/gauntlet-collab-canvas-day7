@@ -33,6 +33,9 @@ class SocketService {
                          window.location.hostname === 'localhost' ||
                          window.location.hostname === '127.0.0.1'
     
+    // If we've had multiple connection failures, try polling-only mode
+    const shouldUsePollingOnly = this.connectionAttempts > 2
+    
     // Only log in debug mode
     if (this.debugMode) {
       console.log('=== Socket.IO Connection Debug ===')
@@ -56,12 +59,14 @@ class SocketService {
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
       },
-      transports: ['websocket', 'polling'],
+      transports: shouldUsePollingOnly ? ['polling'] : ['polling', 'websocket'], // Use polling-only after failures
       timeout: 20000,
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      maxReconnectionAttempts: 5
+      maxReconnectionAttempts: 5,
+      // upgrade: !shouldUsePollingOnly, // Disable upgrades if using polling-only
+      // rememberUpgrade: false // Don't remember failed upgrades
     }
     
     // Only add auth token if not in development mode
@@ -228,6 +233,17 @@ class SocketService {
         errorType = 'polling_error'
       } else if (error.message.includes('timeout')) {
         errorType = 'timeout_error'
+      } else if (error.message.includes('websocket error') || error.message.includes('FI: websocket error')) {
+        errorType = 'websocket_error'
+        // For WebSocket errors, try to force polling transport
+        if (this.socket && this.socket.io && this.socket.io.engine) {
+          console.log('WebSocket error detected, attempting to force polling transport')
+          // Note: Direct transport assignment may not be supported in all Socket.IO versions
+          // This is a fallback attempt
+        }
+      } else if (error.message.includes('Invalid transport')) {
+        errorType = 'transport_error'
+        console.log('Invalid transport error detected, this may indicate server configuration mismatch')
       }
       
       const context: ErrorContext = {

@@ -54,37 +54,40 @@ class JobProcessor:
         """Main processing loop."""
         self.logger.log_info("Job processor loop started")
         
-        # Import app here to avoid circular imports
-        from app import create_app
-        app = create_app()
+        # Use the existing app context instead of creating a new one
+        from flask import current_app
         
         while self.running:
             try:
-                with app.app_context():
-                    # Check if we can process more jobs
-                    active_jobs = self.job_service.get_active_jobs_count()
+                # Use current_app if available, otherwise skip this iteration
+                if not current_app:
+                    time.sleep(1)
+                    continue
+                
+                # Check if we can process more jobs
+                active_jobs = self.job_service.get_active_jobs_count()
+                
+                if active_jobs < self.config.MAX_CONCURRENT_JOBS:
+                    # Get next job
+                    job = self.job_service.get_next_job()
                     
-                    if active_jobs < self.config.MAX_CONCURRENT_JOBS:
-                        # Get next job
-                        job = self.job_service.get_next_job()
+                    if job:
+                        self.logger.log_info(f"Processing job {job.id}")
                         
-                        if job:
-                            self.logger.log_info(f"Processing job {job.id}")
-                            
-                            # Process job in a separate thread to avoid blocking
-                            job_thread = threading.Thread(
-                                target=self._process_single_job,
-                                args=(job,),
-                                daemon=True
-                            )
-                            job_thread.start()
-                        else:
-                            # No jobs to process, wait
-                            time.sleep(self.config.PROCESSING_INTERVAL)
+                        # Process job in a separate thread to avoid blocking
+                        job_thread = threading.Thread(
+                            target=self._process_single_job,
+                            args=(job,),
+                            daemon=True
+                        )
+                        job_thread.start()
                     else:
-                        # Too many active jobs, wait
-                        self.logger.log_info(f"Max concurrent jobs reached ({active_jobs}), waiting...")
-                        time.sleep(1)
+                        # No jobs to process, wait
+                        time.sleep(self.config.PROCESSING_INTERVAL)
+                else:
+                    # Too many active jobs, wait
+                    self.logger.log_info(f"Max concurrent jobs reached ({active_jobs}), waiting...")
+                    time.sleep(1)
                     
             except Exception as e:
                 self.logger.log_error(f"Job processor error: {str(e)}", e)
@@ -95,12 +98,12 @@ class JobProcessor:
     def _process_single_job(self, job: AIJob):
         """Process a single job."""
         try:
-            # Import app here to avoid circular imports
-            from app import create_app
-            app = create_app()
-            
-            with app.app_context():
+            # Use the existing app context instead of creating a new one
+            from flask import current_app
+            if current_app:
                 self.job_service.process_job(job)
+            else:
+                self.logger.log_error(f"No app context available for job {job.id}")
         except Exception as e:
             self.logger.log_error(f"Error processing job {job.id}: {str(e)}", e)
     
