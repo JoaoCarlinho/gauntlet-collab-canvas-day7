@@ -48,7 +48,7 @@ import CursorTooltip from './CursorTooltip'
 import PointerIndicator from './PointerIndicator'
 import { getUserColor, getUserInitials, getCursorIcon } from '../utils/cursorUtils'
 import { getCursorManager, CursorState } from '../utils/cursorManager'
-import { FloatingToolbar, useToolbarState, useToolShortcuts, getToolById } from './toolbar'
+import { useToolbarState, useToolShortcuts, getToolById } from './toolbar'
 import { AIAgentButton } from './AIAgentButton'
 import { AIAgentPanel } from './AIAgentPanel'
 import SelectionBox from './SelectionBox'
@@ -80,15 +80,15 @@ const CanvasPage: React.FC = () => {
   
   // Floating toolbar state
   const {
-    preferences,
+    // preferences,
     selectedTool,
-    isVisible: isToolbarVisible,
-    updatePreferences,
+    // isVisible: isToolbarVisible,
+    // updatePreferences,
     selectTool,
-    toggleVisibility: toggleToolbarVisibility,
-    updatePosition,
-    toggleCollapse,
-    getFilteredTools
+    // toggleVisibility: toggleToolbarVisibility,
+    // updatePosition,
+    // toggleCollapse,
+    // getFilteredTools
   } = useToolbarState()
   
   // New state for enhanced object interactions
