@@ -2,6 +2,8 @@
  * Network Health Service
  * Monitors network connectivity and service health
  * Provides fallback mechanisms and user feedback
+ * 
+ * NOTE: Health checking can be disabled by setting DISABLE_HEALTH_CHECKS=true
  */
 
 import { errorLogger } from '../utils/errorLogger'
@@ -476,7 +478,22 @@ class NetworkHealthService {
 }
 
 // Create singleton instance
-export const networkHealthService = new NetworkHealthService()
+const networkHealthService = new NetworkHealthService()
 
-// Export types and service
+// Check if health checks should be disabled
+const isHealthChecksDisabled = 
+  import.meta.env.DISABLE_HEALTH_CHECKS === 'true' ||
+  import.meta.env.SKIP_HEALTH_MONITORING === 'true' ||
+  import.meta.env.HEALTH_CHECK_ENABLED === 'false'
+
+// Export disabled version if health checks are disabled
+if (isHealthChecksDisabled) {
+  console.log('Health checks disabled - using mock service')
+  // Import and export the disabled version
+  import('./networkHealthService.disabled').then(({ networkHealthService: disabledService }) => {
+    Object.assign(networkHealthService, disabledService)
+  })
+}
+
+export { networkHealthService }
 export default networkHealthService

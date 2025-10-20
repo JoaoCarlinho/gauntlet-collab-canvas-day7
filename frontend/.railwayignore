@@ -1,0 +1,38 @@
+# Railway ignore file for frontend deployment
+# Ensures Docker-free deployment using Nixpacks
+
+# Ignore any Docker-related files
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Ignore development files
+node_modules/
+.git/
+.gitignore
+*.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore test files and reports
+cypress/
+playwright-tests/
+test-results/
+playwright-report/
+coverage/
+
+# Ignore build artifacts (will be rebuilt)
+dist/
+build/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore OS files
+.DS_Store
+Thumbs.db

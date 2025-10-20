@@ -71,6 +71,11 @@ export default defineConfig(({ mode }) => {
       __RAILWAY_ENV__: JSON.stringify(isRailway),
       __API_URL__: JSON.stringify(apiUrl),
       __SOCKET_URL__: JSON.stringify(socketUrl),
+      __DISABLE_HEALTH_CHECKS__: JSON.stringify(
+        process.env.DISABLE_HEALTH_CHECKS === 'true' ||
+        process.env.SKIP_HEALTH_MONITORING === 'true' ||
+        process.env.HEALTH_CHECK_ENABLED === 'false'
+      ),
     },
   }
 })

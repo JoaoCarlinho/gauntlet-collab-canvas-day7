@@ -101,7 +101,6 @@
     "automation:all": "cd .. && ./scripts/run-phase3-automation.sh all",
     "incident:create": "cd .. && ./scripts/incident-response.sh",
     "escalation:create-policy": "cd .. && ./scripts/escalation-procedures.sh create-policy",
-    "escalation:health-check": "cd .. && ./scripts/escalation-procedures.sh health-check",
     "rollback:deploy": "cd .. && ./scripts/rollback-deployment.sh",
     "notifications:config": "cd .. && ./scripts/test-notifications.sh create-config",
     "notifications:test": "cd .. && ./scripts/test-notifications.sh test-notification",
