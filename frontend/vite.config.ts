@@ -8,8 +8,8 @@ export default defineConfig(({ mode }) => {
   const isRailway = process.env.RAILWAY_ENVIRONMENT === 'production'
   
   // Get API URL from environment variables
-  const apiUrl = process.env.VITE_API_URL || 'http://localhost:5000'
-  const socketUrl = process.env.VITE_SOCKET_URL || 'http://localhost:5000'
+  const apiUrl = process.env.VITE_API_URL || 'http://localhost:5001'
+  const socketUrl = process.env.VITE_SOCKET_URL || 'http://localhost:5001'
   
   return {
     plugins: [react()],
