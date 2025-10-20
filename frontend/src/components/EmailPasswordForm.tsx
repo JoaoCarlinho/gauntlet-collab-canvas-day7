@@ -167,7 +167,7 @@ const EmailPasswordForm: React.FC<EmailPasswordFormProps> = ({
             />
           </div>
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+            <p className="mt-1 text-sm text-red-600" data-testid="error-message">{errors.email}</p>
           )}
         </div>
 
@@ -205,7 +205,7 @@ const EmailPasswordForm: React.FC<EmailPasswordFormProps> = ({
             </button>
           </div>
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            <p className="mt-1 text-sm text-red-600" data-testid="error-message">{errors.password}</p>
           )}
           {mode === 'register' && formData.password && (
             <p className={`mt-1 text-sm ${passwordStrength.color}`}>
@@ -249,7 +249,7 @@ const EmailPasswordForm: React.FC<EmailPasswordFormProps> = ({
               </button>
             </div>
             {errors.confirmPassword && (
-              <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+              <p className="mt-1 text-sm text-red-600" data-testid="error-message">{errors.confirmPassword}</p>
             )}
           </div>
         )}
