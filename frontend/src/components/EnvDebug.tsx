@@ -2,15 +2,16 @@ import React from 'react';
 import { getApiUrl } from '../utils/env';
 
 export const EnvDebug: React.FC = () => {
-  const apiUrl = getApiUrl();
-  
-  // Only show in development and not during tests
-  if (import.meta.env.MODE !== 'development' || 
+  // Completely disable in production and during tests
+  if (import.meta.env.PROD || 
+      import.meta.env.MODE === 'production' ||
       (window as any).Cypress || 
       (window as any).playwright ||
       navigator.userAgent.includes('Playwright')) {
     return null;
   }
+  
+  const apiUrl = getApiUrl();
   
   return (
     <div style={{
