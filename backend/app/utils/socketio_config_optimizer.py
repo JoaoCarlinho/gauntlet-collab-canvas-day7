@@ -87,8 +87,8 @@ class SocketIOConfigOptimizer:
                     'reconnection_attempts': 3,  # Fewer attempts in production
                     'reconnection_delay': 2000,  # 2 seconds
                     'reconnection_delay_max': 10000,  # 10 seconds
-                    'transports': ['polling'],  # Railway doesn't support WebSocket, use polling only
-                    'allow_upgrades': False,  # Disable upgrade attempts since WebSocket doesn't work on Railway
+                    'transports': ['polling', 'websocket'],  # Allow both transports with polling as primary
+                    'allow_upgrades': True,  # Allow upgrade attempts for better compatibility
                 })
             else:
                 # Development optimizations
