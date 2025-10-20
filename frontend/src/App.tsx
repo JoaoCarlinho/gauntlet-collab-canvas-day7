@@ -9,6 +9,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
 // import NetworkStatusIndicator from './components/NetworkStatusIndicator'
 
+// Test comment for PR build validation workflow
+
 function App() {
   return (
     <ErrorBoundary>
