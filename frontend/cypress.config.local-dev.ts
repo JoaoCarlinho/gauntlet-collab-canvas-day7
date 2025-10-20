@@ -2,7 +2,7 @@ import { defineConfig } from 'cypress'
 
 export default defineConfig({
   e2e: {
-    baseUrl: 'http://localhost:3002',
+    baseUrl: 'http://localhost:3000',
     supportFile: 'cypress/support/e2e.ts',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     viewportWidth: 1280,
@@ -16,7 +16,7 @@ export default defineConfig({
     pageLoadTimeout: 30000,
     // Environment variables for local testing
     env: {
-      API_URL: 'http://localhost:5000',
+      API_URL: 'http://localhost:5001',
       MOCK_AUTH: true,
       MOCK_WEBSOCKET: false
     },
