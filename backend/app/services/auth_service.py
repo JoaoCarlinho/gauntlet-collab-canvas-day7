@@ -89,6 +89,34 @@ class AuthService:
     def verify_token(self, id_token):
         """Verify Firebase ID token."""
         try:
+            # Allow development tokens when enabled
+            allow_dev = os.environ.get('ALLOW_DEV_TOKENS', 'false').lower() == 'true'
+            if allow_dev and isinstance(id_token, str) and id_token.startswith('dev.'):
+                # Expected format: dev.<b64header>.<b64payload>.<signature>
+                parts = id_token.split('.')
+                if len(parts) >= 4:
+                    import base64
+                    import json
+                    def b64url_decode(segment: str) -> bytes:
+                        padding = '=' * (-len(segment) % 4)
+                        segment = segment.replace('-', '+').replace('_', '/') + padding
+                        return base64.b64decode(segment)
+                    try:
+                        payload_bytes = b64url_decode(parts[2])
+                        payload = json.loads(payload_bytes.decode('utf-8'))
+                        # Map to expected decoded_token shape
+                        return {
+                            'uid': payload.get('uid') or str(uuid.uuid4()),
+                            'email': payload.get('email') or 'dev@example.com',
+                            'name': payload.get('name') or 'Development User',
+                            'dev': True
+                        }
+                    except Exception as e:
+                        print(f"Failed to decode dev token payload: {str(e)}")
+                        raise Exception('Invalid dev token')
+                else:
+                    raise Exception('Invalid dev token format')
+
             if hasattr(self, '_mock_firebase') and self._mock_firebase:
                 # Mock token verification for testing
                 if id_token == 'valid-token':

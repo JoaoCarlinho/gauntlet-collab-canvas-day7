@@ -4,7 +4,8 @@
     "dockerfilePath": null
   },
   "deploy": {
-    "restartPolicyType": "NEVER"
+    "restartPolicyType": "NEVER",
+    "startCommand": "npm run start:railway"
   },
   "environments": {
     "preview": {

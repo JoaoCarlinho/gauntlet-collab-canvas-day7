@@ -21,3 +21,20 @@ import './auth-helpers'
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
+
+// Disable CSS animations/transitions during tests to reduce flakiness
+beforeEach(() => {
+  const disableAnimationsCss = `
+    *, *::before, *::after {
+      transition: none !important;
+      animation: none !important;
+      scroll-behavior: auto !important;
+    }
+  `
+  cy.document().then((doc) => {
+    const style = doc.createElement('style')
+    style.setAttribute('data-testid', 'cypress-disable-animations')
+    style.appendChild(doc.createTextNode(disableAnimationsCss))
+    doc.head.appendChild(style)
+  })
+})
