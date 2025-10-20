@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 from flask_cors import CORS
@@ -107,9 +107,14 @@ def create_app(config_class=Config):
     from .utils.socketio_config_optimizer import SocketIOConfigOptimizer
     socketio_config = SocketIOConfigOptimizer.get_optimized_config(app)
     
+    # Ensure CORS origins are properly configured for Socket.IO
+    socketio_cors_origins = allowed_origins.copy()
+    if not socketio_cors_origins:
+        socketio_cors_origins = ["*"]  # Fallback to allow all origins
+    
     socketio.init_app(
         app, 
-        cors_allowed_origins=socketio_config['cors_allowed_origins'],
+        cors_allowed_origins=socketio_cors_origins,
         manage_session=socketio_config['manage_session'],
         logger=socketio_config['logger'],
         engineio_logger=socketio_config['engineio_logger'],
@@ -205,6 +210,19 @@ def create_app(config_class=Config):
     # Register socket handlers
     from .socket_handlers import register_socket_handlers
     register_socket_handlers(socketio)
+    
+    # Add Socket.IO health check endpoint
+    @app.route('/socket.io/')
+    @app.route('/socket.io')
+    def socketio_health():
+        """Socket.IO health check endpoint."""
+        return jsonify({
+            'status': 'healthy',
+            'message': 'Socket.IO endpoint is accessible',
+            'transports': socketio_config.get('transports', ['polling']),
+            'cors_enabled': True,
+            'timestamp': time.time()
+        }), 200
     
     # Add Socket.IO connection authentication
     @socketio.on('connect')

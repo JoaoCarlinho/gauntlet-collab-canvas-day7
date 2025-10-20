@@ -47,8 +47,8 @@ class SocketIOClientOptimizer {
    * Get optimized Socket.IO client configuration
    */
   getOptimizedConfig(): SocketIOClientConfig {
-    const isProduction = import.meta.env.PROD
-    const isDevelopment = import.meta.env.DEV
+    const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production'
+    const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development'
 
     if (isProduction) {
       return this.getProductionConfig()
@@ -72,12 +72,12 @@ class SocketIOClientOptimizer {
       forceNew: false,
       reconnection: true,
       reconnectionDelay: 2000, // 2 seconds
-      reconnectionAttempts: 5, // More attempts since polling is less efficient
+      reconnectionAttempts: 3, // Match server configuration
       reconnectionDelayMax: 10000, // 10 seconds
-      maxReconnectionAttempts: 5,
-      compression: false, // Disable compression to avoid protocol issues
-      compressionThreshold: 0, // No compression
-      maxMessageSize: 1000000, // 1MB - increase to handle larger messages
+      maxReconnectionAttempts: 3,
+      compression: true, // Enable compression for better performance
+      compressionThreshold: 512, // 512 bytes - match server configuration
+      maxMessageSize: 500000, // 500KB - match server configuration
       pingTimeout: 60, // 60 seconds - increase timeout
       pingInterval: 25 // 25 seconds - match server configuration
     }

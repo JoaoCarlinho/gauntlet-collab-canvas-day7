@@ -22,7 +22,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
 db = SQLAlchemy(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, 
+    cors_allowed_origins="*",
+    transports=['polling'],  # Railway doesn't support WebSocket
+    allow_upgrades=False,    # Disable upgrade attempts
+    ping_timeout=60,
+    ping_interval=25,
+    max_http_buffer_size=500000,
+    logger=False,
+    engineio_logger=False
+)
 
 # Configure CORS
 CORS(app, origins=[
@@ -41,6 +50,17 @@ def health():
         'status': 'healthy',
         'message': 'CollabCanvas API is running',
         'version': '1.0.0'
+    }), 200
+
+@app.route('/socket.io/')
+@app.route('/socket.io')
+def socketio_health():
+    """Socket.IO health check endpoint."""
+    return jsonify({
+        'status': 'healthy',
+        'message': 'Socket.IO endpoint is accessible',
+        'transports': ['polling'],
+        'cors_enabled': True
     }), 200
 
 @app.route('/')
