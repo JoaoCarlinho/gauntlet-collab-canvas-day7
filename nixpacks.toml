@@ -1,0 +1,24 @@
+# Railway NIXPACKS configuration for backend Python application
+# This avoids Docker Hub connectivity issues by using Railway's infrastructure
+
+[phases.setup]
+nixPkgs = ["python39", "pip"]
+
+[phases.install]
+cmds = [
+  "cd backend && pip install --no-cache-dir -r requirements.txt"
+]
+
+[phases.build]
+cmds = [
+  "cd backend && python -m py_compile run.py"
+]
+
+[start]
+cmd = "cd backend && python run.py"
+
+[variables]
+FLASK_APP = "run.py"
+FLASK_ENV = "production"
+PYTHONPATH = "/app/backend"
+PORT = "5000"
