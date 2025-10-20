@@ -28,11 +28,14 @@ test.describe('User Authentication Journey', () => {
   test('should complete user registration flow', async () => {
     await page.goto('/login');
     
+    // Switch to email authentication method
+    await page.click('[data-testid="email-auth-button"]');
+    
     // Check if user is already authenticated
     const isAuthenticated = await page.evaluate(() => {
       return localStorage.getItem('idToken') !== null;
     });
-    
+
     if (!isAuthenticated) {
       // Test registration flow
       await page.click('[data-testid="sign-up-button"]');
@@ -55,6 +58,9 @@ test.describe('User Authentication Journey', () => {
 
   test('should complete user login flow', async () => {
     await page.goto('/login');
+    
+    // Switch to email authentication method
+    await page.click('[data-testid="email-auth-button"]');
     
     // Test login flow
     await page.click('[data-testid="sign-in-button"]');
@@ -82,6 +88,9 @@ test.describe('User Authentication Journey', () => {
 
   test('should handle authentication errors gracefully', async () => {
     await page.goto('/login');
+    
+    // Switch to email authentication method
+    await page.click('[data-testid="email-auth-button"]');
     
     // Test invalid email
     await page.click('[data-testid="sign-in-button"]');
