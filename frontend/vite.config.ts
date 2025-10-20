@@ -40,6 +40,7 @@ export default defineConfig(({ mode }) => {
     preview: {
       port: parseInt(process.env.PORT || '3000'),
       host: '0.0.0.0', // Allow external connections for Railway
+      allowedHosts: ['collab-canvas-frontend.up.railway.app'],
       headers: {
         'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
         'Cross-Origin-Embedder-Policy': 'unsafe-none',
