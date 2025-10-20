@@ -1,17 +1,18 @@
-# Railway NIXPACKS configuration for backend Python application
-# This avoids Docker Hub connectivity issues by using Railway's infrastructure
+# Railway NIXPACKS configuration for backend Python Flask application
+# Completely Docker-free deployment using Railway's native Python infrastructure
 
 [phases.setup]
 nixPkgs = ["python39", "pip"]
 
 [phases.install]
 cmds = [
-  "cd backend && pip install --no-cache-dir -r requirements.txt"
+  "cd backend && pip install --no-cache-dir --disable-pip-version-check -r requirements.txt"
 ]
 
 [phases.build]
 cmds = [
-  "cd backend && python -m py_compile run.py"
+  "cd backend && python -m py_compile run.py",
+  "cd backend && python -m py_compile app/__init__.py"
 ]
 
 [start]
@@ -22,3 +23,6 @@ FLASK_APP = "run.py"
 FLASK_ENV = "production"
 PYTHONPATH = "/app/backend"
 PORT = "5000"
+PYTHONUNBUFFERED = "1"
+PIP_DISABLE_PIP_VERSION_CHECK = "1"
+PIP_NO_CACHE_DIR = "1"
