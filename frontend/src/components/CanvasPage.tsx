@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Rect, Circle, Text, Group, Line, RegularPolygon, Star } from 'react-konva'
-import { ArrowLeft, Users, Settings, UserPlus } from 'lucide-react'
+import { ArrowLeft, Users, Settings, UserPlus, BarChart3 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../hooks/useSocket'
 import { canvasAPI } from '../services/api'
@@ -16,6 +16,9 @@ import { stateSyncManager, StateConflict } from '../services/stateSyncManager'
 import { updateQueueManager, QueueStats } from '../services/updateQueueManager'
 import { connectionMonitor } from '../services/connectionMonitor'
 import { offlineManager } from '../services/offlineManager'
+import { objectVisibilityRecoveryService } from '../services/objectVisibilityRecoveryService'
+import { connectionQualityMonitor } from '../services/connectionQualityMonitor'
+import ConnectionQualityDashboard from './ConnectionQualityDashboard'
 import { objectUpdateDebouncer } from '../utils/debounce'
 import { enhancedErrorHandler } from '../services/enhancedErrorHandler'
 // import { batchUpdateManager, useBatchUpdates } from '../utils/batchUpdates'
@@ -64,6 +67,7 @@ const CanvasPage: React.FC = () => {
   const [newObject, setNewObject] = useState<Partial<CanvasObject> | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [showCollaborationSidebar, setShowCollaborationSidebar] = useState(false)
+  const [showConnectionQualityDashboard, setShowConnectionQualityDashboard] = useState(false)
   
   // AI Agent state
   const [showAIPanel, setShowAIPanel] = useState(false)
@@ -230,6 +234,12 @@ const CanvasPage: React.FC = () => {
     // Set up socket event listeners (skip in development mode)
     if (!isDevelopmentMode()) {
     setupSocketListeners()
+    
+    // Set up visibility monitoring
+    setupVisibilityMonitoring()
+    
+    // Set up connection quality monitoring
+    setupConnectionQualityMonitoring()
 
       // Initialize state synchronization
       initializeStateSync()
@@ -536,10 +546,27 @@ const CanvasPage: React.FC = () => {
       console.log('Connection lost:', _data)
       setConnectionStatus('disconnected')
       
+      // Backup object state before disconnection
+      if (canvasId && objects.length > 0) {
+        socketService.backupObjectState(canvasId, objects)
+        console.log(`Backed up ${objects.length} objects before disconnection`)
+      }
+      
       // Notify offline manager
       offlineManager.handleConnectionLoss()
       
       devToast.error(`Connection lost: ${_data.reason}`)
+    })
+
+    // Enhanced connection event handlers
+    socketService.on('connection_disconnected', (_data: { reason: string; timestamp: number }) => {
+      console.log('Connection disconnected:', _data)
+      
+      // Backup object state
+      if (canvasId && objects.length > 0) {
+        socketService.backupObjectState(canvasId, objects)
+        console.log(`Backed up ${objects.length} objects on disconnection`)
+      }
     })
 
     socketService.on('reconnection_attempt', (_data: { attempt: number; timestamp: number }) => {
@@ -772,24 +799,120 @@ const CanvasPage: React.FC = () => {
     // OfflineManager starts automatically when instantiated
   }
 
-  // Reconnection synchronization function
+  // Set up connection quality monitoring
+  const setupConnectionQualityMonitoring = () => {
+    if (!canvasId) return
+
+    console.log('Setting up connection quality monitoring')
+
+    // Start monitoring
+    connectionQualityMonitor.startMonitoring(30000) // 30 seconds
+
+    // Listen for connection quality reports
+    const handleQualityReport = (data: any) => {
+      console.log('Connection quality report received:', data)
+      
+      // Show recommendations to user if quality is poor
+      if (data.connectionQuality === 'poor' && data.recommendations.length > 0) {
+        devToast.warning(`Connection quality is poor: ${data.recommendations[0]}`, { duration: 5000 })
+      }
+    }
+    
+    socketService.on('connection_quality_report', handleQualityReport)
+
+    // Cleanup function
+    return () => {
+      connectionQualityMonitor.stopMonitoring()
+      socketService.off('connection_quality_report', handleQualityReport)
+    }
+  }
+
+  // Set up visibility monitoring
+  const setupVisibilityMonitoring = () => {
+    if (!canvasId) return
+
+    console.log('Setting up object visibility monitoring')
+
+    // Monitor visibility every 30 seconds
+    const visibilityInterval = setInterval(async () => {
+      if (canvasId && objects.length > 0) {
+        await objectVisibilityRecoveryService.monitorObjectVisibility(canvasId, objects)
+      }
+    }, 30000)
+
+    // Listen for visibility recovery events
+    const handleVisibilitySuccess = (data: any) => {
+      console.log('Visibility recovery successful:', data)
+      toast.success(`Recovered ${data.recoveredObjects} missing objects`, { duration: 3000 })
+      
+      // Refresh objects to show recovered ones
+      if (data.canvasId === canvasId) {
+        loadObjects()
+      }
+    }
+
+    const handleVisibilityFailed = (data: any) => {
+      console.error('Visibility recovery failed:', data)
+      toast.error('Failed to recover some objects - refreshing canvas', { duration: 4000 })
+      
+      // Force refresh on recovery failure
+      if (data.canvasId === canvasId) {
+        objectVisibilityRecoveryService.forceRefreshCanvas(canvasId).then(() => {
+          loadObjects()
+        })
+      }
+    }
+
+    socketService.on('visibility_recovery_success', handleVisibilitySuccess)
+    socketService.on('visibility_recovery_failed', handleVisibilityFailed)
+
+    // Cleanup function
+    return () => {
+      clearInterval(visibilityInterval)
+      socketService.off('visibility_recovery_success', handleVisibilitySuccess)
+      socketService.off('visibility_recovery_failed', handleVisibilityFailed)
+    }
+  }
+
+  // Enhanced reconnection synchronization function
   const handleReconnectionSync = async () => {
     if (!canvasId || !idToken) return
 
-    console.log('Starting reconnection sync...')
+    console.log('Starting enhanced reconnection sync...')
     
     try {
-      // 1. Sync offline cached updates
-      // const syncResult = await offlineManager.syncPendingUpdates()
+      // 1. Restore object state from backup
+      const restoredObjects = await socketService.restoreObjectState(canvasId)
+      if (restoredObjects.length > 0) {
+        console.log(`Restored ${restoredObjects.length} objects from backup`)
+        setObjects(restoredObjects)
+      }
+
+      // 2. Sync offline cached updates
       const syncResult = { success: true, conflicts: [], hasConflicts: false, syncedCount: 0 }
       if (syncResult.success && syncResult.syncedCount > 0) {
         toast.success(`Synced ${syncResult.syncedCount} offline updates`, { duration: 3000 })
       }
 
-      // 2. Refresh canvas state from server
+      // 3. Refresh canvas state from server
       await loadObjects()
       
-      // 3. Trigger state synchronization
+      // 4. Sync object state with server
+      const syncedObjects = await socketService.syncObjectState(canvasId, objects)
+      if (syncedObjects.length !== objects.length) {
+        console.log(`Object state sync: ${objects.length} -> ${syncedObjects.length} objects`)
+        setObjects(syncedObjects)
+      }
+      
+      // 5. Validate object state consistency
+      const isConsistent = await socketService.validateObjectStateConsistency(canvasId, objects)
+      if (!isConsistent) {
+        console.warn('Object state inconsistency detected after reconnection')
+        devToast.warning('Some objects may not be visible - refreshing canvas', { duration: 4000 })
+        await loadObjects() // Force refresh
+      }
+      
+      // 6. Trigger state synchronization
       const stateSyncResult = await stateSyncManager.syncState(canvasId, objects, {
         forceSync: true as any,
         resolveConflicts: 'server_wins' as any
@@ -800,17 +923,20 @@ const CanvasPage: React.FC = () => {
         setShowConflictDialog(true)
       }
 
-      // 4. Process any queued updates
+      // 7. Process any queued updates
       updateQueueManager.processQueue()
 
-      // 5. Update connection status
+      // 8. Update connection status
       setConnectionStatus('connected')
       setIsOffline(false)
       
-      console.log('Reconnection sync completed successfully')
+      // 9. Clear object state backup after successful sync
+      socketService.clearObjectStateBackup(canvasId)
+      
+      console.log('Enhanced reconnection sync completed successfully')
       
     } catch (error) {
-      console.error('Reconnection sync failed:', error)
+      console.error('Enhanced reconnection sync failed:', error)
       toast.error('Failed to sync after reconnection - some data may be outdated', {
         duration: 5000
       })
@@ -2242,6 +2368,17 @@ const CanvasPage: React.FC = () => {
         onPreferencesChange={updatePreferences}
       />
 
+      {/* Connection Quality Dashboard Button */}
+      <div className="fixed bottom-4 right-20 z-50">
+        <button
+          onClick={() => setShowConnectionQualityDashboard(true)}
+          className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          title="Connection Quality Dashboard"
+        >
+          <BarChart3 className="w-5 h-5" />
+        </button>
+      </div>
+
       {/* Debug Panel - Only show in development */}
       {import.meta.env.DEV && (
         <div className="fixed bottom-4 right-4 z-50">
@@ -2501,6 +2638,12 @@ const CanvasPage: React.FC = () => {
           // Optionally refresh the canvas or show success message
         }}
         currentCanvasId={canvasId}
+      />
+
+      {/* Connection Quality Dashboard */}
+      <ConnectionQualityDashboard
+        isVisible={showConnectionQualityDashboard}
+        onClose={() => setShowConnectionQualityDashboard(false)}
       />
     </div>
   )

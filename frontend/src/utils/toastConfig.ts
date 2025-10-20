@@ -26,6 +26,17 @@ export const devToast = {
     return originalToast.error(message, options)
   },
   
+  warning: (message: string, options?: any) => {
+    return originalToast.error(message, { 
+      ...options, 
+      style: {
+        background: '#fef3c7',
+        color: '#92400e',
+        border: '1px solid #f59e0b'
+      }
+    })
+  },
+  
   loading: (message: string, options?: any) => {
     return originalToast.loading(message, options)
   },
