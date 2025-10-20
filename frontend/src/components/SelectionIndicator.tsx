@@ -36,7 +36,7 @@ const SelectionIndicator: React.FC<SelectionIndicatorProps> = ({
         height: (props.radius * 2) + 10 
       }
       break
-    case 'text':
+    case 'text': {
       // Calculate text bounds (approximate)
       const textWidth = props.text.length * props.fontSize * 0.6
       const textHeight = props.fontSize * 1.2
@@ -47,6 +47,7 @@ const SelectionIndicator: React.FC<SelectionIndicatorProps> = ({
         height: textHeight + 10 
       }
       break
+    }
     default:
       return null
   }

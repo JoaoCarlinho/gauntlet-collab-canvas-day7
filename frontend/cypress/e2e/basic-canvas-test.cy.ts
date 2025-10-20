@@ -1,7 +1,7 @@
 describe('Basic Canvas Functionality', () => {
   beforeEach(() => {
     // Handle uncaught exceptions from Firebase
-    cy.on('uncaught:exception', (err, runnable) => {
+    cy.on('uncaught:exception', (err, _runnable) => {
       // Don't fail the test on Firebase errors
       if (err.message.includes('Firebase') || err.message.includes('auth/invalid-api-key')) {
         return false

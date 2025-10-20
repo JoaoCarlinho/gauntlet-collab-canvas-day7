@@ -15,7 +15,7 @@ export interface Prompt {
   color_scheme: 'pastel' | 'vibrant' | 'monochrome' | 'default'
   model_used: string | null
   status: 'pending' | 'processing' | 'completed' | 'failed'
-  request_metadata: Record<string, any>
+  request_metadata: Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
   error_message: string | null
   created_at: string
   updated_at: string
@@ -40,7 +40,7 @@ export interface CanvasObject {
   id: string
   canvas_id: string
   object_type: 'rectangle' | 'circle' | 'text' | 'heart' | 'star' | 'diamond' | 'line' | 'arrow'
-  properties: Record<string, any>
+  properties: Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
   created_by: string
   created_at: string
   updated_at: string

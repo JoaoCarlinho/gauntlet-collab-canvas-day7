@@ -31,7 +31,7 @@ export default defineConfig({
       TEST_USER_DISPLAY_NAME: 'Test User',
       ENABLE_TEST_AUTH: true
     },
-    setupNodeEvents(on, config) {
+    setupNodeEvents(on, _config) {
       // Add custom tasks for production testing
       on('task', {
         log(message) {

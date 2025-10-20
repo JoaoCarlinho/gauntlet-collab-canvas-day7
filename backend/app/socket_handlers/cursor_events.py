@@ -1,6 +1,6 @@
 from flask_socketio import emit, join_room, leave_room
 from app.services.auth_service import AuthService
-from app.extensions import redis_client
+from app.extensions import cache_client
 from app.utils.production_logger import production_logger
 from app.utils.railway_logger import railway_logger, log_socket_event, log_cursor_event
 from app.schemas.validation_schemas import CursorMoveEventSchema

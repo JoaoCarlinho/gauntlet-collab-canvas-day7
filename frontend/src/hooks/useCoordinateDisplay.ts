@@ -257,13 +257,14 @@ function calculateBounds(objects: CanvasObject[]): {
         objMaxX = props.x + (props.radius || 0)
         objMaxY = props.y + (props.radius || 0)
         break
-      case 'text':
+      case 'text': {
         // Approximate text bounds
         const textWidth = (props.text?.length || 0) * (props.fontSize || 16) * 0.6
         const textHeight = (props.fontSize || 16) * 1.2
         objMaxX = props.x + textWidth
         objMaxY = props.y + textHeight
         break
+      }
       default:
         // For other shapes, approximate with width/height if available
         if (props.width) objMaxX = props.x + props.width

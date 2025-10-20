@@ -1,7 +1,7 @@
 from flask_socketio import emit, join_room, leave_room
 from app.services.auth_service import AuthService
 from app.services.canvas_service import CanvasService
-from app.extensions import redis_client
+from app.extensions import cache_client
 from app.schemas.validation_schemas import ObjectUpdateEventSchema
 from app.middleware.rate_limiting import check_socket_rate_limit
 from app.middleware.socket_security import (

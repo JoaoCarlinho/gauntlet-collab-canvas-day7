@@ -2,7 +2,7 @@
  * Tests for Edge Detection Utility
  */
 
-import { EdgeDetector, EdgeDetectionResult } from '../edgeDetection'
+import { EdgeDetector, EdgeDetectionResult as _EdgeDetectionResult } from '../edgeDetection'
 import { CanvasObject } from '../../types'
 
 describe('EdgeDetector', () => {

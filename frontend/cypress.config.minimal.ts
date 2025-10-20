@@ -20,7 +20,7 @@ export default defineConfig({
       MOCK_AUTH: false,
       MOCK_WEBSOCKET: false
     },
-    setupNodeEvents(on, config) {
+    setupNodeEvents(on, _config) {
       // Minimal setup to avoid issues
       on('task', {
         log(message) {

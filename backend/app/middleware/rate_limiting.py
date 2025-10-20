@@ -7,7 +7,6 @@ from flask import request, jsonify, g
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from functools import wraps
-import redis
 import logging
 from typing import Optional, Dict, Any
 
@@ -17,11 +16,10 @@ logger = logging.getLogger(__name__)
 class RateLimitingService:
     """Service for managing rate limiting across the application."""
     
-    def __init__(self, app=None, redis_url: Optional[str] = None):
+    def __init__(self, app=None, cache_client=None):
         self.app = app
-        self.redis_url = redis_url
+        self.cache_client = cache_client
         self.limiter = None
-        self.redis_client = None
         
         if app:
             self.init_app(app)
@@ -30,33 +28,25 @@ class RateLimitingService:
         """Initialize rate limiting with Flask app."""
         self.app = app
         
-        # Get Redis URL from config
-        redis_url = self.redis_url or app.config.get('REDIS_URL', 'redis://localhost:6379/0')
+        # Use memory-based storage for Railway compatibility
+        storage_uri = "memory://"
         
         try:
-            # Initialize Redis client
-            self.redis_client = redis.from_url(redis_url, decode_responses=True)
+            # Initialize Flask-Limiter with memory storage
+            self.limiter = Limiter(
+                app=app,
+                key_func=self._get_rate_limit_key,
+                storage_uri=storage_uri,
+                default_limits=["100 per minute"],
+                headers_enabled=True,
+                retry_after="delta-seconds"
+            )
             
-            # Test Redis connection
-            self.redis_client.ping()
-            logger.info("Rate limiting initialized with Redis backend")
+            logger.info("Rate limiting initialized with memory backend")
             
         except Exception as e:
-            logger.warning(f"Redis not available for rate limiting: {str(e)}")
-            self.redis_client = None
-        
-        # Initialize Flask-Limiter
-        self.limiter = Limiter(
-            app=app,
-            key_func=self._get_rate_limit_key,
-            storage_uri=redis_url if self.redis_client else "memory://",
-            default_limits=["100 per minute"],
-            headers_enabled=True,
-            retry_after="delta-seconds"
-        )
-        
-        # Register rate limit error handler
-        self.limiter.error_handler = self._rate_limit_error_handler
+            logger.warning(f"Rate limiting initialization failed: {str(e)}")
+            self.limiter = None
     
     def _get_rate_limit_key(self) -> str:
         """Get rate limiting key based on user authentication."""
@@ -190,11 +180,12 @@ class RateLimitConfig:
 
 
 class SocketRateLimiter:
-    """Custom rate limiter for Socket.IO events."""
+    """Custom rate limiter for Socket.IO events using in-memory storage."""
     
-    def __init__(self, redis_client: Optional[redis.Redis] = None):
-        self.redis_client = redis_client
+    def __init__(self, cache_client=None):
+        self.cache_client = cache_client
         self.rate_limits = RateLimitConfig.SOCKET_LIMITS
+        self._memory_store = {}  # In-memory fallback storage
     
     def is_allowed(self, user_id: str, event_type: str) -> bool:
         """
@@ -207,10 +198,6 @@ class SocketRateLimiter:
         Returns:
             True if event is allowed, False if rate limited
         """
-        if not self.redis_client:
-            # If Redis is not available, allow all events
-            return True
-        
         if event_type not in self.rate_limits:
             # If no specific limit, use global socket limit
             limit_str = self.rate_limits.get('socket_events', '1000 per minute')
@@ -229,20 +216,48 @@ class SocketRateLimiter:
             # Create rate limit key
             key = f"socket_rate_limit:{user_id}:{event_type}"
             
-            # Check current count
-            current_count = self.redis_client.get(key)
-            if current_count is None:
-                # First request in this period
-                self.redis_client.setex(key, period_seconds, 1)
+            # Use cache if available, otherwise use memory store
+            if self.cache_client:
+                try:
+                    # Check current count using cache
+                    current_count = self.cache_client.get(key)
+                    if current_count is None:
+                        # First request in this period
+                        self.cache_client.set(key, 1, timeout=period_seconds)
+                        return True
+                    
+                    current_count = int(current_count)
+                    if current_count >= limit_count:
+                        # Rate limit exceeded
+                        return False
+                    
+                    # Increment counter
+                    self.cache_client.set(key, current_count + 1, timeout=period_seconds)
+                    return True
+                except Exception as e:
+                    logger.warning(f"Cache error in socket rate limiting: {str(e)}")
+                    # Fall back to memory store
+            
+            # Use in-memory storage as fallback
+            import time
+            current_time = time.time()
+            
+            if key not in self._memory_store:
+                self._memory_store[key] = {'count': 1, 'expires': current_time + period_seconds}
                 return True
             
-            current_count = int(current_count)
-            if current_count >= limit_count:
+            store_data = self._memory_store[key]
+            if current_time > store_data['expires']:
+                # Expired, reset counter
+                self._memory_store[key] = {'count': 1, 'expires': current_time + period_seconds}
+                return True
+            
+            if store_data['count'] >= limit_count:
                 # Rate limit exceeded
                 return False
             
             # Increment counter
-            self.redis_client.incr(key)
+            store_data['count'] += 1
             return True
             
         except Exception as e:
@@ -270,10 +285,10 @@ class SocketRateLimiter:
 socket_rate_limiter = SocketRateLimiter()
 
 
-def init_socket_rate_limiting(redis_client: Optional[redis.Redis] = None):
+def init_socket_rate_limiting(cache_client=None):
     """Initialize socket rate limiting."""
     global socket_rate_limiter
-    socket_rate_limiter = SocketRateLimiter(redis_client)
+    socket_rate_limiter = SocketRateLimiter(cache_client)
 
 
 def check_socket_rate_limit(user_id: str, event_type: str) -> bool:

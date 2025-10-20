@@ -43,19 +43,23 @@ def readiness_check():
         if missing_vars:
             env_status = f'unhealthy: missing {missing_vars}'
         
-        # Check Redis connection (if available)
-        redis_status = 'healthy'
+        # Check cache connection (if available)
+        cache_status = 'healthy'
         try:
-            from app.extensions import redis_client
-            if redis_client:
-                redis_client.ping()
+            from app.extensions import cache_client
+            if cache_client:
+                # Test cache functionality
+                cache_client.set('health_check', 'test', timeout=10)
+                test_value = cache_client.get('health_check')
+                if test_value != 'test':
+                    cache_status = 'unhealthy: cache test failed'
             else:
-                redis_status = 'not_configured'
+                cache_status = 'not_configured'
         except Exception as e:
-            redis_status = f'unhealthy: {str(e)}'
+            cache_status = f'unhealthy: {str(e)}'
         
         overall_status = 'healthy' if all(status == 'healthy' or status == 'not_configured' 
-                                        for status in [db_status, env_status, redis_status]) else 'unhealthy'
+                                        for status in [db_status, env_status, cache_status]) else 'unhealthy'
         
         return jsonify({
             'status': overall_status,
@@ -64,7 +68,7 @@ def readiness_check():
             'checks': {
                 'database': db_status,
                 'environment': env_status,
-                'redis': redis_status
+                'cache': cache_status
             }
         }), 200 if overall_status == 'healthy' else 503
         

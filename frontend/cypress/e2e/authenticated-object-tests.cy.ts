@@ -44,7 +44,7 @@ describe('Authenticated Object Tests', () => {
       { tool: 'text', name: 'Authenticated Text', x: 1100, y: 100 }
     ]
 
-    objects.forEach((obj, index) => {
+    objects.forEach((obj, _index) => {
       // Select the tool
       cy.get(`[data-testid="tool-${obj.tool}"]`).click()
       cy.wait(500)
@@ -165,7 +165,7 @@ describe('Authenticated Object Tests', () => {
     cy.get('[data-testid="tool-select"]').click()
     
     // Move each object
-    objects.forEach((obj, index) => {
+    objects.forEach((obj, _index) => {
       cy.get('.konvajs-content').click(obj.x, obj.y, { force: true })
       cy.wait(200)
       

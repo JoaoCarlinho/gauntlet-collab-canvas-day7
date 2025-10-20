@@ -23,11 +23,11 @@ export default defineConfig({
       // API configuration
       API_URL: 'http://localhost:5000'
     },
-    setupNodeEvents(on, config) {
+    setupNodeEvents(on, _config) {
       // Add custom tasks for Firebase authentication
       on('task', {
         // Task to create test users
-        createTestUser: async ({ email, password, displayName }) => {
+        createTestUser: async ({ email, _password, _displayName }) => {
           // Implementation would use Firebase Admin SDK
           console.log(`Creating test user: ${email}`)
           return { success: true, uid: `test-${Date.now()}` }
@@ -40,7 +40,7 @@ export default defineConfig({
         },
         
         // Task to generate authentication token
-        generateAuthToken: async ({ email, password }) => {
+        generateAuthToken: async ({ email, _password }) => {
           // Implementation would use Firebase Auth
           console.log(`Generating auth token for: ${email}`)
           return { success: true, token: `test-token-${Date.now()}` }

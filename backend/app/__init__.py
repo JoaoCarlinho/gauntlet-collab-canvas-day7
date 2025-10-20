@@ -58,7 +58,14 @@ def create_app(config_class=Config):
         "https://*.up.railway.app"
     ]
     
-    allowed_origins = default_origins + cors_origins + vercel_origins + railway_origins
+    # Add Railway frontend URLs (will be updated when frontend is deployed)
+    railway_frontend_origins = [
+        "https://collabcanvas-frontend-production.up.railway.app",
+        "https://collabcanvas-frontend.up.railway.app",
+        "https://*.up.railway.app"
+    ]
+    
+    allowed_origins = default_origins + cors_origins + vercel_origins + railway_origins + railway_frontend_origins
     
     # Debug CORS configuration
     print(f"CORS Configuration Debug:")
@@ -199,12 +206,16 @@ def create_app(config_class=Config):
     app.register_blueprint(test_cors_bp, url_prefix='/api/test')
     app.register_blueprint(health_bp)
     
+    # Initialize cache system
+    from .extensions import init_cache
+    init_cache(app)
+    
     # Initialize rate limiting
     from .middleware.rate_limiting import init_rate_limiting, init_socket_rate_limiting
     from .middleware.error_handling import init_error_handling
-    from .extensions import redis_client
+    from .extensions import cache_client
     init_rate_limiting(app)
-    init_socket_rate_limiting(redis_client)
+    init_socket_rate_limiting(cache_client)
     init_error_handling(app)
     
     # Register socket handlers
