@@ -86,6 +86,31 @@ if (!isDevelopment || (firebaseConfig.apiKey && firebaseConfig.apiKey !== 'dev-a
 
 export { auth }
 
+// Build a long, structured development ID token that the backend can decode
+const buildDevIdToken = (user: { uid: string; email: string; displayName?: string }): string => {
+  const header = { alg: 'none', typ: 'JWT' }
+  const now = Math.floor(Date.now() / 1000)
+  const payload = {
+    iss: 'dev-local',
+    aud: 'dev-local',
+    iat: now,
+    exp: now + 60 * 60,
+    uid: user.uid,
+    email: user.email,
+    name: user.displayName || user.email.split('@')[0],
+    dev: true
+  }
+  const encode = (obj: any) => btoa(unescape(encodeURIComponent(JSON.stringify(obj))))
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+  const headerPart = encode(header)
+  const payloadPart = encode(payload)
+  // Create a long pseudo-signature to exceed length checks in some validators
+  const signature = Array.from({ length: 120 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
+  return `dev.${headerPart}.${payloadPart}.${signature}`
+}
+
 // Configure Firebase auth persistence
 export const initializeAuthPersistence = async (): Promise<void> => {
   try {
@@ -396,12 +421,13 @@ export const signInWithEmailAndPassword = async (email: string, password: string
     
     if (isDevelopment) {
       console.log('Development mode: Mocking email/password sign-in')
-      // Return a mock user for development
+      const uid = `dev-${Math.random().toString(36).slice(2)}`
+      const devToken = buildDevIdToken({ uid, email, displayName: 'Development User' })
       return {
-        uid: 'dev-user-email',
+        uid,
         email: email,
         displayName: 'Development User',
-        getIdToken: () => Promise.resolve('dev-token-email')
+        getIdToken: () => Promise.resolve(devToken)
       } as any
     }
     
@@ -438,12 +464,13 @@ export const createUserWithEmailAndPassword = async (email: string, password: st
     
     if (isDevelopment) {
       console.log('Development mode: Mocking email/password registration')
-      // Return a mock user for development
+      const uid = `dev-${Math.random().toString(36).slice(2)}`
+      const devToken = buildDevIdToken({ uid, email, displayName: 'New Development User' })
       return {
-        uid: 'dev-user-email-new',
+        uid,
         email: email,
         displayName: 'New Development User',
-        getIdToken: () => Promise.resolve('dev-token-email-new')
+        getIdToken: () => Promise.resolve(devToken)
       } as any
     }
     

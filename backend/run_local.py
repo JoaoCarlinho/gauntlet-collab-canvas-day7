@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ['FLASK_ENV'] = 'development'
 os.environ['DATABASE_URL'] = 'sqlite:///app.db'
 os.environ['SECRET_KEY'] = 'local-development-secret-key'
+os.environ['ALLOW_DEV_TOKENS'] = 'true'
 
 # Firebase configuration (using production values for local testing)
 os.environ['FIREBASE_PROJECT_ID'] = 'collabcanvas-24-mvp'
@@ -36,10 +37,10 @@ if __name__ == '__main__':
     app = create_app(LocalConfig)
     
     print("Starting local development server...")
-    print("Backend: http://localhost:5000")
-    print("Health check: http://localhost:5000/health")
+    print("Backend: http://localhost:5001")
+    print("Health check: http://localhost:5001/health")
     
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
     app.run(
         host='0.0.0.0',
         port=port,

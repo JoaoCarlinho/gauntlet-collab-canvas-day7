@@ -1,0 +1,61 @@
+{
+  "timestamp": 1760960573494,
+  "rect": {
+    "left": 0,
+    "top": 138,
+    "width": 1280,
+    "height": 600,
+    "pointerEvents": "auto",
+    "zIndex": "auto",
+    "display": "block",
+    "visibility": "visible"
+  },
+  "blockers": [
+    {
+      "tag": "div",
+      "id": null,
+      "class": null,
+      "pointerEvents": "auto",
+      "zIndex": "auto",
+      "display": "block",
+      "visibility": "visible"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "relative overflow-hidden ",
+      "pointerEvents": "auto",
+      "zIndex": "auto",
+      "display": "block",
+      "visibility": "visible"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "flex-1 overflow-hidden",
+      "pointerEvents": "auto",
+      "zIndex": "auto",
+      "display": "block",
+      "visibility": "visible"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "h-screen flex flex-col bg-gray-100",
+      "pointerEvents": "auto",
+      "zIndex": "auto",
+      "display": "flex",
+      "visibility": "visible"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "min-h-screen bg-gray-50",
+      "pointerEvents": "auto",
+      "zIndex": "auto",
+      "display": "block",
+      "visibility": "visible"
+    }
+  ],
+  "canvasClicks": 6
+}

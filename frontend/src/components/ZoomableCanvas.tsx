@@ -17,6 +17,7 @@ interface ZoomableCanvasProps {
   showZoomControls?: boolean
   zoomControlsPosition?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
   enableKeyboardShortcuts?: boolean
+  onTransformChange?: (t: { scale: number; x: number; y: number; container: HTMLDivElement | null }) => void
 }
 
 const ZoomableCanvas: React.FC<ZoomableCanvasProps> = ({
@@ -31,7 +32,8 @@ const ZoomableCanvas: React.FC<ZoomableCanvasProps> = ({
   className = '',
   showZoomControls = true,
   zoomControlsPosition = 'bottom-right',
-  enableKeyboardShortcuts = true
+  enableKeyboardShortcuts = true,
+  onTransformChange
 }) => {
   const stageRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -191,6 +193,11 @@ const ZoomableCanvas: React.FC<ZoomableCanvasProps> = ({
       container.addEventListener('touchend', handleTouchEndEvent, { passive: false })
       container.addEventListener('touchcancel', handleTouchCancelEvent, { passive: false })
       
+      // Inform parent about current transform/container for overlays
+      if (onTransformChange) {
+        onTransformChange({ scale: zoomState.scale, x: zoomState.x, y: zoomState.y, container })
+      }
+
       return () => {
         container.removeEventListener('wheel', handleWheelEvent)
         container.removeEventListener('touchstart', handleTouchStartEvent)
@@ -200,6 +207,13 @@ const ZoomableCanvas: React.FC<ZoomableCanvasProps> = ({
       }
     }
   }, [handleWheelEvent, handleTouchStartEvent, handleTouchMoveEvent, handleTouchEndEvent, handleTouchCancelEvent])
+
+  // Notify parent on transform changes
+  useEffect(() => {
+    if (onTransformChange) {
+      onTransformChange({ scale: zoomState.scale, x: zoomState.x, y: zoomState.y, container: containerRef.current })
+    }
+  }, [zoomState.scale, zoomState.x, zoomState.y, onTransformChange])
 
   // Handle context menu
   const handleContextMenu = useCallback((e: React.MouseEvent) => {

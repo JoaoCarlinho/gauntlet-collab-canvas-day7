@@ -16,11 +16,14 @@ declare global {
     interface Chainable {
       login(): Chainable<void>
       createCanvas(title: string, description?: string): Chainable<void>
+      seedCanvas(title?: string, description?: string): Chainable<string>
       mockWebSocket(): Chainable<void>
       mockFirebaseAuth(): Chainable<void>
       waitForCanvasLoad(): Chainable<void>
       addObjectToCanvas(objectType: string, x: number, y: number): Chainable<void>
       verifyObjectVisible(objectIndex: number): Chainable<void>
+      clickKonvaAt(percentX: number, percentY: number): Chainable<void>
+      dragKonva(fromPercentX: number, fromPercentY: number, toPercentX: number, toPercentY: number): Chainable<void>
     }
   }
 }
@@ -49,6 +52,58 @@ Cypress.Commands.add('createCanvas', (title: string, description?: string) => {
   
   // Wait for canvas to be created and appear in the list
   cy.get('[data-testid="canvas-list"]').should('contain', title)
+})
+
+// Seed a deterministic canvas via backend API and return its id
+Cypress.Commands.add('seedCanvas', (title?: string, description?: string) => {
+  const canvasTitle = title || `E2E Test Canvas ${Date.now()}`
+  const canvasDescription = description || 'Seeded by Cypress for deterministic tests'
+
+  const apiUrl = Cypress.env('API_URL') || 'http://localhost:5001'
+
+  // Build a dev token compatible with backend dev token parser
+  const buildDevIdToken = (user: { uid: string; email: string; displayName?: string }) => {
+    const header = { alg: 'none', typ: 'JWT' }
+    const now = Math.floor(Date.now() / 1000)
+    const payload = {
+      iss: 'dev-local',
+      aud: 'dev-local',
+      iat: now,
+      exp: now + 3600,
+      uid: user.uid,
+      email: user.email,
+      name: user.displayName || 'E2E User',
+      dev: true
+    }
+    const toBase64Url = (obj: any) =>
+      Buffer.from(JSON.stringify(obj))
+        .toString('base64')
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+    const headerPart = toBase64Url(header)
+    const payloadPart = toBase64Url(payload)
+    const signature = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
+    return `dev.${headerPart}.${payloadPart}.${signature}`
+  }
+
+  const devToken = buildDevIdToken({ uid: 'e2e-user', email: 'e2e@example.com', displayName: 'E2E User' })
+
+  // Try API first; if unauthorized or not found, fall back to deterministic ID for dev route
+  return cy.request<any>({
+    method: 'POST',
+    url: `${apiUrl}/api/canvas`,
+    headers: { Authorization: `Bearer ${devToken}` },
+    body: { title: canvasTitle, description: canvasDescription, is_public: false },
+    failOnStatusCode: false
+  }).then((resp) => {
+    if (resp.status === 200 || resp.status === 201) {
+      const id = resp.body?.canvas?.id
+      if (id && typeof id === 'string') return id as string
+    }
+    // Fallback: use deterministic ID for /dev route (no backend dependency)
+    return `e2e-${Date.now()}`
+  })
 })
 
 Cypress.Commands.add('mockWebSocket', () => {
@@ -147,5 +202,31 @@ Cypress.Commands.add('verifyObjectVisible', (objectIndex: number) => {
   cy.get('[data-testid="canvas-container"]').within(() => {
     // Look for SVG elements that represent Konva objects
     cy.get('canvas').should('exist')
+  })
+})
+
+// Click on inner Konva canvas using percentage coordinates (0..1)
+Cypress.Commands.add('clickKonvaAt', (percentX: number, percentY: number) => {
+  cy.get('[data-testid="canvas-container"] canvas').first().then(($canvas) => {
+    const rect = $canvas[0].getBoundingClientRect()
+    const x = rect.left + rect.width * percentX
+    const y = rect.top + rect.height * percentY
+    cy.wrap($canvas).click(x - rect.left, y - rect.top, { force: true })
+  })
+})
+
+// Drag on inner Konva canvas from A% to B%
+Cypress.Commands.add('dragKonva', (fromPercentX: number, fromPercentY: number, toPercentX: number, toPercentY: number) => {
+  cy.get('[data-testid="canvas-container"] canvas').first().then(($canvas) => {
+    const rect = $canvas[0].getBoundingClientRect()
+    const startX = rect.left + rect.width * fromPercentX
+    const startY = rect.top + rect.height * fromPercentY
+    const endX = rect.left + rect.width * toPercentX
+    const endY = rect.top + rect.height * toPercentY
+
+    cy.wrap($canvas)
+      .trigger('pointerdown', { clientX: startX, clientY: startY, force: true })
+      .trigger('pointermove', { clientX: endX, clientY: endY, force: true })
+      .trigger('pointerup', { force: true })
   })
 })

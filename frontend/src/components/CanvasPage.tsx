@@ -62,6 +62,7 @@ import { useClipboard } from '../hooks/useClipboard'
 import { useUndoRedo, useUndoRedoShortcuts } from '../hooks/useUndoRedo'
 import { useCoordinateDisplay } from '../hooks/useCoordinateDisplay'
 import CoordinateStatusBar from './CoordinateStatusBar'
+import TextEditorOverlay from './TextEditorOverlay'
 import '../styles/AIAgent.css'
 
 const CanvasPage: React.FC = () => {
@@ -99,6 +100,9 @@ const CanvasPage: React.FC = () => {
   // New state for enhanced object interactions
   const [editingObjectId, setEditingObjectId] = useState<string | null>(null)
   const [hoveredObjectId, setHoveredObjectId] = useState<string | null>(null)
+  const [stageTransform, setStageTransform] = useState<{ scale: number; x: number; y: number }>({ scale: 1, x: 0, y: 0 })
+  const [stageContainer, setStageContainer] = useState<HTMLDivElement | null>(null)
+  const [stageContainerRect, setStageContainerRect] = useState<DOMRect | null>(null)
   
   // Multi-selection, clipboard, and undo/redo functionality
   const [multiSelectionState, multiSelectionActions] = useMultiSelection(objects)
@@ -172,6 +176,47 @@ const CanvasPage: React.FC = () => {
   const addBatchUpdate = (_update: Record<string, unknown>) => 'mock-id'
   const getBatchStats = () => ({ queueSize: 0, isProcessing: false, hasTimer: false, pendingUpdates: [] as any[] })
   const getQueueStatus = () => ({ queueSize: 0, isProcessing: false, hasTimer: false, pendingUpdates: [] as any[] })
+  // Keep container rect for overlay positioning
+  useEffect(() => {
+    if (!stageContainer) return
+    const updateRect = () => setStageContainerRect(stageContainer.getBoundingClientRect())
+    updateRect()
+    const obs = new ResizeObserver(updateRect)
+    obs.observe(stageContainer)
+    window.addEventListener('scroll', updateRect, true)
+    window.addEventListener('resize', updateRect)
+    return () => {
+      obs.disconnect()
+      window.removeEventListener('scroll', updateRect, true)
+      window.removeEventListener('resize', updateRect)
+    }
+  }, [stageContainer])
+
+  // Start editing when Enter is pressed and a single text object is selected
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return
+      if (editingObjectId) return
+      if (selectedTool.id !== 'select') return
+      const selected = multiSelectionActions.getSelectedObjects?.() || []
+      if (selected.length === 1 && selected[0].object_type === 'text') {
+        e.preventDefault()
+        setEditingObjectId(selected[0].id)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [editingObjectId, selectedTool.id, multiSelectionActions])
+
+  // Prevent tool switching while editing
+  const handleSafeToolSelect = (tool: any) => {
+    if (editingObjectId) {
+      // Ignore tool switches during text edit
+      return
+    }
+    selectTool(tool)
+  }
+
   // const [batchStats, setBatchStats] = useState({
   //   totalBatches: 0,
   //   successfulBatches: 0,
@@ -1595,6 +1640,8 @@ const CanvasPage: React.FC = () => {
   }
 
   const handleStageClick = (e: any) => {
+    // Ignore stage clicks during text editing; blur will commit/cancel
+    if (editingObjectId) return
     // Clear selection if clicking on empty space
     if (selectedTool.id === 'select' && e.target === e.target.getStage()) {
       multiSelectionActions.clearSelection()
@@ -2573,6 +2620,10 @@ const CanvasPage: React.FC = () => {
           showZoomControls={true}
           zoomControlsPosition="bottom-right"
           enableKeyboardShortcuts={true}
+          onTransformChange={({ scale, x, y, container }) => {
+            setStageTransform({ scale, x, y })
+            setStageContainer(container)
+          }}
         >
           {objects.map(renderObject)}
           {renderNewObject()}
@@ -2653,7 +2704,7 @@ const CanvasPage: React.FC = () => {
         position={preferences.position}
         isVisible={isToolbarVisible}
         selectedTool={selectedTool}
-        onToolSelect={selectTool}
+        onToolSelect={handleSafeToolSelect}
         onPositionChange={updatePosition}
         onVisibilityToggle={toggleToolbarVisibility}
         onCollapseToggle={toggleCollapse}
@@ -2662,6 +2713,27 @@ const CanvasPage: React.FC = () => {
         preferences={preferences}
         onPreferencesChange={updatePreferences}
       />
+
+      {/* Text Editor Overlay */}
+      {editingObjectId && (() => {
+        const obj = objects.find(o => o.id === editingObjectId)
+        if (!obj || obj.object_type !== 'text') return null
+        const props = obj.properties
+        return (
+          <TextEditorOverlay
+            containerRect={stageContainerRect}
+            transform={stageTransform}
+            x={props.x || 0}
+            y={props.y || 0}
+            fontSize={props.fontSize || 16}
+            fontFamily={props.fontFamily || 'Arial'}
+            fill={(props.fill as string) || '#000'}
+            initialText={(props.text as string) || ''}
+            onCommit={(newText) => handleEndTextEdit(obj.id, newText)}
+            onCancel={() => setEditingObjectId(null)}
+          />
+        )
+      })()}
 
       {/* Connection Status Indicator */}
       <div className="fixed bottom-4 right-32 z-50">
