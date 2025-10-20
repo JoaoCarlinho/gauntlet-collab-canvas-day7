@@ -73,8 +73,8 @@ class ObjectCreationService {
       // Wait a moment for the object to be persisted
       await new Promise(resolve => setTimeout(resolve, 500))
       
-      const response = await objectsAPI.getObject(canvasId, objectId)
-      const objectExists = response.data && response.data.id === objectId
+      const response = await objectsAPI.getObject(objectId)
+      const objectExists = response.object && response.object.id === objectId
       
       console.log(`Object creation confirmation: ${objectExists ? 'SUCCESS' : 'FAILED'} for ${objectId}`)
       return objectExists
@@ -84,27 +84,6 @@ class ObjectCreationService {
     }
   }
 
-  /**
-   * Validate object state after creation
-   */
-  private async validateObjectState(canvasId: string, expectedObjects: number): Promise<boolean> {
-    try {
-      console.log(`Validating object state: expecting ${expectedObjects} objects on canvas: ${canvasId}`)
-      
-      // Wait for state to sync
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const response = await objectsAPI.getObjects(canvasId)
-      const actualObjects = response.data.length
-      const stateValid = actualObjects >= expectedObjects
-      
-      console.log(`Object state validation: ${stateValid ? 'SUCCESS' : 'FAILED'} (expected: ${expectedObjects}, actual: ${actualObjects})`)
-      return stateValid
-    } catch (error) {
-      console.error('Object state validation failed:', error)
-      return false
-    }
-  }
 
   /**
    * Enhanced object data validation

@@ -577,11 +577,6 @@ class SocketService {
     return socketIOClientOptimizer.getParseErrorMetrics()
   }
 
-  // Get connection quality
-  getConnectionQuality() {
-    return socketIOClientOptimizer.getConnectionQuality()
-  }
-
   // Get recommended configuration adjustments
   getRecommendedAdjustments() {
     return socketIOClientOptimizer.getRecommendedAdjustments()
@@ -739,13 +734,13 @@ class SocketService {
       console.log(`Validating object state consistency for canvas: ${canvasId}`)
       
       // Get current objects from server
-      const { objectsAPI } = await import('./api')
-      const response = await objectsAPI.getObjects(canvasId)
-      const serverObjects = response.data || []
+      const { canvasAPI } = await import('./api')
+      const response = await canvasAPI.getCanvasObjects(canvasId)
+      const serverObjects = response.objects || []
       
       // Compare with expected objects
-      const expectedIds = new Set(expectedObjects.map(obj => obj.id))
-      const serverIds = new Set(serverObjects.map(obj => obj.id))
+      const expectedIds = new Set(expectedObjects.map((obj: any) => obj.id))
+      const serverIds = new Set(serverObjects.map((obj: any) => obj.id))
       
       const missingObjects = [...expectedIds].filter(id => !serverIds.has(id))
       const extraObjects = [...serverIds].filter(id => !expectedIds.has(id))
@@ -776,28 +771,28 @@ class SocketService {
       console.log(`Syncing object state for canvas: ${canvasId}`)
       
       // Get server objects
-      const { objectsAPI } = await import('./api')
-      const response = await objectsAPI.getObjects(canvasId)
-      const serverObjects = response.data || []
+      const { canvasAPI } = await import('./api')
+      const response = await canvasAPI.getCanvasObjects(canvasId)
+      const serverObjects = response.objects || []
       
       // Create maps for comparison
-      const localMap = new Map(localObjects.map(obj => [obj.id, obj]))
-      const serverMap = new Map(serverObjects.map(obj => [obj.id, obj]))
+      const localMap = new Map(localObjects.map((obj: any) => [obj.id, obj]))
+      const serverMap = new Map(serverObjects.map((obj: any) => [obj.id, obj]))
       
       // Find missing objects (on server but not local)
-      const missingObjects = serverObjects.filter(obj => !localMap.has(obj.id))
+      const missingObjects = serverObjects.filter((obj: any) => !localMap.has(obj.id))
       
       // Find outdated objects (different versions)
-      const outdatedObjects = localObjects.filter(localObj => {
+      const outdatedObjects = localObjects.filter((localObj: any) => {
         const serverObj = serverMap.get(localObj.id)
-        return serverObj && serverObj.updated_at !== localObj.updated_at
+        return serverObj && (serverObj as any).updated_at !== localObj.updated_at
       })
       
       // Merge server objects with local objects
       const syncedObjects = [...localObjects]
       
       // Add missing objects
-      missingObjects.forEach(obj => {
+      missingObjects.forEach((obj: any) => {
         syncedObjects.push(obj)
         console.log(`Added missing object: ${obj.id}`)
       })

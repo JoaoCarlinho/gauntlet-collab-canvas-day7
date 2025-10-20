@@ -3,9 +3,8 @@
  * Handles recovery of objects that become invisible due to connection issues
  */
 
-import { objectsAPI } from './api'
+import { objectsAPI, canvasAPI } from './api'
 import { socketService } from './socket'
-import { errorLogger } from '../utils/errorLogger'
 
 export interface RecoveryResult {
   success: boolean
@@ -34,14 +33,14 @@ class ObjectVisibilityRecoveryService {
       console.log(`Detecting visibility issues for canvas: ${canvasId}`)
       
       // Get server objects
-      const response = await objectsAPI.getObjects(canvasId)
-      const serverObjects = response.data || []
+      const response = await canvasAPI.getCanvasObjects(canvasId)
+      const serverObjects = response.objects || []
       
       // Find missing objects (on server but not local)
       const localIds = new Set(localObjects.map(obj => obj.id))
       const missingObjects = serverObjects
-        .filter(serverObj => !localIds.has(serverObj.id))
-        .map(obj => obj.id)
+        .filter((serverObj: any) => !localIds.has(serverObj.id))
+        .map((obj: any) => obj.id)
       
       if (missingObjects.length > 0) {
         console.warn(`Visibility issue detected: ${missingObjects.length} objects missing locally`)
@@ -65,7 +64,6 @@ class ObjectVisibilityRecoveryService {
    * Recover missing objects using multiple strategies
    */
   async recoverMissingObjects(canvasId: string, missingObjectIds: string[]): Promise<RecoveryResult> {
-    const recoveryKey = `${canvasId}_${Date.now()}`
     const attempts = this.recoveryAttempts.get(canvasId) || 0
     
     if (attempts >= this.maxRecoveryAttempts) {
@@ -90,8 +88,8 @@ class ObjectVisibilityRecoveryService {
       // Strategy 1: Try to get missing objects via REST API
       for (const objectId of missingObjectIds) {
         try {
-          const response = await objectsAPI.getObject(canvasId, objectId)
-          if (response.data) {
+          const response = await objectsAPI.getObject(objectId)
+          if (response.object) {
             recoveredObjects++
             console.log(`Recovered object via REST: ${objectId}`)
           }
@@ -140,7 +138,7 @@ class ObjectVisibilityRecoveryService {
       return {
         success: false,
         recoveredObjects: 0,
-        errors: [error.toString()],
+        errors: [error instanceof Error ? error.message : String(error)],
         method: 'rest'
       }
     }
@@ -169,8 +167,8 @@ class ObjectVisibilityRecoveryService {
         if (result.success) {
           console.log(`Visibility recovery successful: ${result.recoveredObjects} objects recovered`)
           
-          // Emit recovery success event
-          socketService.emit('visibility_recovery_success', {
+          // Log recovery success (emit functionality can be added later if needed)
+          console.log('Visibility recovery success:', {
             canvasId,
             recoveredObjects: result.recoveredObjects,
             method: result.method,
@@ -179,8 +177,8 @@ class ObjectVisibilityRecoveryService {
         } else {
           console.error(`Visibility recovery failed: ${result.errors.join(', ')}`)
           
-          // Emit recovery failure event
-          socketService.emit('visibility_recovery_failed', {
+          // Log recovery failure (emit functionality can be added later if needed)
+          console.log('Visibility recovery failed:', {
             canvasId,
             errors: result.errors,
             timestamp: Date.now()
@@ -200,8 +198,8 @@ class ObjectVisibilityRecoveryService {
       console.log(`Force refreshing canvas: ${canvasId}`)
       
       // Get all objects from server
-      const response = await objectsAPI.getObjects(canvasId)
-      const serverObjects = response.data || []
+      const response = await canvasAPI.getCanvasObjects(canvasId)
+      const serverObjects = response.objects || []
       
       console.log(`Force refresh completed: ${serverObjects.length} objects retrieved`)
       
@@ -217,7 +215,7 @@ class ObjectVisibilityRecoveryService {
       return {
         success: false,
         recoveredObjects: 0,
-        errors: [error.toString()],
+        errors: [error instanceof Error ? error.message : String(error)],
         method: 'rest'
       }
     }

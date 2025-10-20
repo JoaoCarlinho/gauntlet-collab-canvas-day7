@@ -222,9 +222,6 @@ class SocketIOClientOptimizer {
     this.parseErrorMetrics.lastParseError = Date.now()
     
     // Calculate parse error rate (errors per minute)
-    const now = Date.now()
-    const oneMinuteAgo = now - 60000
-    
     // This is a simplified calculation - in a real implementation,
     // you'd track errors over time windows
     this.parseErrorMetrics.parseErrorRate = this.parseErrorMetrics.parseErrorCount / 60
@@ -291,7 +288,6 @@ class SocketIOClientOptimizer {
    */
   getRecommendedAdjustments(): Partial<SocketIOClientConfig> {
     const quality = this.getConnectionQuality()
-    const metrics = this.parseErrorMetrics
     
     const adjustments: Partial<SocketIOClientConfig> = {}
     
