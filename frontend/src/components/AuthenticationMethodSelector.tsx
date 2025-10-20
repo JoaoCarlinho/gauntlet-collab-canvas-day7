@@ -34,6 +34,7 @@ const AuthenticationMethodSelector: React.FC<AuthenticationMethodSelectorProps> 
               ? 'bg-white text-primary-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
+          data-testid="email-auth-button"
         >
           <Mail className="h-4 w-4" />
           <span>Email</span>

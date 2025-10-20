@@ -233,7 +233,7 @@ const HomePage: React.FC = () => {
             <div className="flex items-center">
               <h1 className="text-xl font-semibold text-gray-900">CollabCanvas</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4" data-testid="user-menu">
               <span className="text-sm text-gray-600">Welcome, {user?.name}</span>
               <button
                 onClick={() => setShowCreateModal(true)}

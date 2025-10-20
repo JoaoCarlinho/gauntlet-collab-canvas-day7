@@ -5,9 +5,9 @@ import HomePage from './components/HomePage'
 import LoginPage from './components/LoginPage'
 import CanvasPage from './components/CanvasPage'
 import ProtectedRoute from './components/ProtectedRoute'
-import { EnvDebug } from './components/EnvDebug'
+// import { EnvDebug } from './components/EnvDebug'
 import ErrorBoundary from './components/ErrorBoundary'
-import NetworkStatusIndicator from './components/NetworkStatusIndicator'
+// import NetworkStatusIndicator from './components/NetworkStatusIndicator'
 
 function App() {
   return (
@@ -15,8 +15,8 @@ function App() {
       <AuthProvider>
         <SocketProvider>
           <div className="min-h-screen bg-gray-50">
-            <EnvDebug />
-            <NetworkStatusIndicator />
+            {/* <EnvDebug /> */}
+            {/* <NetworkStatusIndicator /> */}
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />

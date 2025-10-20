@@ -150,7 +150,7 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
               <Mail className="absolute right-3 top-2.5 w-4 h-4 text-gray-400" />
             </div>
             {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              <p className="mt-1 text-sm text-red-600" data-testid="error-message">{errors.email}</p>
             )}
           </div>
 
@@ -212,7 +212,7 @@ const InviteCollaboratorModal: React.FC<InviteCollaboratorModalProps> = ({
             />
             <div className="flex justify-between mt-1">
               {errors.message && (
-                <p className="text-sm text-red-600">{errors.message}</p>
+                <p className="text-sm text-red-600" data-testid="error-message">{errors.message}</p>
               )}
               <p className="text-sm text-gray-500 ml-auto">
                 {message.length}/1000 characters
