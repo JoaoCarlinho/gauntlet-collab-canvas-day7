@@ -8,6 +8,7 @@ class Canvas(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
     owner_id = db.Column(db.String(128), db.ForeignKey('users.id'), nullable=False)
+    prompt_id = db.Column(db.String(36), db.ForeignKey('prompts.id'), nullable=True)  # Link to AI prompt if generated
     is_public = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -26,6 +27,7 @@ class Canvas(db.Model):
             'title': self.title,
             'description': self.description,
             'owner_id': self.owner_id,
+            'prompt_id': self.prompt_id,
             'is_public': self.is_public,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,

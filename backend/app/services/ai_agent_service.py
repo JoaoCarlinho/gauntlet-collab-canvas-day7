@@ -3,13 +3,15 @@ import json
 import os
 import uuid
 from typing import Dict, List, Any, Optional
+from datetime import datetime
 from app.models.canvas_object import CanvasObject
 from app.models.canvas import Canvas
 from app.utils.logger import SmartLogger
 from app.services.auth_service import AuthService
 from app.services.ai_performance_service import AIPerformanceService
 from app.services.ai_security_service import AISecurityService
-from app.extensions import db
+from app.services.prompt_service import PromptService
+from app.extensions import db, socketio
 
 class AIAgentService:
     """Service for AI-powered canvas creation."""
@@ -46,6 +48,7 @@ class AIAgentService:
             self.auth_service = AuthService()
             self.performance_service = AIPerformanceService()
             self.security_service = AISecurityService()
+            self.prompt_service = PromptService()
             # Only log success in development
             if os.environ.get('FLASK_ENV') == 'development':
                 self.logger.log_info("AI Agent Service dependencies initialized successfully")
@@ -59,9 +62,14 @@ class AIAgentService:
         user_id: str, 
         canvas_id: Optional[str] = None,
         style: str = "modern",
-        color_scheme: str = "default"
+        color_scheme: str = "default",
+        request_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Create canvas objects from natural language query."""
+        # Generate request ID if not provided
+        if not request_id:
+            request_id = str(uuid.uuid4())
+        
         try:
             # Only log detailed info in development
             if os.environ.get('FLASK_ENV') == 'development':
@@ -77,6 +85,44 @@ class AIAgentService:
             if os.environ.get('FLASK_ENV') == 'development':
                 self.logger.log_info("Sanitizing user query...")
             sanitized_query = self.security_service.sanitize_user_query(query)
+            
+            # Create Prompt record to track this generation
+            prompt = None
+            model_name = os.environ.get('OPENAI_MODEL', 'gpt-4')
+            try:
+                prompt = self.prompt_service.create_prompt(
+                    user_id=user_id,
+                    instructions=query,
+                    style=style,
+                    color_scheme=color_scheme,
+                    model=model_name,
+                    request_metadata={
+                        'request_id': request_id,
+                        'canvas_id': canvas_id,
+                        'start_time': datetime.utcnow().isoformat()
+                    }
+                )
+                # Update prompt status to processing
+                self.prompt_service.update_prompt_status(prompt.id, 'processing')
+                self.logger.log_info(f"Created prompt record: {prompt.id} for request: {request_id}")
+            except Exception as e:
+                self.logger.log_warning(f"Failed to create prompt record: {str(e)}")
+            
+            # Emit websocket event: generation started
+            try:
+                socketio.emit('ai_generation_started', {
+                    'request_id': request_id,
+                    'prompt_id': prompt.id if prompt else None,
+                    'canvas_id': canvas_id,
+                    'user_id': user_id,
+                    'instructions_preview': query[:100],
+                    'style': style,
+                    'color_scheme': color_scheme,
+                    'timestamp': datetime.utcnow().isoformat()
+                }, room=canvas_id if canvas_id else f'user_{user_id}')
+                self.logger.log_info(f"Emitted ai_generation_started for request: {request_id}")
+            except Exception as e:
+                self.logger.log_warning(f"Failed to emit ai_generation_started: {str(e)}")
             
             # Optimize request and check for common patterns
             optimization_result = self.performance_service.optimize_request(sanitized_query, style, color_scheme)
@@ -114,12 +160,16 @@ class AIAgentService:
             
             # Create or update canvas
             if not canvas_id:
-                canvas = self._create_new_canvas(user_id, query)
+                canvas = self._create_new_canvas(user_id, query, prompt.id if prompt else None)
                 canvas_id = canvas.id
             else:
                 canvas = Canvas.query.get(canvas_id)
                 if not canvas or canvas.owner_id != user_id:
                     raise ValueError("Canvas not found or access denied")
+                # Link canvas to prompt if it doesn't have one
+                if prompt and not canvas.prompt_id:
+                    canvas.prompt_id = prompt.id
+                    db.session.commit()
             
             # Save objects to database
             saved_objects = self._save_objects_to_canvas(objects_data['objects'], canvas_id, user_id)
@@ -129,7 +179,8 @@ class AIAgentService:
                 'canvas_id': canvas_id,
                 'objects': [obj.to_dict() for obj in saved_objects],
                 'message': f'Successfully created {len(saved_objects)} objects',
-                'title': objects_data.get('title', 'AI Generated Canvas')
+                'title': objects_data.get('title', 'AI Generated Canvas'),
+                'request_id': request_id
             }
             
             # Record performance metrics
@@ -138,6 +189,36 @@ class AIAgentService:
                 optimization_result['cache_key'],
                 result
             )
+            
+            # Update prompt status to completed
+            if prompt:
+                try:
+                    self.prompt_service.update_prompt_status(prompt.id, 'completed')
+                    self.prompt_service.update_prompt_metadata(prompt.id, {
+                        'completed_time': datetime.utcnow().isoformat(),
+                        'object_count': len(saved_objects),
+                        'canvas_id': canvas_id
+                    })
+                    self.logger.log_info(f"Prompt {prompt.id} marked as completed")
+                except Exception as e:
+                    self.logger.log_warning(f"Failed to update prompt status: {str(e)}")
+            
+            # Emit websocket event: generation completed
+            try:
+                generation_time = datetime.utcnow().timestamp() - optimization_result.get('start_time', datetime.utcnow().timestamp())
+                socketio.emit('ai_generation_completed', {
+                    'request_id': request_id,
+                    'prompt_id': prompt.id if prompt else None,
+                    'canvas_id': canvas_id,
+                    'title': result['title'],
+                    'objects': result['objects'],
+                    'object_count': len(saved_objects),
+                    'generation_time': generation_time,
+                    'timestamp': datetime.utcnow().isoformat()
+                }, room=canvas_id if canvas_id else f'user_{user_id}')
+                self.logger.log_info(f"Emitted ai_generation_completed for request: {request_id}")
+            except Exception as e:
+                self.logger.log_warning(f"Failed to emit ai_generation_completed: {str(e)}")
             
             return result
             
@@ -155,6 +236,33 @@ class AIAgentService:
             }
             self.logger.log_error(f"AI canvas creation failed: {str(e)}", e)
             self.logger.log_error(f"Error details: {error_details}")
+            
+            # Update prompt status to failed
+            if prompt:
+                try:
+                    self.prompt_service.update_prompt_status(
+                        prompt.id, 
+                        'failed', 
+                        error_message=str(e)
+                    )
+                    self.logger.log_info(f"Prompt {prompt.id} marked as failed")
+                except Exception as prompt_error:
+                    self.logger.log_warning(f"Failed to update prompt status: {str(prompt_error)}")
+            
+            # Emit websocket event: generation failed
+            try:
+                socketio.emit('ai_generation_failed', {
+                    'request_id': request_id,
+                    'prompt_id': prompt.id if prompt else None,
+                    'canvas_id': canvas_id,
+                    'error_message': str(e),
+                    'error_type': type(e).__name__,
+                    'timestamp': datetime.utcnow().isoformat()
+                }, room=canvas_id if canvas_id else f'user_{user_id}')
+                self.logger.log_info(f"Emitted ai_generation_failed for request: {request_id}")
+            except Exception as ws_error:
+                self.logger.log_warning(f"Failed to emit ai_generation_failed: {str(ws_error)}")
+            
             raise
     
     def _generate_ai_response(self, query: str, style: str, color_scheme: str) -> str:
@@ -336,12 +444,13 @@ Guidelines:
         
         return cleaned
     
-    def _create_new_canvas(self, user_id: str, query: str) -> Canvas:
+    def _create_new_canvas(self, user_id: str, query: str, prompt_id: Optional[str] = None) -> Canvas:
         """Create a new canvas for AI-generated content."""
         canvas = Canvas(
             id=str(uuid.uuid4()),
             title=f"AI Generated: {query[:50]}...",
             owner_id=user_id,
+            prompt_id=prompt_id,
             is_public=False
         )
         

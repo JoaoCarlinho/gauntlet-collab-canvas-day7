@@ -363,6 +363,41 @@ class SocketService {
       this.emit('online_users', data)
     })
 
+    // AI Generation events
+    this.socket.on('ai_generation_started', (data) => {
+      if (this.debugMode) {
+        console.log('=== AI Generation Started ===')
+        console.log('Data:', data)
+      }
+      this.emit('ai_generation_started', data)
+    })
+
+    this.socket.on('ai_generation_completed', (data) => {
+      if (this.debugMode) {
+        console.log('=== AI Generation Completed ===')
+        console.log('Data:', data)
+      }
+      this.emit('ai_generation_completed', data)
+    })
+
+    this.socket.on('ai_generation_failed', (data) => {
+      console.error('=== AI Generation Failed ===')
+      console.error('Data:', data)
+      
+      const context: ErrorContext = {
+        operation: 'ai_generation',
+        timestamp: Date.now(),
+        additionalData: { 
+          type: 'ai_generation_failed',
+          errorData: data,
+          requestId: data.request_id
+        }
+      }
+      
+      const errorId = errorLogger.logError(data.error_message || data, context)
+      this.emit('ai_generation_failed', { ...data, errorId })
+    })
+
     // Error events for object operations
     this.socket.on('object_update_failed', (data) => {
       console.error('=== Object Update Failed ===')
