@@ -7,7 +7,6 @@ import React, { useState, useEffect } from 'react'
 import { Activity, Wifi, WifiOff, AlertTriangle, CheckCircle, XCircle, BarChart3 } from 'lucide-react'
 import { connectionQualityMonitor, ConnectionQualityMetrics } from '../services/connectionQualityMonitor'
 import { socketService } from '../services/socket'
-import { socketIOClientOptimizer } from '../utils/socketioClientOptimizer'
 
 interface ConnectionQualityDashboardProps {
   isVisible: boolean

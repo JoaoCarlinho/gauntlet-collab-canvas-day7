@@ -809,19 +809,21 @@ const CanvasPage: React.FC = () => {
     connectionQualityMonitor.startMonitoring(30000) // 30 seconds
 
     // Listen for connection quality reports
-    socketService.on('connection_quality_report', (data: any) => {
+    const handleQualityReport = (data: any) => {
       console.log('Connection quality report received:', data)
       
       // Show recommendations to user if quality is poor
       if (data.connectionQuality === 'poor' && data.recommendations.length > 0) {
-        toast.warning(`Connection quality is poor: ${data.recommendations[0]}`, { duration: 5000 })
+        devToast.warning(`Connection quality is poor: ${data.recommendations[0]}`, { duration: 5000 })
       }
-    })
+    }
+    
+    socketService.on('connection_quality_report', handleQualityReport)
 
     // Cleanup function
     return () => {
       connectionQualityMonitor.stopMonitoring()
-      socketService.off('connection_quality_report')
+      socketService.off('connection_quality_report', handleQualityReport)
     }
   }
 
@@ -839,7 +841,7 @@ const CanvasPage: React.FC = () => {
     }, 30000)
 
     // Listen for visibility recovery events
-    socketService.on('visibility_recovery_success', (data: any) => {
+    const handleVisibilitySuccess = (data: any) => {
       console.log('Visibility recovery successful:', data)
       toast.success(`Recovered ${data.recoveredObjects} missing objects`, { duration: 3000 })
       
@@ -847,9 +849,9 @@ const CanvasPage: React.FC = () => {
       if (data.canvasId === canvasId) {
         loadObjects()
       }
-    })
+    }
 
-    socketService.on('visibility_recovery_failed', (data: any) => {
+    const handleVisibilityFailed = (data: any) => {
       console.error('Visibility recovery failed:', data)
       toast.error('Failed to recover some objects - refreshing canvas', { duration: 4000 })
       
@@ -859,13 +861,16 @@ const CanvasPage: React.FC = () => {
           loadObjects()
         })
       }
-    })
+    }
+
+    socketService.on('visibility_recovery_success', handleVisibilitySuccess)
+    socketService.on('visibility_recovery_failed', handleVisibilityFailed)
 
     // Cleanup function
     return () => {
       clearInterval(visibilityInterval)
-      socketService.off('visibility_recovery_success')
-      socketService.off('visibility_recovery_failed')
+      socketService.off('visibility_recovery_success', handleVisibilitySuccess)
+      socketService.off('visibility_recovery_failed', handleVisibilityFailed)
     }
   }
 
@@ -903,7 +908,7 @@ const CanvasPage: React.FC = () => {
       const isConsistent = await socketService.validateObjectStateConsistency(canvasId, objects)
       if (!isConsistent) {
         console.warn('Object state inconsistency detected after reconnection')
-        toast.warning('Some objects may not be visible - refreshing canvas', { duration: 4000 })
+        devToast.warning('Some objects may not be visible - refreshing canvas', { duration: 4000 })
         await loadObjects() // Force refresh
       }
       

@@ -28,6 +28,7 @@ class ConnectionQualityMonitor {
   private maxEventHistory = 1000
   private monitoringInterval: number | null = null
   private isMonitoring = false
+  private eventListeners: Map<string, Function> = new Map()
 
   /**
    * Start monitoring connection quality
@@ -78,31 +79,31 @@ class ConnectionQualityMonitor {
    * Set up event listeners for connection monitoring
    */
   private setupEventListeners(): void {
-    socketService.on('connection_restored', (data) => {
+    const handleConnectionRestored = (data: any) => {
       this.recordEvent({
         type: 'connect',
         timestamp: Date.now(),
         data
       })
-    })
+    }
 
-    socketService.on('connection_lost', (data) => {
+    const handleConnectionLost = (data: any) => {
       this.recordEvent({
         type: 'disconnect',
         timestamp: Date.now(),
         data
       })
-    })
+    }
 
-    socketService.on('reconnection_success', (data) => {
+    const handleReconnectionSuccess = (data: any) => {
       this.recordEvent({
         type: 'reconnect',
         timestamp: Date.now(),
         data
       })
-    })
+    }
 
-    socketService.on('socket_error', (data) => {
+    const handleSocketError = (data: any) => {
       if (data.error?.message?.includes('parse error')) {
         this.recordEvent({
           type: 'parse_error',
@@ -110,17 +111,28 @@ class ConnectionQualityMonitor {
           data
         })
       }
-    })
+    }
+
+    // Store listeners and register them
+    this.eventListeners.set('connection_restored', handleConnectionRestored)
+    this.eventListeners.set('connection_lost', handleConnectionLost)
+    this.eventListeners.set('reconnection_success', handleReconnectionSuccess)
+    this.eventListeners.set('socket_error', handleSocketError)
+
+    socketService.on('connection_restored', handleConnectionRestored)
+    socketService.on('connection_lost', handleConnectionLost)
+    socketService.on('reconnection_success', handleReconnectionSuccess)
+    socketService.on('socket_error', handleSocketError)
   }
 
   /**
    * Remove event listeners
    */
   private removeEventListeners(): void {
-    socketService.off('connection_restored')
-    socketService.off('connection_lost')
-    socketService.off('reconnection_success')
-    socketService.off('socket_error')
+    for (const [event, listener] of this.eventListeners) {
+      socketService.off(event, listener)
+    }
+    this.eventListeners.clear()
   }
 
   /**
@@ -177,7 +189,8 @@ class ConnectionQualityMonitor {
       averageMessageSize: parseErrorMetrics.averageMessageSize,
       connectionUptime,
       lastParseError: parseErrorMetrics.lastParseError,
-      connectionQuality
+      connectionQuality,
+      recommendations: [] // Will be populated by generateRecommendations
     })
 
     // Log quality report
@@ -189,18 +202,7 @@ class ConnectionQualityMonitor {
     console.log('Connection Quality:', connectionQuality)
     console.log('Recommendations:', recommendations)
 
-    // Emit quality report
-    socketService.emit('connection_quality_report', {
-      parseErrorRate,
-      connectionDropRate,
-      reconnectionSuccessRate,
-      averageMessageSize: parseErrorMetrics.averageMessageSize,
-      connectionUptime,
-      lastParseError: parseErrorMetrics.lastParseError,
-      connectionQuality,
-      recommendations,
-      timestamp: now
-    })
+    // Note: Quality report is logged above, emit functionality can be added later if needed
   }
 
   /**
@@ -303,7 +305,8 @@ class ConnectionQualityMonitor {
       averageMessageSize: parseErrorMetrics.averageMessageSize,
       connectionUptime,
       lastParseError: parseErrorMetrics.lastParseError,
-      connectionQuality
+      connectionQuality,
+      recommendations: [] // Will be populated by generateRecommendations
     })
 
     return {
