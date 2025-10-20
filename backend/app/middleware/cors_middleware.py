@@ -7,6 +7,7 @@ def add_cors_headers(response):
     
     # Allow specific origins
     allowed_origins = [
+        'https://collab-canvas-frontend.up.railway.app',
         'https://gauntlet-collab-canvas-day7.vercel.app',
         'https://collabcanvas-mvp-day7.vercel.app',
         'https://gauntlet-collab-canvas-24hr.vercel.app',

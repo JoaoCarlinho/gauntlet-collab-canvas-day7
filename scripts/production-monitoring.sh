@@ -23,8 +23,8 @@ MONITORING_DIR="$PROJECT_ROOT/monitoring"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
 # Production URLs
-PRODUCTION_FRONTEND_URL="https://collabcanvas-mvp-24.vercel.app"
-PRODUCTION_BACKEND_URL="https://collabcanvas-mvp-24-production.up.railway.app"
+PRODUCTION_FRONTEND_URL="https://collab-canvas-frontend.up.railway.app"
+PRODUCTION_BACKEND_URL="https://gauntlet-collab-canvas-day7-production.up.railway.app"
 
 # Monitoring thresholds
 PERFORMANCE_THRESHOLD_MS=3000

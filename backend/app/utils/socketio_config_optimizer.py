@@ -62,6 +62,7 @@ class SocketIOConfigOptimizer:
             
             # Add specific Vercel and Railway origins for production
             production_origins = [
+                "https://collab-canvas-frontend.up.railway.app",
                 "https://gauntlet-collab-canvas-day7.vercel.app",
                 "https://collabcanvas-mvp-day7.vercel.app",
                 "https://gauntlet-collab-canvas-24hr.vercel.app",
