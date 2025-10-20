@@ -13,7 +13,7 @@ export enum ToolCategory {
 export interface DrawingTool {
   id: string
   name: string
-  icon: React.ComponentType<any>
+  icon: React.ComponentType<any> // eslint-disable-line @typescript-eslint/no-explicit-any
   category: ToolCategory
   shortcut?: string
   cursor?: string
@@ -31,7 +31,7 @@ export interface ToolProperties {
   opacity?: number
   fontSize?: number
   fontFamily?: string
-  [key: string]: any
+  [key: string]: any // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export interface ToolbarState {
@@ -60,7 +60,7 @@ export interface ToolConfig {
   id: string
   isEnabled: boolean
   isVisible: boolean
-  defaultProperties: Record<string, any>
+  defaultProperties: Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
   shortcuts: string[]
   customIcon?: string
 }

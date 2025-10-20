@@ -55,7 +55,7 @@ const ResizeHandles: React.FC<ResizeHandlesProps> = ({
           { x: props.x - props.radius * 0.707 - handleOffset, y: props.y + props.radius * 0.707 - handleOffset, cursor: 'sw-resize', type: 'sw' },
           { x: props.x - props.radius * 0.707 - handleOffset, y: props.y - props.radius * 0.707 - handleOffset, cursor: 'nw-resize', type: 'nw' }
         ]
-      case 'text':
+      case 'text': {
         // Text resizing handles (font size adjustment)
         const textWidth = props.text.length * props.fontSize * 0.6
         const textHeight = props.fontSize * 1.2
@@ -63,6 +63,7 @@ const ResizeHandles: React.FC<ResizeHandlesProps> = ({
           { x: props.x + textWidth - handleOffset, y: props.y - handleOffset, cursor: 'e-resize', type: 'e' },
           { x: props.x + textWidth - handleOffset, y: props.y + textHeight - handleOffset, cursor: 'e-resize', type: 'e' }
         ]
+      }
       case 'heart':
       case 'star':
       case 'diamond':
@@ -80,7 +81,7 @@ const ResizeHandles: React.FC<ResizeHandlesProps> = ({
           { x: props.x + props.width - handleOffset, y: props.y + props.height/2 - handleOffset, cursor: 'e-resize', type: 'e' }
         ]
       case 'line':
-      case 'arrow':
+      case 'arrow': {
         // Line objects with start and end point handles
         const startX = props.x
         const startY = props.y
@@ -90,6 +91,7 @@ const ResizeHandles: React.FC<ResizeHandlesProps> = ({
           { x: startX - handleOffset, y: startY - handleOffset, cursor: 'move', type: 'start' },
           { x: endX - handleOffset, y: endY - handleOffset, cursor: 'move', type: 'end' }
         ]
+      }
       default:
         return []
     }
@@ -186,11 +188,12 @@ const ResizeHandles: React.FC<ResizeHandlesProps> = ({
       case 'ne':
       case 'se':
       case 'sw':
-      case 'nw':
+      case 'nw': {
         // For diagonal handles, calculate distance from center
         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
         newRadius = Math.max(minRadius, props.radius + distance * 0.5)
         break
+      }
     }
 
     props.radius = newRadius

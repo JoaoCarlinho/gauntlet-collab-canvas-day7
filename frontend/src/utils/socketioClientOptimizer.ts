@@ -165,7 +165,7 @@ class SocketIOClientOptimizer {
 
       if (typeof data === 'string') {
         // Remove null bytes and control characters
-        return data.replace(/\x00/g, '').replace(/[\r\n]/g, ' ')
+        return data.replace(/\0/g, '').replace(/[\r\n]/g, ' ')
       }
 
       if (typeof data === 'number') {

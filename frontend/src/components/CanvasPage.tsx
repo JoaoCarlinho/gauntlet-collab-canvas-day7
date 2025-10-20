@@ -820,13 +820,14 @@ const CanvasPage: React.FC = () => {
 
   const handleQueueAction = (action: string) => {
     switch (action) {
-      case 'retry_failed':
+      case 'retry_failed': {
         const failedUpdates = updateQueueManager.getFailedUpdates()
         failedUpdates.forEach(update => {
           updateQueueManager.retryFailedUpdate(update.id)
         })
         toast.success(`Retrying ${failedUpdates.length} failed updates`)
         break
+      }
       case 'clear_completed':
         updateQueueManager.clearCompleted()
         toast.success('Cleared completed updates')

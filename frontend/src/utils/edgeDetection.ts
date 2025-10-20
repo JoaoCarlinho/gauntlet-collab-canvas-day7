@@ -368,30 +368,33 @@ export class EdgeDetector {
       case 'rectangle':
       case 'heart':
       case 'star':
-      case 'diamond':
+      case 'diamond': {
         const rectBounds = this.getRectangleBounds(object.properties)
         return mouseX >= rectBounds.x - padding && 
                mouseX <= rectBounds.x + rectBounds.width + padding && 
                mouseY >= rectBounds.y - padding && 
                mouseY <= rectBounds.y + rectBounds.height + padding
+      }
 
-      case 'circle':
+      case 'circle': {
         const centerX = object.properties.x
         const centerY = object.properties.y
         const radius = object.properties.radius || 20
         const distance = Math.sqrt((mouseX - centerX) ** 2 + (mouseY - centerY) ** 2)
         return distance <= radius + padding
+      }
 
-      case 'text':
+      case 'text': {
         const textWidth = (object.properties.text?.length || 0) * (object.properties.fontSize || 16) * 0.6
         const textHeight = (object.properties.fontSize || 16) * 1.2
         return mouseX >= object.properties.x - padding && 
                mouseX <= object.properties.x + textWidth + padding && 
                mouseY >= object.properties.y - padding && 
                mouseY <= object.properties.y + textHeight + padding
+      }
 
       case 'line':
-      case 'arrow':
+      case 'arrow': {
         // For lines, check if point is near the line path
         const points = object.properties.points || [object.properties.x, object.properties.y, object.properties.x + 100, object.properties.y]
         if (points.length >= 4) {
@@ -405,6 +408,7 @@ export class EdgeDetector {
           return lineDistance <= padding + 5 // 5px tolerance for line thickness
         }
         return false
+      }
 
       default:
         return false

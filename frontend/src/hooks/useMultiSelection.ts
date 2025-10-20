@@ -112,11 +112,12 @@ export const useMultiSelection = (
             height: props.radius * 2
           }
           break
-        case 'text':
+        case 'text': {
           const textWidth = props.text.length * props.fontSize * 0.6
           const textHeight = props.fontSize * 1.2
           objBounds = { x: props.x, y: props.y, width: textWidth, height: textHeight }
           break
+        }
         default:
           return false
       }
@@ -174,11 +175,12 @@ export const useMultiSelection = (
             height: props.radius * 2
           }
           break
-        case 'text':
+        case 'text': {
           const textWidth = props.text.length * props.fontSize * 0.6
           const textHeight = props.fontSize * 1.2
           bounds = { x: props.x, y: props.y, width: textWidth, height: textHeight }
           break
+        }
       }
 
       minX = Math.min(minX, bounds.x)
