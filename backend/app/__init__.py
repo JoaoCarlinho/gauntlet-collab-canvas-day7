@@ -354,6 +354,7 @@ def create_app(config_class=Config):
     
     # Add health check endpoints
     @app.route('/health')
+    @app.route('/health/')
     def health_check():
         return {'status': 'healthy', 'message': 'CollabCanvas API is running'}, 200
     
