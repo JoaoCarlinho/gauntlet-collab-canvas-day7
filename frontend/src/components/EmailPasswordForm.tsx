@@ -127,6 +127,7 @@ const EmailPasswordForm: React.FC<EmailPasswordFormProps> = ({
               ? 'bg-white text-primary-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
+          data-testid="sign-in-button"
         >
           Sign In
         </button>
@@ -138,13 +139,14 @@ const EmailPasswordForm: React.FC<EmailPasswordFormProps> = ({
               ? 'bg-white text-primary-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
+          data-testid="sign-up-button"
         >
           Sign Up
         </button>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">
         {/* Email Field */}
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -154,17 +156,18 @@ const EmailPasswordForm: React.FC<EmailPasswordFormProps> = ({
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Mail className="h-5 w-5 text-gray-400" />
             </div>
-            <input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                errors.email ? 'border-red-300' : 'border-gray-300'
-              }`}
-              placeholder="Enter your email"
-              disabled={isLoading}
-            />
+              <input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
+                  errors.email ? 'border-red-300' : 'border-gray-300'
+                }`}
+                placeholder="Enter your email"
+                disabled={isLoading}
+                data-testid="email-input"
+              />
           </div>
           {errors.email && (
             <p className="mt-1 text-sm text-red-600" data-testid="error-message">{errors.email}</p>
@@ -273,6 +276,7 @@ const EmailPasswordForm: React.FC<EmailPasswordFormProps> = ({
           type="submit"
           disabled={isLoading}
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="login-passkey-button"
         >
           {isLoading ? (
             <div className="flex items-center">
