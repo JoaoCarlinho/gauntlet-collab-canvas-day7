@@ -4,8 +4,7 @@
     "dockerfilePath": null
   },
   "deploy": {
-    "restartPolicyType": "NEVER",
-    "restartPolicyMaxRetries": 0
+    "restartPolicyType": "NEVER"
   },
   "environments": {
     "preview": {
