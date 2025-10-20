@@ -8,6 +8,8 @@ import { canvasAPI } from '../services/api'
 import { socketService } from '../services/socket'
 import { Canvas, CanvasObject, CursorData } from '../types'
 import { ErrorWithDetails, FailedUpdate as FailedUpdateType } from '../types/common'
+// Using any for Konva events for now to avoid type compatibility issues
+// TODO: Improve Konva event types in future iterations
 import { errorLogger } from '../utils/errorLogger'
 import { objectUpdateService } from '../services/objectUpdateService'
 import { objectCreationService } from '../services/objectCreationService'
@@ -167,9 +169,9 @@ const CanvasPage: React.FC = () => {
   
   // Batch updates state
   // const { addUpdate: addBatchUpdate, getStats: getBatchStats, getQueueStatus } = useBatchUpdates()
-  const addBatchUpdate = (_update: any) => 'mock-id'
-  const getBatchStats = () => ({ queueSize: 0, isProcessing: false, hasTimer: false, pendingUpdates: [] })
-  const getQueueStatus = () => ({ queueSize: 0, isProcessing: false, hasTimer: false, pendingUpdates: [] })
+  const addBatchUpdate = (_update: Record<string, unknown>) => 'mock-id'
+  const getBatchStats = () => ({ queueSize: 0, isProcessing: false, hasTimer: false, pendingUpdates: [] as any[] })
+  const getQueueStatus = () => ({ queueSize: 0, isProcessing: false, hasTimer: false, pendingUpdates: [] as any[] })
   // const [batchStats, setBatchStats] = useState({
   //   totalBatches: 0,
   //   successfulBatches: 0,
@@ -843,7 +845,7 @@ const CanvasPage: React.FC = () => {
   // Connection monitoring functions
   const initializeConnectionMonitoring = () => {
     // Set up connection status callback
-    connectionMonitor.on('statusChange', (_status: any) => {
+    connectionMonitor.on('statusChange', (_status: Record<string, unknown>) => {
       // setConnectionMetrics(prev => ({
       //   ...prev,
       //   latency: status.latency,
@@ -854,7 +856,7 @@ const CanvasPage: React.FC = () => {
     })
 
     // Set up connection quality callback
-    connectionMonitor.on('qualityChange', (_quality: any) => {
+    connectionMonitor.on('qualityChange', (_quality: Record<string, unknown>) => {
       // setConnectionMetrics(prev => ({
       //   ...prev,
       //   quality
@@ -868,12 +870,12 @@ const CanvasPage: React.FC = () => {
   // Offline mode functions
   const initializeOfflineMode = () => {
     // Set up offline status callback
-    offlineManager.on('offlineStatusChange', (isOffline: any) => {
+    offlineManager.on('offlineStatusChange', (isOffline: boolean) => {
       setIsOffline(Boolean(isOffline))
     })
 
     // Set up offline data callback
-    offlineManager.on('offlineDataChange', (_data: any) => {
+    offlineManager.on('offlineDataChange', (_data: Record<string, unknown>) => {
       // setOfflineData({
       //   pendingUpdates: data.pendingUpdates,
       //   lastSyncTime: data.lastSyncTime,
@@ -882,7 +884,7 @@ const CanvasPage: React.FC = () => {
     })
 
     // Set up sync callback
-    offlineManager.on('syncComplete', (result: any) => {
+    offlineManager.on('syncComplete', (result: Record<string, unknown>) => {
       if (result.success) {
         toast.success(`Synced ${result.syncedCount} updates`)
       } else {
@@ -904,17 +906,17 @@ const CanvasPage: React.FC = () => {
     connectionQualityMonitor.startMonitoring(30000) // 30 seconds
 
     // Listen for connection quality reports
-    const handleQualityReport = (data: any) => {
+    const handleQualityReport = (data: Record<string, unknown>) => {
       console.log('Connection quality report received:', data)
       
       // Show recommendations to user if quality is poor
-      if (data.connectionQuality === 'poor' && data.recommendations.length > 0) {
+      if (data.connectionQuality === 'poor' && Array.isArray(data.recommendations) && data.recommendations.length > 0) {
         devToast.warning(`Connection quality is poor: ${data.recommendations[0]}`, { duration: 5000 })
       }
     }
     
     // Listen for connection state changes
-    const handleConnectionStateChange = (data: any) => {
+    const handleConnectionStateChange = (data: Record<string, unknown>) => {
       console.log('Connection state changed:', data)
       
       if (data.connectionState === 'connected') {
@@ -951,7 +953,7 @@ const CanvasPage: React.FC = () => {
     }, 30000)
 
     // Listen for visibility recovery events
-    const handleVisibilitySuccess = (data: any) => {
+    const handleVisibilitySuccess = (data: Record<string, unknown>) => {
       console.log('Visibility recovery successful:', data)
       toast.success(`Recovered ${data.recoveredObjects} missing objects`, { duration: 3000 })
       
@@ -961,7 +963,7 @@ const CanvasPage: React.FC = () => {
       }
     }
 
-    const handleVisibilityFailed = (data: any) => {
+    const handleVisibilityFailed = (data: Record<string, unknown>) => {
       console.error('Visibility recovery failed:', data)
       toast.error('Failed to recover some objects - refreshing canvas', { duration: 4000 })
       
@@ -999,7 +1001,7 @@ const CanvasPage: React.FC = () => {
       }
 
       // 2. Sync offline cached updates
-      const syncResult = { success: true, conflicts: [], hasConflicts: false, syncedCount: 0 }
+      const syncResult = { success: true, conflicts: [] as any[], hasConflicts: false, syncedCount: 0 }
       if (syncResult.success && syncResult.syncedCount > 0) {
         toast.success(`Synced ${syncResult.syncedCount} offline updates`, { duration: 3000 })
       }
@@ -1011,7 +1013,7 @@ const CanvasPage: React.FC = () => {
       const syncedObjects = await socketService.syncObjectState(canvasId, objects)
       if (syncedObjects.length !== objects.length) {
         console.log(`Object state sync: ${objects.length} -> ${syncedObjects.length} objects`)
-        setObjects(syncedObjects)
+        setObjects(syncedObjects as CanvasObject[])
       }
       
       // 5. Validate object state consistency
@@ -1186,7 +1188,7 @@ const CanvasPage: React.FC = () => {
     coordinateDisplay.updateMovingCoordinates(x, y, props.width, props.height, props.radius)
   }
 
-  const performObjectResize = async (objectId: string, newProperties: any) => {
+  const performObjectResize = async (objectId: string, newProperties: Record<string, unknown>) => {
     if (!idToken || !canvasId) return
 
     // Check if we're offline and handle accordingly
@@ -1291,7 +1293,7 @@ const CanvasPage: React.FC = () => {
     }
   }
 
-  const handleObjectResize = (objectId: string, newProperties: any) => {
+  const handleObjectResize = (objectId: string, newProperties: Record<string, unknown>) => {
     // Use debounced update for resize changes
     debouncedResizeUpdate(objectId, newProperties)
     
@@ -1330,7 +1332,8 @@ const CanvasPage: React.FC = () => {
   // Create debounced version of position update
   const debouncedPositionUpdate = objectUpdateDebouncer.debounceUpdate(
     'position_update',
-    async (objectId: string, x: number, y: number) => {
+    async (...args: any[]) => {
+      const [objectId, x, y] = args as [string, number, number]
       await performObjectUpdatePosition(objectId, x, y)
     },
     'high' // High priority for position updates
@@ -1339,7 +1342,8 @@ const CanvasPage: React.FC = () => {
   // Create debounced version of resize update
   const debouncedResizeUpdate = objectUpdateDebouncer.debounceUpdate(
     'resize_update',
-    async (objectId: string, newProperties: any) => {
+    async (...args: any[]) => {
+      const [objectId, newProperties] = args as [string, Record<string, unknown>]
       await performObjectResize(objectId, newProperties)
     },
     'normal' // Normal priority for resize updates
@@ -1570,11 +1574,13 @@ const CanvasPage: React.FC = () => {
     const stage = event.target.getStage()
     const pointerPosition = stage.getPointerPosition()
     
-    setHoveredCursor(cursor)
-    setTooltipPosition({
-      x: pointerPosition.x,
-      y: pointerPosition.y
-    })
+    if (pointerPosition) {
+      setHoveredCursor(cursor)
+      setTooltipPosition({
+        x: pointerPosition.x,
+        y: pointerPosition.y
+      })
+    }
     setShowTooltip(true)
   }
 
@@ -1754,12 +1760,12 @@ const CanvasPage: React.FC = () => {
     const point = stage.getPointerPosition()
 
     // Update cursor position
-    if (idToken) {
+    if (idToken && point) {
       socketService.moveCursor(canvasId!, idToken, point)
     }
 
     // Update pointer indicator position
-    if (pointerIndicator && pointerIndicator.isVisible) {
+    if (pointerIndicator && pointerIndicator.isVisible && point) {
       setPointerIndicator(prev => prev ? {
         ...prev,
         position: point
@@ -1767,7 +1773,7 @@ const CanvasPage: React.FC = () => {
     }
 
     // Handle drawing mode updates
-    if (!isDrawing || !newObject || !idToken) return
+    if (!isDrawing || !newObject || !idToken || !point) return
 
     // Update new object position
     if (newObject.object_type === 'rectangle') {

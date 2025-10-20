@@ -8,7 +8,7 @@ interface LogEntry {
   timestamp: number
   level: string
   message: string
-  context?: any
+  context?: Record<string, unknown>
 }
 
 interface RateLimitConfig {
@@ -72,7 +72,7 @@ class ProductionLogger {
     return false
   }
 
-  private addToBuffer(level: string, message: string, context?: any): void {
+  private addToBuffer(level: string, message: string, context?: Record<string, unknown>): void {
     if (this.isDevelopment) {
       return // No buffering in development
     }
@@ -129,7 +129,7 @@ class ProductionLogger {
     this.logBuffer = []
   }
 
-  private logToConsole(level: string, message: string, context?: any): void {
+  private logToConsole(level: string, message: string, context?: Record<string, unknown>): void {
     const timestamp = new Date().toISOString()
     const logMessage = `[${timestamp}] ${level.toUpperCase()}: ${message}`
     
@@ -142,7 +142,7 @@ class ProductionLogger {
   }
 
   // Public logging methods
-  error(message: string, context?: any): void {
+  error(message: string, context?: Record<string, unknown>): void {
     if (this.shouldLog('error')) {
       this.logToConsole('error', message, context)
     } else {
@@ -150,7 +150,7 @@ class ProductionLogger {
     }
   }
 
-  warning(message: string, context?: any): void {
+  warning(message: string, context?: Record<string, unknown>): void {
     if (this.shouldLog('warning')) {
       this.logToConsole('warning', message, context)
     } else {
@@ -158,7 +158,7 @@ class ProductionLogger {
     }
   }
 
-  info(message: string, context?: any): void {
+  info(message: string, context?: Record<string, unknown>): void {
     if (this.shouldLog('info')) {
       this.logToConsole('info', message, context)
     } else {
@@ -166,7 +166,7 @@ class ProductionLogger {
     }
   }
 
-  debug(message: string, context?: any): void {
+  debug(message: string, context?: Record<string, unknown>): void {
     if (this.isDevelopment && this.shouldLog('debug')) {
       this.logToConsole('debug', message, context)
     }
@@ -259,10 +259,10 @@ class ProductionLogger {
 export const productionLogger = new ProductionLogger()
 
 // Export convenience functions
-export const logError = (message: string, context?: any) => productionLogger.error(message, context)
-export const logWarning = (message: string, context?: any) => productionLogger.warning(message, context)
-export const logInfo = (message: string, context?: any) => productionLogger.info(message, context)
-export const logDebug = (message: string, context?: any) => productionLogger.debug(message, context)
+export const logError = (message: string, context?: Record<string, unknown>) => productionLogger.error(message, context)
+export const logWarning = (message: string, context?: Record<string, unknown>) => productionLogger.warning(message, context)
+export const logInfo = (message: string, context?: Record<string, unknown>) => productionLogger.info(message, context)
+export const logDebug = (message: string, context?: Record<string, unknown>) => productionLogger.debug(message, context)
 export const logNetworkCheck = (service: string, status: string) => productionLogger.networkCheck(service, status)
 export const logCursorMove = (userId: string, position: { x: number; y: number }) => productionLogger.cursorMove(userId, position)
 export const logObjectUpdate = (userId: string, objectId: string, action: string) => productionLogger.objectUpdate(userId, objectId, action)

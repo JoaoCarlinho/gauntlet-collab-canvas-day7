@@ -8,7 +8,7 @@ export interface DebounceOptions {
   maxWait?: number
 }
 
-export interface DebouncedFunction<T extends (...args: any[]) => any> {
+export interface DebouncedFunction<T extends (...args: unknown[]) => unknown> {
   (...args: Parameters<T>): void
   cancel(): void
   flush(): ReturnType<T> | undefined
@@ -19,7 +19,7 @@ export interface DebouncedFunction<T extends (...args: any[]) => any> {
  * Creates a debounced function that delays invoking func until after wait milliseconds
  * have elapsed since the last time the debounced function was invoked.
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number,
   options: DebounceOptions = {}
@@ -29,7 +29,7 @@ export function debounce<T extends (...args: any[]) => any>(
   let lastCallTime = 0
   let lastInvokeTime = 0
   let lastArgs: Parameters<T> | undefined
-  let lastThis: any
+  let lastThis: unknown
   let result: ReturnType<T> | undefined
   let leading = false
   let trailing = true
@@ -53,7 +53,7 @@ export function debounce<T extends (...args: any[]) => any>(
     lastArgs = undefined
     lastThis = undefined
     lastInvokeTime = time
-    result = func.apply(thisArg, args!)
+    result = func.apply(thisArg as ThisParameterType<T>, args!) as ReturnType<T>
     return result
   }
 
@@ -136,12 +136,12 @@ export function debounce<T extends (...args: any[]) => any>(
     return timeoutId !== null
   }
 
-  function debounced(this: any, ...args: Parameters<T>) {
+  function debounced(this: unknown, ...args: Parameters<T>) {
     const time = Date.now()
     const isInvoking = shouldInvoke(time)
 
     lastArgs = args
-    lastThis = this as any
+    lastThis = this
     lastCallTime = time
 
     if (isInvoking) {
@@ -170,7 +170,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle utility for limiting function execution frequency
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number,
   options: { leading?: boolean; trailing?: boolean } = {}
@@ -196,8 +196,8 @@ export function throttle<T extends (...args: any[]) => any>(
  * Specialized debounce for object updates with priority handling
  */
 export class ObjectUpdateDebouncer {
-  private debouncedUpdates = new Map<string, DebouncedFunction<any>>()
-  private updateQueue = new Map<string, { args: any[]; timestamp: number; priority: number }>()
+  private debouncedUpdates = new Map<string, DebouncedFunction<(...args: unknown[]) => unknown>>()
+  private updateQueue = new Map<string, { args: unknown[]; timestamp: number; priority: number }>()
   private readonly defaultWait = 300 // 300ms default debounce
   private readonly highPriorityWait = 100 // 100ms for high priority updates
   private readonly lowPriorityWait = 500 // 500ms for low priority updates
@@ -205,7 +205,7 @@ export class ObjectUpdateDebouncer {
   /**
    * Debounce an object update with priority-based timing
    */
-  debounceUpdate<T extends (...args: any[]) => any>(
+  debounceUpdate<T extends (...args: unknown[]) => unknown>(
     objectId: string,
     updateFunction: T,
     priority: 'low' | 'normal' | 'high' = 'normal'
@@ -250,7 +250,7 @@ export class ObjectUpdateDebouncer {
   /**
    * Flush pending update for specific object
    */
-  flushUpdate(objectId: string): any {
+  flushUpdate(objectId: string): unknown {
     const debouncedFn = this.debouncedUpdates.get(objectId)
     if (debouncedFn) {
       return debouncedFn.flush()

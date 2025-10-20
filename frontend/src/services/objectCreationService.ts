@@ -120,19 +120,19 @@ class ObjectCreationService {
       case 'circle':
       case 'star':
       case 'diamond':
-        if (typeof objectProperties.x !== 'number' || typeof objectProperties.y !== 'number') {
+        if (typeof (objectProperties as any).x !== 'number' || typeof (objectProperties as any).y !== 'number') {
           throw new Error(`${objectType} requires x and y coordinates`)
         }
         break
       case 'line':
       case 'arrow':
-        if (typeof objectProperties.x1 !== 'number' || typeof objectProperties.y1 !== 'number' ||
-            typeof objectProperties.x2 !== 'number' || typeof objectProperties.y2 !== 'number') {
+        if (typeof (objectProperties as any).x1 !== 'number' || typeof (objectProperties as any).y1 !== 'number' ||
+            typeof (objectProperties as any).x2 !== 'number' || typeof (objectProperties as any).y2 !== 'number') {
           throw new Error(`${objectType} requires x1, y1, x2, y2 coordinates`)
         }
         break
       case 'text':
-        if (typeof objectProperties.text !== 'string') {
+        if (typeof (objectProperties as any).text !== 'string') {
           throw new Error('Text object requires text property')
         }
         break

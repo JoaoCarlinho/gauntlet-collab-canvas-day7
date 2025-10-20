@@ -36,14 +36,74 @@ export interface Canvas {
   collaborator_count: number
 }
 
+export interface CanvasObjectProperties {
+  // Position and size (required for most objects)
+  x: number;
+  y: number;
+  width?: number; // Optional for circles, text, etc.
+  height?: number; // Optional for circles, text, etc.
+  
+  // Visual properties
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  visible?: boolean;
+  
+  // Transform properties
+  rotation?: number;
+  scaleX?: number;
+  scaleY?: number;
+  skewX?: number;
+  skewY?: number;
+  
+  // Text-specific properties
+  text?: string;
+  fontSize?: number;
+  fontFamily?: string;
+  fontStyle?: 'normal' | 'bold' | 'italic';
+  textAlign?: 'left' | 'center' | 'right';
+  textDecoration?: 'none' | 'underline' | 'line-through';
+  
+  // Shape-specific properties
+  radius?: number; // for circles
+  sides?: number; // for polygons
+  innerRadius?: number; // for stars
+  outerRadius?: number; // for stars
+  points?: number[]; // for custom shapes
+  
+  // Line-specific properties
+  linePoints?: number[]; // for lines and arrows
+  tension?: number; // for curved lines
+  closed?: boolean; // for closed shapes
+  
+  // Interaction properties
+  draggable?: boolean;
+  selectable?: boolean;
+  locked?: boolean;
+  
+  // Metadata
+  metadata?: Record<string, unknown>;
+  tags?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  
+  // Allow additional properties for flexibility
+  [key: string]: unknown;
+}
+
 export interface CanvasObject {
   id: string
   canvas_id: string
   object_type: 'rectangle' | 'circle' | 'text' | 'heart' | 'star' | 'diamond' | 'line' | 'arrow'
-  properties: Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  properties: CanvasObjectProperties
   created_by: string
   created_at: string
   updated_at: string
+  // Allow additional properties for flexibility
+  [key: string]: unknown
 }
 
 export interface CanvasPermission {
@@ -73,7 +133,7 @@ export interface CursorPosition {
   y: number
 }
 
-export interface CursorData {
+export interface CursorData extends Record<string, unknown> {
   user_id: string
   user_name: string
   position: CursorPosition
@@ -106,5 +166,11 @@ export interface AuthState {
   isAuthenticated: boolean
 }
 
-// Re-export toolbar types
+// Re-export all type modules (avoiding conflicts)
 export * from './toolbar'
+export * from './socket'
+export * from './events'
+
+// Re-export specific types to avoid conflicts
+export type { EventHandler as CanvasEventHandler } from './events'
+export type { ApiResponse as CanvasApiResponse } from './api'
