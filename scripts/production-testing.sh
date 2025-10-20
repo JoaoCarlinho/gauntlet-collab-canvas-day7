@@ -24,10 +24,10 @@ LOGS_DIR="$PROJECT_ROOT/logs/production"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
 # Production URLs (update these with your actual production URLs)
-PRODUCTION_FRONTEND_URL="https://collabcanvas-mvp-24.vercel.app"
-PRODUCTION_BACKEND_URL="https://collabcanvas-mvp-24-production.up.railway.app"
-STAGING_FRONTEND_URL="https://collabcanvas-mvp-24-staging.vercel.app"
-STAGING_BACKEND_URL="https://collabcanvas-mvp-24-staging.up.railway.app"
+PRODUCTION_FRONTEND_URL="https://https://collab-canvas-frontend.up.railway.app"
+PRODUCTION_BACKEND_URL="https://gauntlet-collab-canvas-day7-production.up.railway.app"
+STAGING_FRONTEND_URL="https://https://collab-canvas-frontend.up.railway.app"
+STAGING_BACKEND_URL="https://gauntlet-collab-canvas-day7-production.up.railway.app"
 
 # Test configuration
 MAX_CONCURRENT_USERS=10

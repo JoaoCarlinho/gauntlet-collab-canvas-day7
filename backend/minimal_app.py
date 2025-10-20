@@ -35,6 +35,7 @@ socketio = SocketIO(app,
 
 # Configure CORS
 CORS(app, origins=[
+    "https://collab-canvas-frontend.up.railway.app",
     "https://gauntlet-collab-canvas-day7.vercel.app",
     "https://collabcanvas-mvp-day7.vercel.app",
     "https://collabcanvas-24-mvp.firebaseapp.com",

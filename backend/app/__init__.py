@@ -44,6 +44,7 @@ def create_app(config_class=Config):
     
     # Add specific Vercel deployment URLs
     vercel_origins = [
+        "https://collab-canvas-frontend.up.railway.app",
         "https://gauntlet-collab-canvas-day7.vercel.app",
         "https://collabcanvas-mvp-day7.vercel.app",
         "https://gauntlet-collab-canvas-24hr.vercel.app",
@@ -60,7 +61,7 @@ def create_app(config_class=Config):
     
     # Add Railway frontend URLs (will be updated when frontend is deployed)
     railway_frontend_origins = [
-        "https://collabcanvas-frontend-production.up.railway.app",
+        "https://collab-canvas-frontend-production.up.railway.app",
         "https://collabcanvas-frontend.up.railway.app",
         "https://*.up.railway.app"
     ]

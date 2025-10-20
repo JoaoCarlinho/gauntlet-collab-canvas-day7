@@ -35,7 +35,7 @@ railway variables set FLASK_ENV=production
 railway variables set FLASK_DEBUG=False
 
 # CORS configuration (update with your actual frontend URL)
-railway variables set CORS_ORIGINS="https://gauntlet-collab-canvas-day7.vercel.app,https://collabcanvas-mvp-day7.vercel.app"
+railway variables set CORS_ORIGINS="https://collab-canvas-frontend.up.railway.app,https://gauntlet-collab-canvas-day7.vercel.app,https://collabcanvas-mvp-day7.vercel.app"
 
 echo "✅ Environment variables configured"
 

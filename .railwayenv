@@ -2,7 +2,7 @@
 # This file helps Railway understand the environment variables needed
 
 # CORS Configuration
-CORS_ORIGINS=https://gauntlet-collab-canvas-day7.vercel.app,https://collabcanvas-mvp-day7.vercel.app,https://gauntlet-collab-canvas-24hr.vercel.app,https://*.vercel.app
+CORS_ORIGINS=https://collab-canvas-frontend.up.railway.app,https://gauntlet-collab-canvas-day7.vercel.app,https://collabcanvas-mvp-day7.vercel.app,https://gauntlet-collab-canvas-24hr.vercel.app,https://*.vercel.app
 
 # Flask Configuration
 FLASK_ENV=production
