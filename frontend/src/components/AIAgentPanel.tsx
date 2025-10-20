@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAIAgent } from '../hooks/useAIAgent';
 import { useNotifications } from '../hooks/useNotifications';
 import { socketService } from '../services/socket';
-import { useAuth } from '../hooks/useAuth';
 
 interface AIAgentPanelProps {
   isOpen: boolean;
@@ -25,7 +24,6 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
   
   const { createCanvas, isLoading, error, clearError } = useAIAgent();
   const { addNotification } = useNotifications();
-  const { user } = useAuth();
   
   // Listen for AI generation websocket events
   useEffect(() => {

@@ -12,6 +12,7 @@ interface AIAgentResponse {
   };
   message: string;
   error?: string;
+  request_id?: string;
 }
 
 interface AIAgentRequest {
