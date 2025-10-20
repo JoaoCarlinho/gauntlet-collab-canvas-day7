@@ -30,8 +30,9 @@ def readiness_check():
         db_status = 'healthy'
         try:
             # Use a more compatible database check
+            from sqlalchemy import text
             with db.engine.connect() as connection:
-                connection.execute('SELECT 1')
+                connection.execute(text('SELECT 1'))
         except Exception as e:
             db_status = f'unhealthy: {str(e)}'
         

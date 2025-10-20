@@ -22,7 +22,7 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
   const [generationStatus, setGenerationStatus] = useState<'idle' | 'sending' | 'processing' | 'receiving'>('idle');
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   
-  const { createCanvas, isLoading, error, clearError } = useAIAgent();
+  const { createCanvas, getJobStatus, getJobResult, isLoading, error, clearError } = useAIAgent();
   const { addNotification } = useNotifications();
   
   // Listen for AI generation websocket events
@@ -89,11 +89,7 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
       clearError();
       setGenerationStatus('sending');
       
-      // Generate a request ID to track this request
-      const requestId = crypto.randomUUID();
-      setCurrentRequestId(requestId);
-      
-      // Send request to backend - websocket events will handle the rest
+      // Send request to backend - now returns a job_id
       const result = await createCanvas({
         instructions: query,
         style,
@@ -101,13 +97,27 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
         canvas_id: currentCanvasId || undefined
       });
       
-      // Note: We no longer manually create objects here
-      // The websocket events (ai_generation_started, ai_generation_completed) 
-      // will handle status updates and UI changes
-      
-      // If the result includes a request_id, update our tracking
-      if (result.request_id) {
-        setCurrentRequestId(result.request_id);
+      // Handle new async response format
+      if (result.job_id) {
+        setCurrentRequestId(result.job_id);
+        setGenerationStatus('processing');
+        
+        addNotification({
+          type: 'info',
+          title: 'AI Processing',
+          message: 'Canvas creation job started. Processing...'
+        });
+        
+        // Start polling for job status
+        pollJobStatus(result.job_id);
+      } else {
+        // Fallback for old format
+        setGenerationStatus('idle');
+        addNotification({
+          type: 'error',
+          title: 'Unexpected Response',
+          message: 'Received unexpected response format from server.'
+        });
       }
       
     } catch (err) {
@@ -134,6 +144,86 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
         message: errorMessage
       });
     }
+  };
+
+  const pollJobStatus = async (jobId: string) => {
+    const maxAttempts = 60; // 5 minutes with 5-second intervals
+    let attempts = 0;
+    
+    const poll = async () => {
+      try {
+        attempts++;
+        const statusResponse = await getJobStatus(jobId);
+        const job = statusResponse.job;
+        
+        if (job.status === 'completed') {
+          setGenerationStatus('receiving');
+          
+          // Get the job result
+          const resultResponse = await getJobResult(jobId);
+          const result = resultResponse.result;
+          
+          addNotification({
+            type: 'success',
+            title: 'AI Canvas Created',
+            message: `Successfully created canvas with ${result.objects?.length || 0} objects!`
+          });
+          
+          // Close panel and reset form
+          handleClose();
+          
+          // Call success callback
+          if (onSuccess && result.canvas_id) {
+            onSuccess(result.canvas_id);
+          }
+          
+        } else if (job.status === 'failed') {
+          setGenerationStatus('idle');
+          addNotification({
+            type: 'error',
+            title: 'AI Canvas Creation Failed',
+            message: job.error_message || 'Canvas creation failed. Please try again.'
+          });
+          
+        } else if (job.status === 'processing') {
+          // Continue polling
+          if (attempts < maxAttempts) {
+            setTimeout(poll, 5000); // Poll every 5 seconds
+          } else {
+            setGenerationStatus('idle');
+            addNotification({
+              type: 'error',
+              title: 'AI Processing Timeout',
+              message: 'Canvas creation is taking longer than expected. Please try again.'
+            });
+          }
+        } else if (job.status === 'queued') {
+          // Job is still queued, continue polling
+          if (attempts < maxAttempts) {
+            setTimeout(poll, 5000);
+          } else {
+            setGenerationStatus('idle');
+            addNotification({
+              type: 'error',
+              title: 'AI Processing Timeout',
+              message: 'Canvas creation is taking longer than expected. Please try again.'
+            });
+          }
+        }
+        
+      } catch (err) {
+        console.error('Error polling job status:', err);
+        setGenerationStatus('idle');
+        addNotification({
+          type: 'error',
+          title: 'Status Check Failed',
+          message: 'Failed to check canvas creation status. Please try again.'
+        });
+      }
+    };
+    
+    // Start polling
+    poll();
   };
   
   const handleClose = () => {
