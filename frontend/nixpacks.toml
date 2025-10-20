@@ -1,12 +1,13 @@
 # Railway NIXPACKS configuration for frontend React/Vite application
 # Completely Docker-free deployment using Railway's native Node.js infrastructure
+# Optimized for Railway's build environment with fallback mechanisms
 
 [phases.setup]
 nixPkgs = ["nodejs-18_x", "npm-9_x"]
 
 [phases.install]
 cmds = [
-  "npm ci --frozen-lockfile --prefer-offline --no-audit --silent || npm install --prefer-offline --no-audit --silent"
+  "npm ci --frozen-lockfile --prefer-offline --no-audit --no-fund --silent || npm install --prefer-offline --no-audit --no-fund --silent"
 ]
 
 [phases.build]
@@ -23,3 +24,8 @@ PORT = "3000"
 NPM_CONFIG_PREFER_OFFLINE = "true"
 NPM_CONFIG_AUDIT = "false"
 NPM_CONFIG_FUND = "false"
+NPM_CONFIG_UPDATE_NOTIFIER = "false"
+NPM_CONFIG_PROGRESS = "false"
+DISABLE_HEALTH_CHECKS = "true"
+SKIP_HEALTH_MONITORING = "true"
+HEALTH_CHECK_ENABLED = "false"
