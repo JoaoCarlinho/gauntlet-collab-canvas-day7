@@ -76,4 +76,5 @@ export interface FloatingToolbarProps {
   tools: DrawingTool[]
   preferences: ToolbarPreferences
   onPreferencesChange: (preferences: Partial<ToolbarPreferences>) => void
+  'data-testid'?: string
 }
