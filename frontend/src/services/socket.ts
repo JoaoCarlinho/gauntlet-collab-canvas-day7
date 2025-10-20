@@ -20,7 +20,7 @@ class SocketService {
   private connectionQuality: SocketConnectionQuality = 'unknown'
 
   connect(idToken?: string) {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+    const API_URL = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000') as string
     
     // Update connection state
     this.connectionState = 'connecting'
@@ -73,7 +73,13 @@ class SocketService {
       console.log('Development mode: Connecting without authentication')
     }
     
-    this.socket = io(API_URL, enhancedConfig)
+    // Ensure correct path and secure transport in production
+    const url = API_URL
+    const config = {
+      path: '/socket.io',
+      ...enhancedConfig
+    }
+    this.socket = io(url, config)
 
     this.socket.on('connect', () => {
       this.connectionState = 'connected'

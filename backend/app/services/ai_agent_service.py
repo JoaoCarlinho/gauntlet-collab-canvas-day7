@@ -11,6 +11,7 @@ from app.services.auth_service import AuthService
 from app.services.ai_performance_service import AIPerformanceService
 from app.services.ai_security_service import AISecurityService
 from app.services.prompt_service import PromptService
+from app.services.openai_client_factory import OpenAIClientFactory
 from app.extensions import db, socketio
 
 class AIAgentService:
@@ -27,16 +28,10 @@ class AIAgentService:
             raise ValueError("OpenAI API key is required but not configured")
         
         try:
-            # Initialize OpenAI client with minimal configuration
-            # Remove any potential proxies argument that might be causing issues
-            client_kwargs = {
-                'api_key': api_key,
-                'timeout': 30.0,  # 30 second timeout
-                'max_retries': 2
-            }
-            
-            # Only add supported parameters to avoid version compatibility issues
-            self.openai_client = openai.OpenAI(**client_kwargs)
+            # Initialize OpenAI client via factory for compatibility and fallbacks
+            self.openai_client = OpenAIClientFactory.create_client(api_key)
+            if not self.openai_client:
+                raise RuntimeError("Failed to initialize OpenAI client")
             # Only log success in development
             if os.environ.get('FLASK_ENV') == 'development':
                 self.logger.log_info("OpenAI client initialized successfully")

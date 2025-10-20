@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import os
 import traceback
 from app.utils.logger import SmartLogger
+from app.services.openai_client_factory import OpenAIClientFactory
 
 ai_agent_debug_bp = Blueprint('ai_agent_debug', __name__, url_prefix='/api/ai-agent/debug')
 logger = SmartLogger('ai_agent_debug', 'INFO')
@@ -129,9 +130,14 @@ def test_openai_connection():
                 'timestamp': datetime.now(timezone.utc).isoformat()
             }), 500
         
-        # Try to create OpenAI client with minimal configuration
-        client_kwargs = {'api_key': api_key}
-        client = openai.OpenAI(**client_kwargs)
+        # Create OpenAI client via factory for compatibility
+        client = OpenAIClientFactory.create_client(api_key)
+        if not client:
+            return jsonify({
+                'status': 'error',
+                'error': 'Failed to initialize OpenAI client',
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            }), 500
         
         # Try to list models (this will test the connection)
         models = client.models.list()

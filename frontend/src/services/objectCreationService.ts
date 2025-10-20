@@ -125,12 +125,16 @@ class ObjectCreationService {
         }
         break
       case 'line':
-      case 'arrow':
-        if (typeof (objectProperties as any).x1 !== 'number' || typeof (objectProperties as any).y1 !== 'number' ||
-            typeof (objectProperties as any).x2 !== 'number' || typeof (objectProperties as any).y2 !== 'number') {
-          throw new Error(`${objectType} requires x1, y1, x2, y2 coordinates`)
+      case 'arrow': {
+        const points = (objectProperties as any).points
+        const hasPointsArray = Array.isArray(points) && points.length >= 4 && points.every((n: any) => typeof n === 'number')
+        const hasXY = typeof (objectProperties as any).x1 === 'number' && typeof (objectProperties as any).y1 === 'number' &&
+                      typeof (objectProperties as any).x2 === 'number' && typeof (objectProperties as any).y2 === 'number'
+        if (!hasPointsArray && !hasXY) {
+          throw new Error(`${objectType} requires points [x1,y1,x2,y2] or x1,y1,x2,y2 coordinates`)
         }
         break
+      }
       case 'text':
         if (typeof (objectProperties as any).text !== 'string') {
           throw new Error('Text object requires text property')
