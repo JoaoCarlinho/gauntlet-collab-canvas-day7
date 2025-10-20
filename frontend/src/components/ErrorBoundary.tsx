@@ -37,7 +37,7 @@ class ErrorBoundary extends Component<Props, State> {
                 Application Error
               </h3>
               <div className="mt-2">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500" data-testid="error-message">
                   Something went wrong while loading the application.
                 </p>
                 {this.state.error && (
