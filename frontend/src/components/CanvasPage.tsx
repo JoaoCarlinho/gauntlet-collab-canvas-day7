@@ -300,9 +300,9 @@ const CanvasPage: React.FC = () => {
 
     return () => {
       // Skip socket cleanup in development mode
-      if (!isDevelopmentMode() && idToken) {
-        socketService.leaveCanvas(canvasId!, idToken)
-        socketService.userOffline(canvasId!, idToken)
+      if (!isDevelopmentMode() && idToken && canvasId) {
+        socketService.leaveCanvas(canvasId, idToken)
+        socketService.userOffline(canvasId, idToken)
       }
       
       // Skip state management cleanup in development mode
@@ -361,7 +361,10 @@ const CanvasPage: React.FC = () => {
         if (isDrawing) {
           setNewObject(null)
           setIsDrawing(false)
-          selectTool(getToolById('select')!)
+          const selectToolObj = getToolById('select')
+          if (selectToolObj) {
+            selectTool(selectToolObj)
+          }
         } else if (editingObjectId) {
           setEditingObjectId(null)
         } else if (multiSelectionState.selectedObjectIds.size > 0) {
@@ -474,7 +477,7 @@ const CanvasPage: React.FC = () => {
         // In development mode, create a mock canvas
         await devModeDelay(500)
         const mockCanvas: Canvas = {
-          id: canvasId!,
+          id: canvasId || 'dev-canvas',
           title: 'Test Canvas',
           description: 'A test canvas for development',
           owner_id: 'dev-user',
@@ -488,7 +491,8 @@ const CanvasPage: React.FC = () => {
         console.log('Development mode: Using mock canvas data')
       } else {
         // In production, use real API
-        const response = await canvasAPI.getCanvas(canvasId!)
+        if (!canvasId) return
+        const response = await canvasAPI.getCanvas(canvasId)
         setCanvas(response.canvas)
       }
     } catch (error) {
@@ -507,7 +511,8 @@ const CanvasPage: React.FC = () => {
         console.log('Development mode: Using empty objects array')
       } else {
         // In production, use real API
-        const response = await canvasAPI.getCanvasObjects(canvasId!)
+        if (!canvasId) return
+        const response = await canvasAPI.getCanvasObjects(canvasId)
         setObjects(response.objects)
       }
     } catch (error) {
@@ -1617,7 +1622,7 @@ const CanvasPage: React.FC = () => {
     if (selectedTool.id === 'rectangle') {
       const rect = {
         id: `temp-${Date.now()}`,
-        canvas_id: canvasId!,
+        canvas_id: canvasId || 'temp-canvas',
         object_type: 'rectangle' as const,
         properties: {
           x: point.x,
@@ -1635,7 +1640,7 @@ const CanvasPage: React.FC = () => {
     } else if (selectedTool.id === 'circle') {
       const circle = {
         id: `temp-${Date.now()}`,
-        canvas_id: canvasId!,
+        canvas_id: canvasId || 'temp-canvas',
         object_type: 'circle' as const,
         properties: {
           x: point.x,
@@ -1652,7 +1657,7 @@ const CanvasPage: React.FC = () => {
     } else if (selectedTool.id === 'text') {
       const text = {
         id: `temp-${Date.now()}`,
-        canvas_id: canvasId!,
+        canvas_id: canvasId || 'temp-canvas',
         object_type: 'text' as const,
         properties: {
           x: point.x,
@@ -1669,7 +1674,7 @@ const CanvasPage: React.FC = () => {
     } else if (selectedTool.id === 'heart') {
       const heart = {
         id: `temp-${Date.now()}`,
-        canvas_id: canvasId!,
+        canvas_id: canvasId || 'temp-canvas',
         object_type: 'heart' as const,
         properties: {
           x: point.x,
@@ -1687,7 +1692,7 @@ const CanvasPage: React.FC = () => {
     } else if (selectedTool.id === 'star') {
       const star = {
         id: `temp-${Date.now()}`,
-        canvas_id: canvasId!,
+        canvas_id: canvasId || 'temp-canvas',
         object_type: 'star' as const,
         properties: {
           x: point.x,
@@ -1705,7 +1710,7 @@ const CanvasPage: React.FC = () => {
     } else if (selectedTool.id === 'diamond') {
       const diamond = {
         id: `temp-${Date.now()}`,
-        canvas_id: canvasId!,
+        canvas_id: canvasId || 'temp-canvas',
         object_type: 'diamond' as const,
         properties: {
           x: point.x,
@@ -1723,7 +1728,7 @@ const CanvasPage: React.FC = () => {
     } else if (selectedTool.id === 'line') {
       const line = {
         id: `temp-${Date.now()}`,
-        canvas_id: canvasId!,
+        canvas_id: canvasId || 'temp-canvas',
         object_type: 'line' as const,
         properties: {
           x: point.x,
@@ -1739,7 +1744,7 @@ const CanvasPage: React.FC = () => {
     } else if (selectedTool.id === 'arrow') {
       const arrow = {
         id: `temp-${Date.now()}`,
-        canvas_id: canvasId!,
+        canvas_id: canvasId || 'temp-canvas',
         object_type: 'arrow' as const,
         properties: {
           x: point.x,
@@ -1777,13 +1782,13 @@ const CanvasPage: React.FC = () => {
 
     // Update new object position
     if (newObject.object_type === 'rectangle') {
-      const newWidth = Math.max(10, point.x - newObject.properties!.x)
-      const newHeight = Math.max(10, point.y - newObject.properties!.y)
+      const newWidth = Math.max(10, point.x - (newObject.properties?.x as number || 0))
+      const newHeight = Math.max(10, point.y - (newObject.properties?.y as number || 0))
       
       setNewObject(prev => ({
         ...prev,
         properties: {
-          ...prev!.properties!,
+          ...prev?.properties,
           width: newWidth,
           height: newHeight
         }
@@ -1808,7 +1813,7 @@ const CanvasPage: React.FC = () => {
       setNewObject(prev => ({
         ...prev,
         properties: {
-          ...prev!.properties!,
+          ...prev?.properties,
           radius: newRadius // Increased minimum radius for better visibility
         }
       }))
@@ -1829,7 +1834,7 @@ const CanvasPage: React.FC = () => {
       setNewObject(prev => ({
         ...prev,
         properties: {
-          ...prev!.properties!,
+          ...prev?.properties,
           width: width,
           height: height
         }
@@ -1845,7 +1850,7 @@ const CanvasPage: React.FC = () => {
       setNewObject(prev => ({
         ...prev,
         properties: {
-          ...prev!.properties!,
+          ...prev?.properties,
           points: [0, 0, dx * scale, dy * scale]
         }
       }))
@@ -1858,7 +1863,7 @@ const CanvasPage: React.FC = () => {
         // In development mode, add object directly to local state
         const canvasObject: CanvasObject = {
           id: `dev-${Date.now()}`,
-          canvas_id: canvasId!,
+          canvas_id: canvasId || 'temp-canvas',
           object_type: newObject.object_type!,
           properties: newObject.properties!,
           created_by: 'dev-user',

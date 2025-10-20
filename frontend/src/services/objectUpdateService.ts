@@ -43,7 +43,10 @@ class ObjectUpdateService {
     
     // Prevent duplicate updates for the same object
     if (this.pendingUpdates.has(updateKey)) {
-      return this.pendingUpdates.get(updateKey)!
+      const pending = this.pendingUpdates.get(updateKey)
+      if (pending) {
+        return pending
+      }
     }
 
     const updatePromise = this.performUpdate(
@@ -78,7 +81,10 @@ class ObjectUpdateService {
     
     // Prevent duplicate updates for the same object
     if (this.pendingUpdates.has(updateKey)) {
-      return this.pendingUpdates.get(updateKey)!
+      const pending = this.pendingUpdates.get(updateKey)
+      if (pending) {
+        return pending
+      }
     }
 
     const updatePromise = this.performUpdate(

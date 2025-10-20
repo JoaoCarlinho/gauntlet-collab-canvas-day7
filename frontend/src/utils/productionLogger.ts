@@ -101,9 +101,11 @@ class ProductionLogger {
     for (const log of this.logBuffer) {
       const key = `${log.level}:${log.message}`
       if (groupedLogs.has(key)) {
-        const existing = groupedLogs.get(key)!
-        existing.count++
-        existing.lastSeen = log.timestamp
+        const existing = groupedLogs.get(key)
+        if (existing) {
+          existing.count++
+          existing.lastSeen = log.timestamp
+        }
       } else {
         groupedLogs.set(key, {
           count: 1,
