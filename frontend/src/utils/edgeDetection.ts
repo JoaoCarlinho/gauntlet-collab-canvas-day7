@@ -435,7 +435,7 @@ export class EdgeDetector {
       return Math.sqrt(A * A + B * B)
     }
 
-    let param = dot / lenSq
+    const param = dot / lenSq
 
     let xx, yy
 

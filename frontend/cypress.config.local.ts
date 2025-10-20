@@ -10,7 +10,6 @@ export default defineConfig({
     video: false,
     screenshotOnRunFailure: true,
     screenshotsFolder: 'cypress/screenshots',
-    screenshotOnRunFailure: true,
     defaultScreenshotOptions: {
       capture: 'fullPage',
       clip: null,
@@ -26,7 +25,7 @@ export default defineConfig({
       MOCK_AUTH: false,
       MOCK_WEBSOCKET: false
     },
-    setupNodeEvents(on, config) {
+    setupNodeEvents(on, _config) {
       // Add custom tasks here if needed
       on('task', {
         log(message) {

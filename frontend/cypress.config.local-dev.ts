@@ -20,7 +20,7 @@ export default defineConfig({
       MOCK_AUTH: true,
       MOCK_WEBSOCKET: false
     },
-    setupNodeEvents(on, config) {
+    setupNodeEvents(on, _config) {
       // Add custom tasks here if needed
       on('task', {
         log(message) {
