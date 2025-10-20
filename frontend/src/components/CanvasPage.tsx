@@ -818,12 +818,27 @@ const CanvasPage: React.FC = () => {
       }
     }
     
+    // Listen for connection state changes
+    const handleConnectionStateChange = (data: any) => {
+      console.log('Connection state changed:', data)
+      
+      if (data.connectionState === 'connected') {
+        devToast.success('Real-time connection established', { duration: 3000 })
+      } else if (data.connectionState === 'disconnected') {
+        devToast.error('Real-time connection lost. Using polling mode.', { duration: 5000 })
+      } else if (data.connectionState === 'reconnecting') {
+        devToast.loading('Reconnecting to real-time service...', { duration: 2000 })
+      }
+    }
+    
     socketService.on('connection_quality_report', handleQualityReport)
+    socketService.on('connection_state_changed', handleConnectionStateChange)
 
     // Cleanup function
     return () => {
       connectionQualityMonitor.stopMonitoring()
       socketService.off('connection_quality_report', handleQualityReport)
+      socketService.off('connection_state_changed', handleConnectionStateChange)
     }
   }
 
@@ -2367,6 +2382,24 @@ const CanvasPage: React.FC = () => {
         preferences={preferences}
         onPreferencesChange={updatePreferences}
       />
+
+      {/* Connection Status Indicator */}
+      <div className="fixed bottom-4 right-32 z-50">
+        <div className="flex items-center space-x-2 bg-white rounded-lg shadow-lg px-3 py-2 border">
+          <div className={`w-3 h-3 rounded-full ${
+            socketService.getConnectionState() === 'connected' ? 'bg-green-500' :
+            socketService.getConnectionState() === 'connecting' ? 'bg-yellow-500' :
+            socketService.getConnectionState() === 'reconnecting' ? 'bg-orange-500' :
+            'bg-red-500'
+          }`}></div>
+          <span className="text-sm font-medium text-gray-700">
+            {socketService.getConnectionState() === 'connected' ? 'Connected' :
+             socketService.getConnectionState() === 'connecting' ? 'Connecting...' :
+             socketService.getConnectionState() === 'reconnecting' ? 'Reconnecting...' :
+             'Disconnected'}
+          </span>
+        </div>
+      </div>
 
       {/* Connection Quality Dashboard Button */}
       <div className="fixed bottom-4 right-20 z-50">
