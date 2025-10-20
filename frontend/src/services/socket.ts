@@ -590,7 +590,10 @@ class SocketService {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, [])
     }
-    this.listeners.get(event)!.push(callback)
+    const listeners = this.listeners.get(event)
+    if (listeners) {
+      listeners.push(callback)
+    }
   }
 
   off(event: string, callback: Function) {

@@ -37,10 +37,32 @@ jobs:
           cd frontend
           npm run validation:typescript
           
-      - name: Run ESLint (allow warnings)
+      - name: Run ESLint (Phase 4 progressive strategy)
         run: |
           cd frontend
-          npm run lint || echo "ESLint completed with warnings"
+          echo "🔍 Running ESLint with Phase 4 progressive warning strategy..."
+          
+          # Run ESLint and capture results
+          npm run lint -- --format=json > eslint-report.json || true
+          npm run lint || echo "⚠️ ESLint completed with warnings (Phase 4 progressive strategy)"
+          
+          # Generate detailed summary
+          if [ -f eslint-report.json ]; then
+            WARNING_COUNT=$(cat eslint-report.json | jq '[.[] | .messages[] | select(.severity == 1)] | length' 2>/dev/null || echo "0")
+            ERROR_COUNT=$(cat eslint-report.json | jq '[.[] | .messages[] | select(.severity == 2)] | length' 2>/dev/null || echo "0")
+            echo "📊 ESLint Summary: $ERROR_COUNT errors, $WARNING_COUNT warnings"
+            
+            # Save summary for PR comment
+            echo "ESLINT_ERRORS=$ERROR_COUNT" >> $GITHUB_ENV
+            echo "ESLINT_WARNINGS=$WARNING_COUNT" >> $GITHUB_ENV
+            
+            if [ "$ERROR_COUNT" -gt 0 ]; then
+              echo "❌ Build failed due to ESLint errors"
+              exit 1
+            else
+              echo "✅ Build continues with $WARNING_COUNT warnings (Phase 4 progressive strategy)"
+            fi
+          fi
 
       - name: Test build
         run: |
@@ -66,10 +88,20 @@ jobs:
               - Commit: \`${{ github.sha }}\`
               - Triggered by: @${{ github.actor }}
               
+              **Code Quality (Phase 4 Progressive Strategy):**
+              - ESLint Errors: ${{ env.ESLINT_ERRORS || '0' }}
+              - ESLint Warnings: ${{ env.ESLINT_WARNINGS || '0' }}
+              - Status: ✅ Build continues with warnings (Phase 4 progressive linting)
+              
               **Next Steps:**
               1. Merge this PR to trigger Railway deployment
               2. Railway will automatically deploy to production
               3. Monitor deployment in Railway dashboard
+              
+              **Phase 4 Notes:**
+              - Warnings are allowed as part of progressive linting strategy
+              - Future phases will gradually reduce warning limits
+              - Focus is on preventing errors while allowing gradual improvement
               
               ---
               *Build completed successfully at ${{ github.event.head_commit.timestamp }}*`;

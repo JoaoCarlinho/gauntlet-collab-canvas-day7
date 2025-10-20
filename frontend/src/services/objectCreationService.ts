@@ -197,7 +197,10 @@ class ObjectCreationService {
     
     // Prevent duplicate creations
     if (this.pendingCreations.has(creationKey)) {
-      return this.pendingCreations.get(creationKey)!
+      const pending = this.pendingCreations.get(creationKey)
+      if (pending) {
+        return pending
+      }
     }
 
     const creationPromise = this.performCreationWithConfirmation(
