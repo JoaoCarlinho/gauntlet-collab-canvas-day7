@@ -2533,7 +2533,7 @@ const CanvasPage: React.FC = () => {
       )}
 
       {/* Floating Drawing Toolbar */}
-      <FloatingToolbar
+      {/* <FloatingToolbar
         position={preferences.position}
         isVisible={isToolbarVisible}
         selectedTool={selectedTool}
