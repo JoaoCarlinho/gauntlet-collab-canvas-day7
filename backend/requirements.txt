@@ -3,10 +3,12 @@ Flask-SQLAlchemy==3.0.5
 Flask-SocketIO==5.3.6
 Flask-CORS==4.0.0
 Flask-Migrate==4.0.5
+Flask-Caching==2.1.0
 flasgger==0.9.7.1
 marshmallow==3.20.1
 python-dotenv==1.0.0
-# redis==5.0.1  # Removed - using PostgreSQL-based job queuing instead
+# redis==5.0.1  # Removed - using Flask-Caching + diskcache instead
+diskcache==5.6.3  # File-based caching for Railway compatibility
 python-socketio==5.9.0
 eventlet==0.33.3
 pytest==7.4.3

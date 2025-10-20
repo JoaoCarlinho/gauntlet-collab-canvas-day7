@@ -199,12 +199,16 @@ def create_app(config_class=Config):
     app.register_blueprint(test_cors_bp, url_prefix='/api/test')
     app.register_blueprint(health_bp)
     
+    # Initialize cache system
+    from .extensions import init_cache
+    init_cache(app)
+    
     # Initialize rate limiting
     from .middleware.rate_limiting import init_rate_limiting, init_socket_rate_limiting
     from .middleware.error_handling import init_error_handling
-    from .extensions import redis_client
+    from .extensions import cache_client
     init_rate_limiting(app)
-    init_socket_rate_limiting(redis_client)
+    init_socket_rate_limiting(cache_client)
     init_error_handling(app)
     
     # Register socket handlers

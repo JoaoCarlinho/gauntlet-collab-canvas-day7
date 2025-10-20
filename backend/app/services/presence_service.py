@@ -1,27 +1,28 @@
 import json
-import redis
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from app.models import User
-from app.extensions import get_redis_connection
+from app.extensions import cache_client
 import logging
 
 logger = logging.getLogger(__name__)
 
 class PresenceService:
-    """Service for managing user presence and activity tracking."""
+    """Service for managing user presence and activity tracking using cache."""
     
     def __init__(self):
-        self.redis_client = get_redis_connection()
+        self.cache_client = cache_client
         self.presence_ttl = 60  # 60 seconds
         self.activity_ttl = 300  # 5 minutes
+        self._memory_store = {}  # In-memory fallback storage
     
     def update_user_presence(self, user_id: str, canvas_id: str, status: str = 'online', activity: str = 'viewing') -> bool:
         """Update user presence information."""
         try:
-            if not self.redis_client:
-                logger.warning("Redis not available, skipping presence update")
-                return False
+            if not self.cache_client:
+                logger.warning("Cache not available, using memory store for presence")
+                # Use memory store as fallback
+                return self._update_presence_memory(user_id, canvas_id, status, activity)
             
             # Get user information
             user = User.query.filter_by(id=user_id).first()
@@ -203,3 +204,49 @@ class PresenceService:
                 'by_activity': {},
                 'last_updated': datetime.utcnow().isoformat()
             }
+    
+    def _update_presence_memory(self, user_id: str, canvas_id: str, status: str, activity: str) -> bool:
+        """Update presence using in-memory storage as fallback."""
+        try:
+            import time
+            current_time = time.time()
+            
+            # Create presence data
+            presence_data = {
+                'user_id': user_id,
+                'canvas_id': canvas_id,
+                'status': status,
+                'activity': activity,
+                'last_seen': current_time,
+                'expires': current_time + self.presence_ttl
+            }
+            
+            # Store in memory
+            key = f"presence:{user_id}:{canvas_id}"
+            self._memory_store[key] = presence_data
+            
+            # Clean up expired entries
+            self._cleanup_expired_memory()
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to update presence in memory: {str(e)}")
+            return False
+    
+    def _cleanup_expired_memory(self):
+        """Clean up expired entries from memory store."""
+        try:
+            import time
+            current_time = time.time()
+            
+            expired_keys = [
+                key for key, data in self._memory_store.items()
+                if current_time > data.get('expires', 0)
+            ]
+            
+            for key in expired_keys:
+                del self._memory_store[key]
+                
+        except Exception as e:
+            logger.error(f"Failed to cleanup expired memory entries: {str(e)}")

@@ -11,7 +11,7 @@ from flask_socketio import emit
 from flask import request
 from app.services.auth_service import AuthService
 from app.services.canvas_service import CanvasService
-from app.extensions import redis_client
+from app.extensions import cache_client
 from app.schemas.socket_validation_schemas import validate_socket_event_data, get_socket_event_schema
 from app.utils.validators import ValidationError
 from app.services.sanitization_service import SanitizationService
