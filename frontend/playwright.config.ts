@@ -64,14 +64,14 @@ export default defineConfig({
       name: 'production-chromium',
       use: { 
         ...devices['Desktop Chrome'],
-        baseURL: 'https://gauntlet-collab-canvas-24hr.vercel.app',
+        baseURL: 'https://gauntlet-collab-canvas-day7.vercel.app',
       },
     },
     {
       name: 'production-mobile',
       use: { 
         ...devices['Pixel 5'],
-        baseURL: 'https://gauntlet-collab-canvas-24hr.vercel.app',
+        baseURL: 'https://gauntlet-collab-canvas-day7.vercel.app',
       },
     },
   ],

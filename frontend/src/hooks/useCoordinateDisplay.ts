@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import { CoordinateData, CoordinateMode } from '../components/CoordinateStatusBar'
+import { CoordinateData } from '../components/CoordinateStatusBar'
 import { CanvasObject } from '../types'
 
 interface DragStartPosition {
@@ -40,8 +40,7 @@ export const useCoordinateDisplay = () => {
    * Show coordinates for selected object(s)
    */
   const showSelectedCoordinates = useCallback((
-    objects: CanvasObject[],
-    objectCount?: number
+    objects: CanvasObject[]
   ) => {
     if (objects.length === 0) {
       setCoordinateDisplay(null)

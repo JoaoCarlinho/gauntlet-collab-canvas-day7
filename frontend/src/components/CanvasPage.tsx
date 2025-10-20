@@ -1063,7 +1063,7 @@ const CanvasPage: React.FC = () => {
       // Show coordinates for selected object(s)
       setTimeout(() => {
         const selectedObjects = multiSelectionActions.getSelectedObjects()
-        coordinateDisplay.showSelectedCoordinates(selectedObjects, selectedObjects.length)
+        coordinateDisplay.showSelectedCoordinates(selectedObjects)
       }, 0)
     }
   }
@@ -1312,17 +1312,18 @@ const CanvasPage: React.FC = () => {
     }
   }
   
-  const handleObjectResizeStart = (objectId: string) => {
-    const obj = objects.find(o => o.id === objectId)
-    if (obj) {
-      const props = obj.properties
-      coordinateDisplay.startResizing(props.x, props.y, props.width, props.height, props.radius)
-    }
-  }
+  // Note: These resize handlers are available for future use
+  // const handleObjectResizeStart = (objectId: string) => {
+  //   const obj = objects.find(o => o.id === objectId)
+  //   if (obj) {
+  //     const props = obj.properties
+  //     coordinateDisplay.startResizing(props.x, props.y, props.width, props.height, props.radius)
+  //   }
+  // }
   
-  const handleObjectResizeEnd = () => {
-    coordinateDisplay.endResizing()
-  }
+  // const handleObjectResizeEnd = () => {
+  //   coordinateDisplay.endResizing()
+  // }
 
   // Create debounced version of position update
   const debouncedPositionUpdate = objectUpdateDebouncer.debounceUpdate(

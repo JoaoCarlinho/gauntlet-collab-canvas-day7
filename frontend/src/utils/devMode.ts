@@ -3,6 +3,8 @@
  * Provides mock data and development-specific functionality
  */
 
+import toast from 'react-hot-toast'
+
 // Check if we're in development mode
 export const isDevelopmentMode = (): boolean => {
   return import.meta.env.DEV || 
@@ -83,7 +85,6 @@ export const devModeApiWrapper = async <T>(
       console.log('API call failed in development mode, using mock data:', error)
       if (shouldShowErrorToast() && errorMessage) {
         // Only show toast if not in testing mode
-        const { default: toast } = await import('react-hot-toast')
         toast.error(errorMessage)
       }
       return mockData

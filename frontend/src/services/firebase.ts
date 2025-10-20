@@ -158,24 +158,6 @@ const getAuthErrorMessage = (error: AuthError): string => {
       return 'Your browser does not support the required authentication features. Please try a different browser.'
     case 'auth/invalid-credential':
       return 'Invalid email or password. Please check your credentials and try again.'
-    case 'auth/user-disabled':
-      return 'This account has been disabled. Please contact support.'
-    case 'auth/too-many-requests':
-      return 'Too many failed attempts. Please try again later.'
-    case 'auth/operation-not-allowed':
-      return 'Email/password sign-in is not enabled. Please contact support.'
-    case 'auth/email-already-in-use':
-      return 'An account with this email already exists. Please sign in instead.'
-    case 'auth/weak-password':
-      return 'Password is too weak. Please choose a stronger password with at least 6 characters.'
-    case 'auth/invalid-email':
-      return 'Invalid email address. Please check and try again.'
-    case 'auth/user-not-found':
-      return 'No account found with this email address. Please check your email or create a new account.'
-    case 'auth/wrong-password':
-      return 'Incorrect password. Please try again.'
-    case 'auth/requires-recent-login':
-      return 'Please sign in again to complete this action.'
     default:
       return 'An unexpected error occurred during sign-in. This may be due to browser compatibility issues. Please try using a different browser or contact support.'
   }
