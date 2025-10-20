@@ -48,3 +48,8 @@ class SmartLogger:
         """Log info with rate limiting."""
         if self.should_log('info'):
             self.logger.info(message)
+    
+    def log_warning(self, message: str):
+        """Log warning with rate limiting."""
+        if self.should_log('warning'):
+            self.logger.warning(message)
