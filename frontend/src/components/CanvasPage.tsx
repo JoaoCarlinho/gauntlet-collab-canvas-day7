@@ -51,6 +51,12 @@ import { getCursorManager, CursorState } from '../utils/cursorManager'
 import { FloatingToolbar, useToolbarState, useToolShortcuts, getToolById } from './toolbar'
 import { AIAgentButton } from './AIAgentButton'
 import { AIAgentPanel } from './AIAgentPanel'
+import SelectionBox from './SelectionBox'
+import MultiSelectionIndicator from './MultiSelectionIndicator'
+import ContextMenu from './ContextMenu'
+import { useMultiSelection } from '../hooks/useMultiSelection'
+import { useClipboard } from '../hooks/useClipboard'
+import { useUndoRedo, useUndoRedoShortcuts } from '../hooks/useUndoRedo'
 import '../styles/AIAgent.css'
 
 const CanvasPage: React.FC = () => {
@@ -89,6 +95,18 @@ const CanvasPage: React.FC = () => {
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null)
   const [editingObjectId, setEditingObjectId] = useState<string | null>(null)
   const [hoveredObjectId, setHoveredObjectId] = useState<string | null>(null)
+  
+  // Multi-selection, clipboard, and undo/redo functionality
+  const [multiSelectionState, multiSelectionActions] = useMultiSelection(objects)
+  const [clipboardState, clipboardActions] = useClipboard()
+  const [undoRedoState, undoRedoActions] = useUndoRedo()
+  
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean
+    x: number
+    y: number
+  }>({ visible: false, x: 0, y: 0 })
   
   // Error handling state
   const [failedUpdates, setFailedUpdates] = useState<Map<string, { error: any; timestamp: number; retryCount: number }>>(new Map())
@@ -206,6 +224,24 @@ const CanvasPage: React.FC = () => {
   
   // Keyboard shortcuts for tools
   useToolShortcuts({ onToolSelect: selectTool })
+  
+  // Undo/Redo shortcuts
+  useUndoRedoShortcuts(
+    () => {
+      const newObjects = undoRedoActions.undo()
+      if (newObjects) {
+        setObjects(newObjects)
+        multiSelectionActions.clearSelection()
+      }
+    },
+    () => {
+      const newObjects = undoRedoActions.redo()
+      if (newObjects) {
+        setObjects(newObjects)
+        multiSelectionActions.clearSelection()
+      }
+    }
+  )
 
   useEffect(() => {
     // In development mode, bypass authentication check
@@ -275,9 +311,44 @@ const CanvasPage: React.FC = () => {
     }
   }, [isAuthenticated, canvasId, isConnected])
 
-  // Handle escape key to cancel drawing or editing
+  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Handle copy/paste shortcuts
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        switch (e.key) {
+          case 'c':
+            e.preventDefault()
+            handleCopy()
+            break
+          case 'x':
+            e.preventDefault()
+            handleCut()
+            break
+          case 'v':
+            e.preventDefault()
+            handlePaste()
+            break
+          case 'd':
+            e.preventDefault()
+            handleDuplicate()
+            break
+          case 'a':
+            e.preventDefault()
+            multiSelectionActions.selectAll()
+            break
+        }
+      }
+      
+      // Handle delete key
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (multiSelectionState.selectedObjectIds.size > 0) {
+          e.preventDefault()
+          handleDelete()
+        }
+      }
+      
+      // Handle escape key to cancel drawing or editing
       if (e.key === 'Escape') {
         if (isDrawing) {
           setNewObject(null)
@@ -285,15 +356,15 @@ const CanvasPage: React.FC = () => {
           selectTool(getToolById('select')!)
         } else if (editingObjectId) {
           setEditingObjectId(null)
-        } else if (selectedObjectId) {
-          setSelectedObjectId(null)
+        } else if (multiSelectionState.selectedObjectIds.size > 0) {
+          multiSelectionActions.clearSelection()
         }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isDrawing, editingObjectId, selectedObjectId])
+  }, [isDrawing, editingObjectId, multiSelectionState.selectedObjectIds.size])
 
   // Monitor connection status changes for queue manager
   useEffect(() => {
@@ -959,10 +1030,14 @@ const CanvasPage: React.FC = () => {
   }
 
   // New handler functions for enhanced interactions
-  const handleObjectSelect = (objectId: string) => {
+  const handleObjectSelect = (objectId: string, event?: any) => {
     if (selectedTool.id === 'select') {
       setSelectedObjectId(objectId)
       setEditingObjectId(null)
+      
+      // Handle multi-selection with Ctrl/Cmd key
+      const isMultiSelect = event?.evt?.ctrlKey || event?.evt?.metaKey
+      multiSelectionActions.selectObject(objectId, isMultiSelect)
     }
   }
 
@@ -978,6 +1053,79 @@ const CanvasPage: React.FC = () => {
       })
     }
     setEditingObjectId(null)
+  }
+
+  // Clipboard and context menu handlers
+  const handleCopy = () => {
+    const selectedObjects = multiSelectionActions.getSelectedObjects()
+    if (selectedObjects.length > 0) {
+      clipboardActions.copyObjects(selectedObjects)
+      toast.success(`Copied ${selectedObjects.length} object(s)`)
+    }
+  }
+
+  const handleCut = () => {
+    const selectedObjects = multiSelectionActions.getSelectedObjects()
+    if (selectedObjects.length > 0) {
+      saveStateForUndo('cut', `Cut ${selectedObjects.length} object(s)`)
+      clipboardActions.cutObjects(selectedObjects)
+      // Remove the objects from the canvas
+      setObjects(prev => prev.filter(obj => !selectedObjects.some(selected => selected.id === obj.id)))
+      multiSelectionActions.clearSelection()
+      toast.success(`Cut ${selectedObjects.length} object(s)`)
+    }
+  }
+
+  const handlePaste = () => {
+    const pastedObjects = clipboardActions.pasteObjects()
+    if (pastedObjects.length > 0) {
+      saveStateForUndo('paste', `Pasted ${pastedObjects.length} object(s)`)
+      // Add the pasted objects to the canvas
+      setObjects(prev => [...prev, ...pastedObjects])
+      // Select the pasted objects
+      pastedObjects.forEach(obj => multiSelectionActions.selectObject(obj.id, true))
+      toast.success(`Pasted ${pastedObjects.length} object(s)`)
+    }
+  }
+
+  const handleDuplicate = () => {
+    const selectedObjects = multiSelectionActions.getSelectedObjects()
+    if (selectedObjects.length > 0) {
+      saveStateForUndo('duplicate', `Duplicated ${selectedObjects.length} object(s)`)
+      const duplicatedObjects = clipboardActions.duplicateObjects(selectedObjects)
+      setObjects(prev => [...prev, ...duplicatedObjects])
+      // Select the duplicated objects
+      duplicatedObjects.forEach(obj => multiSelectionActions.selectObject(obj.id, true))
+      toast.success(`Duplicated ${duplicatedObjects.length} object(s)`)
+    }
+  }
+
+  const handleDelete = () => {
+    const selectedObjects = multiSelectionActions.getSelectedObjects()
+    if (selectedObjects.length > 0) {
+      saveStateForUndo('delete', `Deleted ${selectedObjects.length} object(s)`)
+      setObjects(prev => prev.filter(obj => !selectedObjects.some(selected => selected.id === obj.id)))
+      multiSelectionActions.clearSelection()
+      toast.success(`Deleted ${selectedObjects.length} object(s)`)
+    }
+  }
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY
+    })
+  }
+
+  const handleCloseContextMenu = () => {
+    setContextMenu({ visible: false, x: 0, y: 0 })
+  }
+
+  // Helper function to save state for undo/redo
+  const saveStateForUndo = (action: string, description?: string) => {
+    undoRedoActions.saveState(objects, action, description)
   }
 
   const handleObjectUpdatePosition = (objectId: string, x: number, y: number) => {
@@ -1658,7 +1806,7 @@ const CanvasPage: React.FC = () => {
     const optimisticObject = optimisticUpdateManager.getOptimisticObject(obj.id, obj)
     const displayObject = optimisticObject
     const props = displayObject.properties
-    const isSelected = selectedObjectId === obj.id
+    const isSelected = multiSelectionActions.isObjectSelected(obj.id)
     const isEditing = editingObjectId === obj.id
     const isHovered = hoveredObjectId === obj.id
     // const isOptimistic = optimisticObjects.has(obj.id)
@@ -1683,7 +1831,7 @@ const CanvasPage: React.FC = () => {
               stroke={props.stroke}
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={() => handleObjectSelect(obj.id)}
+              onClick={(e) => handleObjectSelect(obj.id, e)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -1724,7 +1872,7 @@ const CanvasPage: React.FC = () => {
               stroke={props.stroke}
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={() => handleObjectSelect(obj.id)}
+              onClick={(e) => handleObjectSelect(obj.id, e)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -1769,7 +1917,7 @@ const CanvasPage: React.FC = () => {
                 stroke={props.stroke}
                 strokeWidth={props.strokeWidth}
                 draggable={selectedTool.id === 'select' && !isEditing}
-                onClick={() => handleObjectSelect(obj.id)}
+                onClick={(e) => handleObjectSelect(obj.id, e)}
                 onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
                 onMouseEnter={() => setHoveredObjectId(obj.id)}
                 onMouseLeave={() => setHoveredObjectId(null)}
@@ -1820,7 +1968,7 @@ const CanvasPage: React.FC = () => {
               stroke={props.stroke}
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={() => handleObjectSelect(obj.id)}
+              onClick={(e) => handleObjectSelect(obj.id, e)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -1852,7 +2000,7 @@ const CanvasPage: React.FC = () => {
               stroke={props.stroke}
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={() => handleObjectSelect(obj.id)}
+              onClick={(e) => handleObjectSelect(obj.id, e)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -1881,7 +2029,7 @@ const CanvasPage: React.FC = () => {
               stroke={props.stroke}
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={() => handleObjectSelect(obj.id)}
+              onClick={(e) => handleObjectSelect(obj.id, e)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -1907,7 +2055,7 @@ const CanvasPage: React.FC = () => {
               x={props.x}
               y={props.y}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={() => handleObjectSelect(obj.id)}
+              onClick={(e) => handleObjectSelect(obj.id, e)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -2315,6 +2463,23 @@ const CanvasPage: React.FC = () => {
           {renderNewObject()}
           {renderCursors()}
           
+          {/* Multi-selection indicator */}
+          <MultiSelectionIndicator
+            selectedObjects={multiSelectionActions.getSelectedObjects()}
+            visible={multiSelectionState.selectedObjectIds.size > 1}
+          />
+          
+          {/* Selection box for multi-selection */}
+          {multiSelectionState.selectionBox && (
+            <SelectionBox
+              startX={multiSelectionState.selectionBox.startX}
+              startY={multiSelectionState.selectionBox.startY}
+              endX={multiSelectionState.selectionBox.endX}
+              endY={multiSelectionState.selectionBox.endY}
+              visible={multiSelectionState.isMultiSelecting}
+            />
+          )}
+          
           {/* Success animations */}
           {successAnimations.map(animation => (
             <UpdateSuccessAnimation
@@ -2668,7 +2833,10 @@ const CanvasPage: React.FC = () => {
         onClose={() => setShowAIPanel(false)}
         onSuccess={(canvasId) => {
           console.log('AI canvas created successfully:', canvasId);
-          // Optionally refresh the canvas or show success message
+          // Clear any existing selection when AI creates new content
+          multiSelectionActions.clearSelection()
+          // Save state for undo/redo
+          saveStateForUndo('ai_generation', 'AI generated canvas content')
         }}
         currentCanvasId={canvasId}
       />
@@ -2677,6 +2845,40 @@ const CanvasPage: React.FC = () => {
       <ConnectionQualityDashboard
         isVisible={showConnectionQualityDashboard}
         onClose={() => setShowConnectionQualityDashboard(false)}
+      />
+
+      {/* Context Menu */}
+      <ContextMenu
+        visible={contextMenu.visible}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        onClose={handleCloseContextMenu}
+        onCopy={handleCopy}
+        onCut={handleCut}
+        onPaste={handlePaste}
+        onDuplicate={handleDuplicate}
+        onDelete={handleDelete}
+        onUndo={() => {
+          const newObjects = undoRedoActions.undo()
+          if (newObjects) {
+            setObjects(newObjects)
+            multiSelectionActions.clearSelection()
+          }
+        }}
+        onRedo={() => {
+          const newObjects = undoRedoActions.redo()
+          if (newObjects) {
+            setObjects(newObjects)
+            multiSelectionActions.clearSelection()
+          }
+        }}
+        canCopy={multiSelectionState.selectedObjectIds.size > 0}
+        canCut={multiSelectionState.selectedObjectIds.size > 0}
+        canPaste={clipboardState.hasCopiedObjects}
+        canDuplicate={multiSelectionState.selectedObjectIds.size > 0}
+        canDelete={multiSelectionState.selectedObjectIds.size > 0}
+        canUndo={undoRedoState.canUndo}
+        canRedo={undoRedoState.canRedo}
       />
     </div>
   )
