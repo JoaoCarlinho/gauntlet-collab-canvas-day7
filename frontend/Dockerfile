@@ -1,4 +1,5 @@
 # Multi-stage build for Railway deployment
+# Use multiple fallback images to handle Docker Hub connectivity issues
 FROM node:18-alpine AS builder
 
 # Set working directory

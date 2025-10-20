@@ -11,3 +11,7 @@ cmds = ["npm run build:railway"]
 
 [start]
 cmd = "npm run start:railway"
+
+[variables]
+NODE_ENV = "production"
+PORT = "3000"
