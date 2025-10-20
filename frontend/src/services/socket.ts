@@ -4,15 +4,20 @@ import { errorLogger, ErrorContext } from '../utils/errorLogger'
 import { socketEventOptimizer } from '../utils/socketOptimizer'
 import { socketIOClientOptimizer } from '../utils/socketioClientOptimizer'
 import { canvasAPI } from './api'
+import { 
+  SocketConfig, 
+  SocketConnectionState,
+  SocketConnectionQuality
+} from '../types/socket'
 
 class SocketService {
   private socket: Socket | null = null
   private listeners: Map<string, Function[]> = new Map()
   private debugMode = import.meta.env.VITE_DEBUG_SOCKET === 'true'
-  private connectionState: 'disconnected' | 'connecting' | 'connected' | 'reconnecting' = 'disconnected'
+  private connectionState: SocketConnectionState = 'disconnected'
   private connectionAttempts = 0
   private lastConnectionTime: number | null = null
-  private connectionQuality: 'excellent' | 'good' | 'poor' | 'unknown' = 'unknown'
+  private connectionQuality: SocketConnectionQuality = 'unknown'
 
   connect(idToken?: string) {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
@@ -42,7 +47,7 @@ class SocketService {
     const socketConfig = socketIOClientOptimizer.getOptimizedConfig()
     
     // Add additional configuration with CORS support
-    const enhancedConfig: any = {
+    const enhancedConfig: SocketConfig = {
       ...socketConfig,
       forceNew: isDevelopment, // Only force new in development
       withCredentials: true, // Enable credentials for CORS
@@ -50,7 +55,13 @@ class SocketService {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-      }
+      },
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      maxReconnectionAttempts: 5
     }
     
     // Only add auth token if not in development mode
@@ -592,7 +603,7 @@ class SocketService {
     }
   }
 
-  private emit(event: string, data: any) {
+  private emit(event: string, data: Record<string, unknown>) {
     const callbacks = this.listeners.get(event)
     if (callbacks) {
       callbacks.forEach(callback => callback(data))
@@ -615,7 +626,7 @@ class SocketService {
   }
 
   // Socket optimization methods
-  optimizeEmit(event: string, data: any, priority: 'low' | 'normal' | 'high' | 'critical' = 'normal') {
+  optimizeEmit(event: string, data: Record<string, unknown>, priority: 'low' | 'normal' | 'high' | 'critical' = 'normal') {
     if (!this.socket) {
       console.warn('Socket not connected, cannot emit event:', event)
       return
@@ -689,7 +700,7 @@ class SocketService {
   }
 
   // Update optimization configuration
-  updateOptimizationConfig(config: any) {
+  updateOptimizationConfig(config: Record<string, unknown>) {
     socketEventOptimizer.updateConfig(config)
   }
 
@@ -709,7 +720,7 @@ class SocketService {
     }
   }
 
-  private ensureAuthContext(data: any): any {
+  private ensureAuthContext(data: Record<string, unknown>): Record<string, unknown> {
     const user = this.getCurrentUser()
     const canvasId = data.canvas_id
     
@@ -724,14 +735,14 @@ class SocketService {
     return {
       ...data,
       canvas_id: canvasId,
-      user_id: user.id,
+      user_id: user.user.id,
       id_token: user.idToken,
-      user_email: user.email,
+      user_email: user.user.email,
       timestamp: Date.now()
     }
   }
 
-  private getCurrentUser(): any {
+  private getCurrentUser(): { idToken: string; user: { id: string; email: string; name: string } } | null {
     try {
       const userStr = localStorage.getItem('user')
       const idToken = localStorage.getItem('idToken')
@@ -760,7 +771,7 @@ class SocketService {
   /**
    * Backup object state before potential disconnection
    */
-  backupObjectState(canvasId: string, objects: any[]): void {
+  backupObjectState(canvasId: string, objects: Array<Record<string, unknown>>): void {
     try {
       console.log(`Backing up object state for canvas: ${canvasId} (${objects.length} objects)`)
       this.objectStateBackup.set(canvasId, [...objects])
@@ -815,7 +826,7 @@ class SocketService {
   /**
    * Validate object state consistency
    */
-  async validateObjectStateConsistency(canvasId: string, expectedObjects: any[]): Promise<boolean> {
+  async validateObjectStateConsistency(canvasId: string, expectedObjects: Array<Record<string, unknown>>): Promise<boolean> {
     try {
       console.log(`Validating object state consistency for canvas: ${canvasId}`)
       
@@ -824,8 +835,8 @@ class SocketService {
       const serverObjects = response.objects || []
       
       // Compare with expected objects
-      const expectedIds = new Set(expectedObjects.map((obj: any) => obj.id))
-      const serverIds = new Set(serverObjects.map((obj: any) => obj.id))
+      const expectedIds = new Set(expectedObjects.map((obj: any) => obj.id as string))
+      const serverIds = new Set(serverObjects.map((obj: any) => obj.id as string))
       
       const missingObjects = [...expectedIds].filter(id => !serverIds.has(id))
       const extraObjects = [...serverIds].filter(id => !expectedIds.has(id))
@@ -851,7 +862,7 @@ class SocketService {
   /**
    * Sync object state with server
    */
-  async syncObjectState(canvasId: string, localObjects: any[]): Promise<any[]> {
+  async syncObjectState(canvasId: string, localObjects: Array<Record<string, unknown>>): Promise<Array<Record<string, unknown>>> {
     try {
       console.log(`Syncing object state for canvas: ${canvasId}`)
       
@@ -860,15 +871,15 @@ class SocketService {
       const serverObjects = response.objects || []
       
       // Create maps for comparison
-      const localMap = new Map(localObjects.map((obj: any) => [obj.id, obj]))
-      const serverMap = new Map(serverObjects.map((obj: any) => [obj.id, obj]))
+      const localMap = new Map(localObjects.map((obj: any) => [obj.id as string, obj]))
+      const serverMap = new Map(serverObjects.map((obj: any) => [obj.id as string, obj]))
       
       // Find missing objects (on server but not local)
-      const missingObjects = serverObjects.filter((obj: any) => !localMap.has(obj.id))
+      const missingObjects = serverObjects.filter((obj: any) => !localMap.has(obj.id as string))
       
       // Find outdated objects (different versions)
       const outdatedObjects = localObjects.filter((localObj: any) => {
-        const serverObj = serverMap.get(localObj.id)
+        const serverObj = serverMap.get(localObj.id as string)
         return serverObj && (serverObj as any).updated_at !== localObj.updated_at
       })
       
@@ -878,18 +889,18 @@ class SocketService {
       // Add missing objects
       missingObjects.forEach((obj: any) => {
         syncedObjects.push(obj)
-        console.log(`Added missing object: ${obj.id}`)
+        console.log(`Added missing object: ${obj.id as string}`)
       })
       
       // Update outdated objects
       outdatedObjects.forEach(localObj => {
-        const serverObj = serverMap.get(localObj.id)
+        const serverObj = serverMap.get(String(localObj.id))
         if (serverObj) {
-          const index = syncedObjects.findIndex(obj => obj.id === localObj.id)
-          if (index !== -1) {
-            syncedObjects[index] = serverObj
-            console.log(`Updated outdated object: ${localObj.id}`)
-          }
+        const index = syncedObjects.findIndex((obj: any) => obj.id === String(localObj.id))
+        if (index !== -1) {
+          syncedObjects[index] = serverObj
+          console.log(`Updated outdated object: ${localObj.id}`)
+        }
         }
       })
       

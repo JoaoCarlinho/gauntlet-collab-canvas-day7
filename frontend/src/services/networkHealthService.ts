@@ -412,9 +412,9 @@ class NetworkHealthService {
     if (callbacks) {
       callbacks.forEach(callback => {
         try {
-          callback(data)
+          callback(data as any)
         } catch (error) {
-          productionLogger.error('Error in network health listener', error)
+          productionLogger.error('Error in network health listener', error as any)
         }
       })
     }

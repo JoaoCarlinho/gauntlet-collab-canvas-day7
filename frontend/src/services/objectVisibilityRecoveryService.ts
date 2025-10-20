@@ -103,7 +103,7 @@ class ObjectVisibilityRecoveryService {
         try {
           const syncedObjects = await socketService.syncObjectState(canvasId, [])
           const additionalRecovered = syncedObjects.filter(obj => 
-            missingObjectIds.includes(obj.id)
+            missingObjectIds.includes(obj.id as string)
           ).length
           
           if (additionalRecovered > 0) {
