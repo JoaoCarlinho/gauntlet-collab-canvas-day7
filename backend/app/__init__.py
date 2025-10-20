@@ -58,7 +58,14 @@ def create_app(config_class=Config):
         "https://*.up.railway.app"
     ]
     
-    allowed_origins = default_origins + cors_origins + vercel_origins + railway_origins
+    # Add Railway frontend URLs (will be updated when frontend is deployed)
+    railway_frontend_origins = [
+        "https://collabcanvas-frontend-production.up.railway.app",
+        "https://collabcanvas-frontend.up.railway.app",
+        "https://*.up.railway.app"
+    ]
+    
+    allowed_origins = default_origins + cors_origins + vercel_origins + railway_origins + railway_frontend_origins
     
     # Debug CORS configuration
     print(f"CORS Configuration Debug:")
