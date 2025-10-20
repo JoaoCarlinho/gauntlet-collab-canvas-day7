@@ -4,6 +4,7 @@ from app.extensions import redis_client
 from app.services.sanitization_service import SanitizationService
 from app.middleware.rate_limiting import check_socket_rate_limit
 from app.utils.railway_logger import railway_logger, log_socket_event
+from app.utils.socketio_config_optimizer import SocketIOConfigOptimizer
 import json
 
 def register_presence_handlers(socketio):
@@ -35,10 +36,16 @@ def register_presence_handlers(socketio):
     
     @socketio.on('user_online')
     def handle_user_online(data):
-        """Handle user coming online."""
+        """Handle user coming online with parse error prevention."""
         try:
-            # Sanitize input data
-            sanitized_data = SanitizationService.sanitize_socket_event_data(data)
+            # Validate message size to prevent parse errors
+            if not SocketIOConfigOptimizer.validate_message_size(data, max_size=5000):  # 5KB for presence data
+                railway_logger.log('presence', 40, "User online message too large, rejecting")
+                return
+            
+            # Sanitize input data to prevent parse errors
+            sanitized_data = SocketIOConfigOptimizer.sanitize_message_data(data)
+            sanitized_data = SanitizationService.sanitize_socket_event_data(sanitized_data)
             
             canvas_id = sanitized_data.get('canvas_id')
             id_token = sanitized_data.get('id_token')
@@ -75,10 +82,21 @@ def register_presence_handlers(socketio):
             # Join the presence room
             join_room(f'presence:{canvas_id}')
             
-            # Notify other users
-            emit('user_came_online', {
+            # Prepare broadcast data with size validation
+            broadcast_data = {
                 'user': user.to_dict()
-            }, room=f'presence:{canvas_id}', include_self=False)
+            }
+            
+            # Validate broadcast data size to prevent parse errors
+            if not SocketIOConfigOptimizer.validate_message_size(broadcast_data, max_size=10000):  # 10KB limit
+                railway_logger.log('presence', 40, "User online broadcast data too large, skipping broadcast")
+                return
+            
+            # Sanitize broadcast data
+            sanitized_broadcast = SocketIOConfigOptimizer.sanitize_message_data(broadcast_data)
+            
+            # Notify other users
+            emit('user_came_online', sanitized_broadcast, room=f'presence:{canvas_id}', include_self=False)
             
         except Exception as e:
             emit('error', {'message': str(e)})

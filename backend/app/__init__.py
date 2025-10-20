@@ -103,18 +103,22 @@ def create_app(config_class=Config):
         from .middleware.cors_middleware import handle_preflight
         return handle_preflight()
     
+    # Initialize Socket.IO with optimized configuration
+    from .utils.socketio_config_optimizer import SocketIOConfigOptimizer
+    socketio_config = SocketIOConfigOptimizer.get_optimized_config(app)
+    
     socketio.init_app(
         app, 
-        cors_allowed_origins=allowed_origins,  # Use same CORS origins as Flask app
-        manage_session=True,  # Enable session management for authentication context
-        logger=app.config.get('SOCKETIO_LOGGER', False),  # Environment controlled
-        engineio_logger=app.config.get('SOCKETIO_ENGINEIO_LOGGER', False),  # Environment controlled
-        ping_timeout=60,
-        ping_interval=25,
-        max_http_buffer_size=1000000,
-        always_connect=True,
-        allow_upgrades=True,
-        transports=['websocket', 'polling']
+        cors_allowed_origins=socketio_config['cors_allowed_origins'],
+        manage_session=socketio_config['manage_session'],
+        logger=socketio_config['logger'],
+        engineio_logger=socketio_config['engineio_logger'],
+        ping_timeout=socketio_config['ping_timeout'],
+        ping_interval=socketio_config['ping_interval'],
+        max_http_buffer_size=socketio_config['max_http_buffer_size'],
+        always_connect=socketio_config['always_connect'],
+        allow_upgrades=socketio_config['allow_upgrades'],
+        transports=socketio_config['transports']
     )
     migrate.init_app(app, db)
     

@@ -7,6 +7,7 @@ from app.schemas.validation_schemas import CursorMoveEventSchema
 from app.middleware.rate_limiting import check_socket_rate_limit
 from app.utils.validators import ValidationError
 from app.services.sanitization_service import SanitizationService
+from app.utils.socketio_config_optimizer import SocketIOConfigOptimizer
 import json
 
 def register_cursor_handlers(socketio):
@@ -59,17 +60,23 @@ def register_cursor_handlers(socketio):
     
     @socketio.on('cursor_move')
     def handle_cursor_move(data):
-        """Handle cursor movement with reduced logging."""
+        """Handle cursor movement with parse error prevention and reduced logging."""
         try:
-            # Sanitize input data
-            sanitized_data = SanitizationService.sanitize_socket_event_data(data)
+            # Validate message size to prevent parse errors
+            if not SocketIOConfigOptimizer.validate_message_size(data, max_size=10000):  # 10KB for cursor data
+                railway_logger.log('cursor', 40, "Cursor move message too large, rejecting")
+                return
+            
+            # Sanitize input data to prevent parse errors
+            sanitized_data = SocketIOConfigOptimizer.sanitize_message_data(data)
+            sanitized_data = SanitizationService.sanitize_socket_event_data(sanitized_data)
             
             # Validate input using schema
             schema = CursorMoveEventSchema()
             try:
                 validated_data = schema.load(sanitized_data)
             except ValidationError as e:
-                production_logger.log_error(f"Cursor move validation failed: {e.messages}")
+                railway_logger.log('cursor', 40, f"Cursor move validation failed: {e.messages}")
                 return
             
             canvas_id = validated_data['canvas_id']
@@ -81,7 +88,7 @@ def register_cursor_handlers(socketio):
             try:
                 user = authenticate_socket_user_quiet(id_token)
             except Exception as e:
-                production_logger.log_error(f"Cursor authentication failed", e)
+                railway_logger.log('cursor', 40, f"Cursor authentication failed: {str(e)}")
                 return
             
             # Check rate limiting
@@ -92,7 +99,7 @@ def register_cursor_handlers(socketio):
             # Log cursor movement with Railway optimization (high sampling)
             log_cursor_event(user.id, 'move')
             
-            # Store cursor position in Redis
+            # Store cursor position in Redis with size validation
             if redis_client:
                 cursor_data = {
                     'user_id': user.id,
@@ -100,19 +107,37 @@ def register_cursor_handlers(socketio):
                     'position': position,
                     'timestamp': timestamp
                 }
+                
+                # Validate cursor data size
+                cursor_json = json.dumps(cursor_data)
+                if len(cursor_json.encode('utf-8')) > 1000:  # 1KB limit for cursor data
+                    railway_logger.log('cursor', 40, f"Cursor data too large: {len(cursor_json)} bytes")
+                    return
+                
                 redis_client.setex(
                     f'cursor:{canvas_id}:{user.id}',
                     30,  # 30 seconds TTL
-                    json.dumps(cursor_data)
+                    cursor_json
                 )
             
-            # Broadcast cursor position
-            emit('cursor_moved', {
+            # Prepare broadcast data with size validation
+            broadcast_data = {
                 'user_id': user.id,
                 'user_name': user.name,
                 'position': position,
                 'timestamp': timestamp
-            }, room=canvas_id, include_self=False)
+            }
+            
+            # Validate broadcast data size to prevent parse errors
+            if not SocketIOConfigOptimizer.validate_message_size(broadcast_data, max_size=5000):  # 5KB limit
+                railway_logger.log('cursor', 40, "Cursor broadcast data too large, skipping broadcast")
+                return
+            
+            # Sanitize broadcast data
+            sanitized_broadcast = SocketIOConfigOptimizer.sanitize_message_data(broadcast_data)
+            
+            # Broadcast cursor position
+            emit('cursor_moved', sanitized_broadcast, room=canvas_id, include_self=False)
             
         except ValidationError as e:
             railway_logger.log('cursor', 40, f"Cursor move validation failed: {e.messages}")

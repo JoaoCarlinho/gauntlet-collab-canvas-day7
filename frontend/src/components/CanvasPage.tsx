@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Rect, Circle, Text, Group, Line, RegularPolygon, Star } from 'react-konva'
-import { ArrowLeft, Users, Settings, UserPlus } from 'lucide-react'
+import { ArrowLeft, Users, Settings, UserPlus, BarChart3 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../hooks/useSocket'
 import { canvasAPI } from '../services/api'
@@ -17,6 +17,8 @@ import { updateQueueManager, QueueStats } from '../services/updateQueueManager'
 import { connectionMonitor } from '../services/connectionMonitor'
 import { offlineManager } from '../services/offlineManager'
 import { objectVisibilityRecoveryService } from '../services/objectVisibilityRecoveryService'
+import { connectionQualityMonitor } from '../services/connectionQualityMonitor'
+import ConnectionQualityDashboard from './ConnectionQualityDashboard'
 import { objectUpdateDebouncer } from '../utils/debounce'
 import { enhancedErrorHandler } from '../services/enhancedErrorHandler'
 // import { batchUpdateManager, useBatchUpdates } from '../utils/batchUpdates'
@@ -65,6 +67,7 @@ const CanvasPage: React.FC = () => {
   const [newObject, setNewObject] = useState<Partial<CanvasObject> | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [showCollaborationSidebar, setShowCollaborationSidebar] = useState(false)
+  const [showConnectionQualityDashboard, setShowConnectionQualityDashboard] = useState(false)
   
   // AI Agent state
   const [showAIPanel, setShowAIPanel] = useState(false)
@@ -234,6 +237,9 @@ const CanvasPage: React.FC = () => {
     
     // Set up visibility monitoring
     setupVisibilityMonitoring()
+    
+    // Set up connection quality monitoring
+    setupConnectionQualityMonitoring()
 
       // Initialize state synchronization
       initializeStateSync()
@@ -791,6 +797,32 @@ const CanvasPage: React.FC = () => {
 
     // Start offline mode
     // OfflineManager starts automatically when instantiated
+  }
+
+  // Set up connection quality monitoring
+  const setupConnectionQualityMonitoring = () => {
+    if (!canvasId) return
+
+    console.log('Setting up connection quality monitoring')
+
+    // Start monitoring
+    connectionQualityMonitor.startMonitoring(30000) // 30 seconds
+
+    // Listen for connection quality reports
+    socketService.on('connection_quality_report', (data: any) => {
+      console.log('Connection quality report received:', data)
+      
+      // Show recommendations to user if quality is poor
+      if (data.connectionQuality === 'poor' && data.recommendations.length > 0) {
+        toast.warning(`Connection quality is poor: ${data.recommendations[0]}`, { duration: 5000 })
+      }
+    })
+
+    // Cleanup function
+    return () => {
+      connectionQualityMonitor.stopMonitoring()
+      socketService.off('connection_quality_report')
+    }
   }
 
   // Set up visibility monitoring
@@ -2331,6 +2363,17 @@ const CanvasPage: React.FC = () => {
         onPreferencesChange={updatePreferences}
       />
 
+      {/* Connection Quality Dashboard Button */}
+      <div className="fixed bottom-4 right-20 z-50">
+        <button
+          onClick={() => setShowConnectionQualityDashboard(true)}
+          className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          title="Connection Quality Dashboard"
+        >
+          <BarChart3 className="w-5 h-5" />
+        </button>
+      </div>
+
       {/* Debug Panel - Only show in development */}
       {import.meta.env.DEV && (
         <div className="fixed bottom-4 right-4 z-50">
@@ -2590,6 +2633,12 @@ const CanvasPage: React.FC = () => {
           // Optionally refresh the canvas or show success message
         }}
         currentCanvasId={canvasId}
+      />
+
+      {/* Connection Quality Dashboard */}
+      <ConnectionQualityDashboard
+        isVisible={showConnectionQualityDashboard}
+        onClose={() => setShowConnectionQualityDashboard(false)}
       />
     </div>
   )

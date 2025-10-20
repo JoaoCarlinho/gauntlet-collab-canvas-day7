@@ -2,6 +2,7 @@ import { io, Socket } from 'socket.io-client'
 import { CursorData } from '../types'
 import { errorLogger, ErrorContext } from '../utils/errorLogger'
 import { socketEventOptimizer } from '../utils/socketOptimizer'
+import { socketIOClientOptimizer } from '../utils/socketioClientOptimizer'
 
 class SocketService {
   private socket: Socket | null = null
@@ -35,27 +36,25 @@ class SocketService {
       console.log('Connection attempts:', this.connectionAttempts)
     }
     
-    const socketConfig: any = {
-      transports: ['polling', 'websocket'],
-      upgrade: true,
-      rememberUpgrade: true,
-      timeout: 20000,
-      forceNew: true,
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+    // Get optimized Socket.IO configuration
+    const socketConfig = socketIOClientOptimizer.getOptimizedConfig()
+    
+    // Add additional configuration
+    const enhancedConfig: any = {
+      ...socketConfig,
+      forceNew: isDevelopment, // Only force new in development
     }
     
     // Only add auth token if not in development mode
     if (!isDevelopment && idToken) {
-      socketConfig.auth = {
+      enhancedConfig.auth = {
         token: idToken
       }
     } else if (isDevelopment) {
       console.log('Development mode: Connecting without authentication')
     }
     
-    this.socket = io(API_URL, socketConfig)
+    this.socket = io(API_URL, enhancedConfig)
 
     this.socket.on('connect', () => {
       this.connectionState = 'connected'
@@ -83,10 +82,14 @@ class SocketService {
       this.connectionState = 'disconnected'
       this.connectionQuality = 'poor'
       
+      // Record connection drop for metrics
+      socketIOClientOptimizer.recordConnectionDrop()
+      
       if (this.debugMode) {
         console.log('=== Socket.IO Disconnected ===')
         console.log('Reason:', reason)
         console.log('Connection state:', this.connectionState)
+        console.log('Parse error metrics:', socketIOClientOptimizer.getParseErrorMetrics())
       }
       
       // Notify connection monitor of disconnection
@@ -126,9 +129,17 @@ class SocketService {
     })
 
     this.socket.on('reconnect', (attemptNumber) => {
+      // Record successful reconnection
+      socketIOClientOptimizer.recordReconnectionSuccess()
+      
+      // Update connection quality based on metrics
+      this.connectionQuality = socketIOClientOptimizer.getConnectionQuality()
+      
       if (this.debugMode) {
         console.log('=== Socket.IO Reconnected ===')
         console.log('Attempt:', attemptNumber)
+        console.log('Connection quality:', this.connectionQuality)
+        console.log('Parse error metrics:', socketIOClientOptimizer.getParseErrorMetrics())
       }
       
       this.emit('reconnection_success', {
@@ -184,15 +195,28 @@ class SocketService {
     })
 
     this.socket.on('error', (error) => {
-      console.error('=== Socket.IO Error ===')
+      // Check if this is a parse error
+      const isParseError = error?.message?.includes('parse error') || 
+                          error?.description?.includes('parse error') ||
+                          error?.code === 'parse_error'
+      
+      if (isParseError) {
+        socketIOClientOptimizer.recordParseError()
+        console.error('=== Socket.IO Parse Error Detected ===')
+      } else {
+        console.error('=== Socket.IO Error ===')
+      }
+      
       console.error('Error type:', typeof error)
       console.error('Error message:', error?.message || 'No message')
       console.error('Error code:', error?.code || 'No code')
       console.error('Error description:', error?.description || 'No description')
+      console.error('Is parse error:', isParseError)
       console.error('Full error object:', JSON.stringify(error, null, 2))
       console.error('Socket ID:', this.socket?.id)
       console.error('Socket connected:', this.socket?.connected)
       console.error('Socket transport:', this.socket?.io?.engine?.transport?.name)
+      console.error('Parse error metrics:', socketIOClientOptimizer.getParseErrorMetrics())
       
       const context: ErrorContext = {
         operation: 'general',
@@ -511,31 +535,61 @@ class SocketService {
       return
     }
 
+    // Validate message size to prevent parse errors
+    const maxSize = priority === 'critical' ? 2000000 : 1000000 // 2MB for critical, 1MB for others
+    if (!socketIOClientOptimizer.validateMessageSize(data, maxSize)) {
+      console.error(`Event ${event} rejected: message too large`)
+      return
+    }
+
+    // Sanitize message data to prevent parse errors
+    const sanitizedData = socketIOClientOptimizer.sanitizeMessageData(data)
+
     // Use socket optimizer for non-critical events
     if (priority !== 'critical') {
       const eventId = socketEventOptimizer.optimizeEvent({
         type: event,
-        data,
+        data: sanitizedData,
         priority,
         maxRetries: 3
       })
       
       if (this.debugMode) {
-        console.log(`Optimized event ${eventId} queued:`, event, data)
+        console.log(`Optimized event ${eventId} queued:`, event, sanitizedData)
       }
       return eventId
     }
 
-    // Emit critical events immediately
-    this.socket.emit(event, data)
+    // Emit critical events immediately with sanitized data
+    this.socket.emit(event, sanitizedData)
     if (this.debugMode) {
-      console.log(`Critical event emitted immediately:`, event, data)
+      console.log(`Critical event emitted immediately:`, event, sanitizedData)
     }
   }
 
   // Get socket optimization statistics
   getOptimizationStats() {
     return socketEventOptimizer.getStats()
+  }
+
+  // Get parse error metrics
+  getParseErrorMetrics() {
+    return socketIOClientOptimizer.getParseErrorMetrics()
+  }
+
+  // Get connection quality
+  getConnectionQuality() {
+    return socketIOClientOptimizer.getConnectionQuality()
+  }
+
+  // Get recommended configuration adjustments
+  getRecommendedAdjustments() {
+    return socketIOClientOptimizer.getRecommendedAdjustments()
+  }
+
+  // Reset parse error metrics
+  resetParseErrorMetrics() {
+    socketIOClientOptimizer.resetMetrics()
   }
 
   // Get socket optimization queue status
