@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAIAgent } from '../hooks/useAIAgent';
 import { useNotifications } from '../hooks/useNotifications';
-import { objectCreationService } from '../services/objectCreationService';
-import { useAuth } from '../hooks/useAuth';
+import { socketService } from '../services/socket';
 
 interface AIAgentPanelProps {
   isOpen: boolean;
@@ -20,17 +19,81 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
   const [query, setQuery] = useState('');
   const [style, setStyle] = useState<'modern' | 'corporate' | 'creative' | 'minimal'>('modern');
   const [colorScheme, setColorScheme] = useState<'pastel' | 'vibrant' | 'monochrome' | 'default'>('default');
+  const [generationStatus, setGenerationStatus] = useState<'idle' | 'sending' | 'processing' | 'receiving'>('idle');
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   
   const { createCanvas, isLoading, error, clearError } = useAIAgent();
   const { addNotification } = useNotifications();
-  const { user } = useAuth();
+  
+  // Listen for AI generation websocket events
+  useEffect(() => {
+    const handleGenerationStarted = (data: any) => {
+      console.log('AI Generation Started:', data);
+      if (data.request_id === currentRequestId) {
+        setGenerationStatus('processing');
+        addNotification({
+          type: 'info',
+          title: 'AI Processing',
+          message: 'Sending your request to AI...'
+        });
+      }
+    };
+    
+    const handleGenerationCompleted = (data: any) => {
+      console.log('AI Generation Completed:', data);
+      if (data.request_id === currentRequestId) {
+        setGenerationStatus('receiving');
+        addNotification({
+          type: 'success',
+          title: 'AI Canvas Created',
+          message: `Successfully created ${data.object_count} objects!`
+        });
+        
+        // Close panel and reset form
+        handleClose();
+        
+        // Call success callback
+        if (onSuccess && data.canvas_id) {
+          onSuccess(data.canvas_id);
+        }
+      }
+    };
+    
+    const handleGenerationFailed = (data: any) => {
+      console.error('AI Generation Failed:', data);
+      if (data.request_id === currentRequestId) {
+        setGenerationStatus('idle');
+        addNotification({
+          type: 'error',
+          title: 'AI Generation Failed',
+          message: data.error_message || 'Failed to generate canvas. Please try again.'
+        });
+      }
+    };
+    
+    socketService.on('ai_generation_started', handleGenerationStarted);
+    socketService.on('ai_generation_completed', handleGenerationCompleted);
+    socketService.on('ai_generation_failed', handleGenerationFailed);
+    
+    return () => {
+      socketService.off('ai_generation_started', handleGenerationStarted);
+      socketService.off('ai_generation_completed', handleGenerationCompleted);
+      socketService.off('ai_generation_failed', handleGenerationFailed);
+    };
+  }, [currentRequestId, onSuccess, addNotification]);
   
   const handleSubmit = async () => {
     if (!query.trim()) return;
     
     try {
       clearError();
+      setGenerationStatus('sending');
       
+      // Generate a request ID to track this request
+      const requestId = crypto.randomUUID();
+      setCurrentRequestId(requestId);
+      
+      // Send request to backend - websocket events will handle the rest
       const result = await createCanvas({
         instructions: query,
         style,
@@ -38,78 +101,18 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
         canvas_id: currentCanvasId || undefined
       });
       
-      if (result.success && result.canvas.objects) {
-        // Add objects to current canvas using socket service
-        if (currentCanvasId && user) {
-          const token = localStorage.getItem('idToken');
-          
-          if (token) {
-            // Add each object to the canvas with fallback mechanism
-            for (const obj of result.canvas.objects) {
-              // Handle both object_type and type fields from AI response
-              const objectType = obj.object_type || (obj as any).type;
-              const objectProperties = obj.properties || obj;
-              
-              if (!objectType) {
-                console.error('AI object missing type field:', obj);
-                continue;
-              }
-              
-              try {
-                const creationResult = await objectCreationService.createObject(
-                  currentCanvasId, 
-                  token, 
-                  {
-                    type: objectType,
-                    properties: objectProperties
-                  }
-                );
-                
-                if (!creationResult.success) {
-                  console.error('Failed to create AI object:', creationResult.error);
-                  console.error('Object data:', { type: objectType, properties: objectProperties });
-                  
-                  // Add notification for failed object creation
-                  addNotification({
-                    type: 'warning',
-                    title: 'Object Creation Failed',
-                    message: `Failed to create ${objectType} object: ${creationResult.error}`
-                  });
-                } else {
-                  console.log('AI object created successfully:', creationResult.object?.id);
-                }
-              } catch (error) {
-                console.error('Error creating AI object:', error);
-                console.error('Object data:', { type: objectType, properties: objectProperties });
-                
-                // Add notification for error
-                addNotification({
-                  type: 'error',
-                  title: 'Object Creation Error',
-                  message: `Error creating ${objectType} object: ${error instanceof Error ? error.message : 'Unknown error'}`
-                });
-              }
-            }
-          }
-        }
-        
-        // Show success message
-        addNotification({
-          type: 'success',
-          title: 'AI Canvas Created',
-          message: `Successfully created ${result.canvas.objects.length} objects!`
-        });
-        
-        // Close panel and reset form
-        handleClose();
-        
-        // Call success callback
-        if (onSuccess) {
-          onSuccess(result.canvas.id);
-        }
+      // Note: We no longer manually create objects here
+      // The websocket events (ai_generation_started, ai_generation_completed) 
+      // will handle status updates and UI changes
+      
+      // If the result includes a request_id, update our tracking
+      if (result.request_id) {
+        setCurrentRequestId(result.request_id);
       }
+      
     } catch (err) {
       console.error('AI Agent error:', err);
+      setGenerationStatus('idle');
       
       // Provide more specific error messages
       let errorMessage = 'Failed to create canvas. Please try again.';
@@ -137,6 +140,8 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
     setQuery('');
     setStyle('modern');
     setColorScheme('default');
+    setGenerationStatus('idle');
+    setCurrentRequestId(null);
     clearError();
     onClose();
   };
@@ -237,9 +242,13 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
             <button
               className="submit-button"
               onClick={handleSubmit}
-              disabled={!query.trim() || isLoading}
+              disabled={!query.trim() || isLoading || generationStatus !== 'idle'}
             >
-              {isLoading ? 'Creating...' : 'Create Canvas'}
+              {generationStatus === 'sending' && 'Sending Request...'}
+              {generationStatus === 'processing' && 'AI Processing...'}
+              {generationStatus === 'receiving' && 'Receiving Objects...'}
+              {(generationStatus === 'idle' && isLoading) && 'Creating...'}
+              {(generationStatus === 'idle' && !isLoading) && 'Create Canvas'}
             </button>
           </div>
         </div>
