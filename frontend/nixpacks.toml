@@ -2,7 +2,9 @@
 nixPkgs = ["nodejs-18_x", "npm-9_x"]
 
 [phases.install]
-cmds = ["npm ci --frozen-lockfile"]
+cmds = [
+  "npm ci --frozen-lockfile --retry=3 --retry-delay=5000 || (npm cache clean --force && npm ci --frozen-lockfile --retry=3 --retry-delay=5000)"
+]
 
 [phases.build]
 cmds = ["npm run build:railway"]

@@ -7,14 +7,22 @@ WORKDIR /app
 # Copy package files first for better layer caching
 COPY package*.json ./
 
+# Copy build script
+COPY scripts/railway-build.sh ./scripts/
+RUN chmod +x ./scripts/railway-build.sh
+
 # Install all dependencies (including dev dependencies for build)
-RUN npm ci --frozen-lockfile
+# Use npm ci with retry mechanism for Railway's network issues
+RUN npm ci --frozen-lockfile --retry=3 --retry-delay=5000 || \
+    (echo "First attempt failed, trying with cache clean..." && \
+     npm cache clean --force && \
+     npm ci --frozen-lockfile --retry=3 --retry-delay=5000)
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build:railway
+# Build the application using robust build script
+RUN ./scripts/railway-build.sh
 
 # Clean up dev dependencies to reduce image size
 RUN npm prune --production
