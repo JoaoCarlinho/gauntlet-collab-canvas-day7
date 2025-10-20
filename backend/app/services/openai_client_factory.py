@@ -93,20 +93,14 @@ class OpenAIClientFactory:
         except Exception as e:
             logger.log_warning(f"Timeout configuration failed: {str(e)}")
         
-        # Strategy 3: With explicit None for problematic parameters
+        # Strategy 3: Skip passing unsupported parameters entirely (no proxies kwarg)
         try:
-            logger.log_info("Trying OpenAI client creation with explicit None parameters")
-            client = openai.OpenAI(
-                api_key=api_key,
-                timeout=30.0,
-                max_retries=2,
-                proxies=None  # Explicitly set to None
-            )
-            # Test the client
+            logger.log_info("Trying OpenAI client creation without optional kwargs")
+            client = openai.OpenAI(api_key=api_key)
             client.models.list()
             return client
         except Exception as e:
-            logger.log_warning(f"Explicit None parameters failed: {str(e)}")
+            logger.log_warning(f"Without optional kwargs failed: {str(e)}")
         
         # Strategy 4: Try with different parameter combinations
         try:

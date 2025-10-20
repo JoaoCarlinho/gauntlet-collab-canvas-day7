@@ -20,7 +20,7 @@ class SocketService {
   private connectionQuality: SocketConnectionQuality = 'unknown'
 
   connect(idToken?: string) {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+    const API_URL = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000') as string
     
     // Update connection state
     this.connectionState = 'connecting'
@@ -73,7 +73,13 @@ class SocketService {
       console.log('Development mode: Connecting without authentication')
     }
     
-    this.socket = io(API_URL, enhancedConfig)
+    // Ensure correct path and secure transport in production
+    const url = API_URL
+    const config = {
+      path: '/socket.io',
+      ...enhancedConfig
+    }
+    this.socket = io(url, config)
 
     this.socket.on('connect', () => {
       this.connectionState = 'connected'
@@ -480,17 +486,17 @@ class SocketService {
   }
 
   createObject(canvasId: string, idToken: string, object: { type: string; properties: Record<string, any> }) {
-    // Enhanced authentication context validation
+    // Enhanced authentication context validation (relaxed in dev by validateAuthContext)
     this.validateAuthContext(canvasId, idToken)
     
     if (this.socket) {
-      // Enhanced data with additional context
-      const enhancedData = this.ensureAuthContext({
+      // Preserve passed idToken; augment with user fields only if available
+      const payload: Record<string, unknown> = {
         canvas_id: canvasId,
         id_token: idToken,
         object
-      })
-      
+      }
+      const enhancedData = this.ensureAuthContext(payload)
       this.socket.emit('object_created', enhancedData)
     }
   }
@@ -709,40 +715,39 @@ class SocketService {
 
   // Authentication context validation and enhancement
   private validateAuthContext(canvasId: string, idToken: string): void {
+    const isDev = import.meta.env.DEV || import.meta.env.MODE === 'development'
     if (!canvasId || !idToken) {
       throw new Error('Missing authentication context: canvasId or idToken')
     }
-    
-    // Additional validation
-    if (canvasId.length < 10) {
-      throw new Error('Invalid canvas ID format')
-    }
-    
-    if (idToken.length < 100) {
-      throw new Error('Invalid authentication token format')
+    // In dev, relax strict length checks to avoid blocking local/test flows
+    if (!isDev) {
+      if (canvasId.length < 10) {
+        throw new Error('Invalid canvas ID format')
+      }
+      if (idToken.length < 100) {
+        throw new Error('Invalid authentication token format')
+      }
     }
   }
 
   private ensureAuthContext(data: Record<string, unknown>): Record<string, unknown> {
     const user = this.getCurrentUser()
     const canvasId = data.canvas_id
-    
-    if (!user || !user.idToken) {
-      throw new Error('User not authenticated')
-    }
-    
-    if (!canvasId) {
-      throw new Error('Canvas ID not available')
-    }
-    
-    return {
+    // Do not throw if user is missing; prefer passed id_token; just augment if available
+    const enriched: Record<string, unknown> = {
       ...data,
       canvas_id: canvasId,
-      user_id: user.user.id,
-      id_token: user.idToken,
-      user_email: user.user.email,
       timestamp: Date.now()
     }
+    if (user && user.idToken) {
+      enriched['user_id'] = user.user.id
+      // Only set id_token from user if none was provided in data
+      if (!('id_token' in enriched)) {
+        enriched['id_token'] = user.idToken
+      }
+      enriched['user_email'] = user.user.email
+    }
+    return enriched
   }
 
   private getCurrentUser(): { idToken: string; user: { id: string; email: string; name: string } } | null {

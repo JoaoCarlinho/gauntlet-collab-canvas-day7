@@ -11,6 +11,7 @@ from typing import Dict, List, Any, Optional
 from app.models.canvas_object import CanvasObject
 from app.models.canvas import Canvas
 from app.utils.logger import SmartLogger
+from app.services.openai_client_factory import OpenAIClientFactory
 from app.extensions import db
 
 class SimpleAIAgentService:
@@ -27,16 +28,10 @@ class SimpleAIAgentService:
             raise ValueError("OpenAI API key is required but not configured")
         
         try:
-            # Initialize OpenAI client with minimal configuration
-            # Remove any potential proxies argument that might be causing issues
-            client_kwargs = {
-                'api_key': api_key,
-                'timeout': 30.0,  # 30 second timeout
-                'max_retries': 2
-            }
-            
-            # Only add supported parameters to avoid version compatibility issues
-            self.openai_client = openai.OpenAI(**client_kwargs)
+            # Initialize OpenAI client via factory (handles compatibility)
+            self.openai_client = OpenAIClientFactory.create_client(api_key)
+            if not self.openai_client:
+                raise RuntimeError("Failed to initialize OpenAI client")
             # Only log success in development
             if os.environ.get('FLASK_ENV') == 'development':
                 self.logger.log_info("Simple OpenAI client initialized successfully")

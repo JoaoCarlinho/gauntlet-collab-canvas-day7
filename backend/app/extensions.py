@@ -29,17 +29,21 @@ def init_cache(app):
             'CACHE_THRESHOLD': 1000,  # Max number of items
         }
         
-        # Try to use diskcache if available for persistence
-        try:
-            import diskcache
-            cache_config.update({
-                'CACHE_TYPE': 'diskcache',
-                'CACHE_DIR': '/tmp/collabcanvas_cache',
-                'CACHE_DEFAULT_TIMEOUT': 300,
-            })
-            print("Using diskcache for persistent caching")
-        except ImportError:
-            print("Using SimpleCache for in-memory caching")
+        # In production, avoid diskcache backend to prevent import errors
+        env = os.environ.get('FLASK_ENV', 'production')
+        if env != 'production':
+            try:
+                import diskcache
+                cache_config.update({
+                    'CACHE_TYPE': 'diskcache',
+                    'CACHE_DIR': '/tmp/collabcanvas_cache',
+                    'CACHE_DEFAULT_TIMEOUT': 300,
+                })
+                print("Using diskcache for persistent caching")
+            except ImportError:
+                print("Using SimpleCache for in-memory caching")
+        else:
+            print("Production environment: forcing SimpleCache to avoid diskcache import issues")
         
         cache.init_app(app, config=cache_config)
         cache_client = cache

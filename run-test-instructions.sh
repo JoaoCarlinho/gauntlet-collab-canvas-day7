@@ -68,6 +68,9 @@ run_cypress_tests() {
     print_status "Running canvas interaction tests (place, move, resize, text)..."
     npm run test:e2e:local:headless -- --spec "cypress/e2e/canvas-interaction-test.cy.ts" --config-file cypress.config.local-dev.ts --config video=true
     
+    print_status "Running shapes visibility tests (circle, star, line, arrow)..."
+    npm run test:e2e:local:headless -- --spec "cypress/e2e/shapes-visibility.cy.ts" --config-file cypress.config.local-dev.ts --config video=true
+    
     cd ..
     
     print_success "Cypress tests completed"
@@ -172,7 +175,25 @@ async function main() {
     return `e2e-${Date.now()}`;
   }
 
+  async function seedObjects(canvasId) {
+    const devToken = buildDevIdToken({ uid: 'e2e-user', email: 'e2e@example.com', displayName: 'E2E User' });
+    const createObject = async (obj) => {
+      try {
+        await fetch(`${apiUrl}/api/objects/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${devToken}` },
+          body: JSON.stringify({ canvas_id: canvasId, object_type: obj.type, properties: obj.properties })
+        });
+      } catch {}
+    };
+    await createObject({ type: 'circle', properties: { x: 200, y: 200, radius: 40, fill: '#88c', stroke: '#224', strokeWidth: 2 } });
+    await createObject({ type: 'star', properties: { x: 380, y: 220, width: 120, fill: '#fc3', stroke: '#842', strokeWidth: 2 } });
+    await createObject({ type: 'line', properties: { x: 120, y: 340, points: [0, 0, 140, 0], stroke: '#111', strokeWidth: 3 } });
+    await createObject({ type: 'arrow', properties: { x: 320, y: 360, points: [0, 0, 120, 0], stroke: '#e11', strokeWidth: 3 } });
+  }
+
   const canvasId = await seedCanvas();
+  await seedObjects(canvasId);
   const editorUrl = `${frontendUrl}/dev/canvas/${canvasId}`;
   await page.goto(editorUrl, { waitUntil: 'domcontentloaded' });
   try {
@@ -460,8 +481,26 @@ async function captureScreenshots() {
       }
       return `e2e-${Date.now()}`;
     }
+
+    async function seedObjects(canvasId) {
+      const devToken = buildDevIdToken({ uid: 'e2e-user', email: 'e2e@example.com', displayName: 'E2E User' });
+      const createObject = async (obj) => {
+        try {
+          await fetch(`${apiUrl}/api/objects/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${devToken}` },
+            body: JSON.stringify({ canvas_id: canvasId, object_type: obj.type, properties: obj.properties })
+          });
+        } catch {}
+      };
+      await createObject({ type: 'circle', properties: { x: 200, y: 200, radius: 40, fill: '#88c', stroke: '#224', strokeWidth: 2 } });
+      await createObject({ type: 'star', properties: { x: 380, y: 220, width: 120, fill: '#fc3', stroke: '#842', strokeWidth: 2 } });
+      await createObject({ type: 'line', properties: { x: 120, y: 340, points: [0, 0, 140, 0], stroke: '#111', strokeWidth: 3 } });
+      await createObject({ type: 'arrow', properties: { x: 320, y: 360, points: [0, 0, 120, 0], stroke: '#e11', strokeWidth: 3 } });
+    }
     
     const canvasId = await seedCanvas();
+    await seedObjects(canvasId);
     const editorUrl = `${frontendUrl}/dev/canvas/${canvasId}`;
     
     const screenshots = [
