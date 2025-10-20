@@ -26,7 +26,7 @@ test.describe('User Authentication Journey', () => {
   });
 
   test('should complete user registration flow', async () => {
-    await page.goto('/');
+    await page.goto('/login');
     
     // Check if user is already authenticated
     const isAuthenticated = await page.evaluate(() => {
@@ -54,7 +54,7 @@ test.describe('User Authentication Journey', () => {
   });
 
   test('should complete user login flow', async () => {
-    await page.goto('/');
+    await page.goto('/login');
     
     // Test login flow
     await page.click('[data-testid="sign-in-button"]');
@@ -81,7 +81,7 @@ test.describe('User Authentication Journey', () => {
   });
 
   test('should handle authentication errors gracefully', async () => {
-    await page.goto('/');
+    await page.goto('/login');
     
     // Test invalid email
     await page.click('[data-testid="sign-in-button"]');
