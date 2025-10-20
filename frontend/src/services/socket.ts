@@ -3,6 +3,7 @@ import { CursorData } from '../types'
 import { errorLogger, ErrorContext } from '../utils/errorLogger'
 import { socketEventOptimizer } from '../utils/socketOptimizer'
 import { socketIOClientOptimizer } from '../utils/socketioClientOptimizer'
+import { canvasAPI } from './api'
 
 class SocketService {
   private socket: Socket | null = null
@@ -819,7 +820,6 @@ class SocketService {
       console.log(`Validating object state consistency for canvas: ${canvasId}`)
       
       // Get current objects from server
-      const { canvasAPI } = await import('./api')
       const response = await canvasAPI.getCanvasObjects(canvasId)
       const serverObjects = response.objects || []
       
@@ -856,7 +856,6 @@ class SocketService {
       console.log(`Syncing object state for canvas: ${canvasId}`)
       
       // Get server objects
-      const { canvasAPI } = await import('./api')
       const response = await canvasAPI.getCanvasObjects(canvasId)
       const serverObjects = response.objects || []
       
