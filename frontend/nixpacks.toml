@@ -3,7 +3,7 @@ nixPkgs = ["nodejs-18_x", "npm-9_x"]
 
 [phases.install]
 cmds = [
-  "npm ci --frozen-lockfile --retry=3 --retry-delay=5000 || (npm cache clean --force && npm ci --frozen-lockfile --retry=3 --retry-delay=5000)"
+  "npm ci --frozen-lockfile --prefer-offline --no-audit || npm install --prefer-offline --no-audit"
 ]
 
 [phases.build]
