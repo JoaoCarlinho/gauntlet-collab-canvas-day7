@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Copy, Scissors, Clipboard, RotateCcw, RotateCw, Trash2, Square } from 'lucide-react'
 
 interface ContextMenuProps {
@@ -148,7 +148,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             key={index}
             className={`w-full px-4 py-2 text-left text-sm flex items-center justify-between hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed ${item.className || ''}`}
             onClick={() => {
-              if (!item.disabled) {
+              if (!item.disabled && item.onClick) {
                 item.onClick()
                 onClose()
               }
@@ -156,7 +156,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             disabled={item.disabled}
           >
             <div className="flex items-center">
-              <Icon size={16} className="mr-3" />
+              {Icon && <Icon size={16} className="mr-3" />}
               <span>{item.label}</span>
             </div>
             <span className="text-xs text-gray-500 ml-4">{item.shortcut}</span>

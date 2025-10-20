@@ -92,7 +92,6 @@ const CanvasPage: React.FC = () => {
   } = useToolbarState()
   
   // New state for enhanced object interactions
-  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null)
   const [editingObjectId, setEditingObjectId] = useState<string | null>(null)
   const [hoveredObjectId, setHoveredObjectId] = useState<string | null>(null)
   
@@ -1032,7 +1031,6 @@ const CanvasPage: React.FC = () => {
   // New handler functions for enhanced interactions
   const handleObjectSelect = (objectId: string, event?: any) => {
     if (selectedTool.id === 'select') {
-      setSelectedObjectId(objectId)
       setEditingObjectId(null)
       
       // Handle multi-selection with Ctrl/Cmd key
@@ -1043,7 +1041,7 @@ const CanvasPage: React.FC = () => {
 
   const handleStartTextEdit = (objectId: string) => {
     setEditingObjectId(objectId)
-    setSelectedObjectId(objectId)
+    multiSelectionActions.selectObject(objectId, false)
   }
 
   const handleEndTextEdit = async (objectId: string, newText: string) => {
@@ -1512,7 +1510,7 @@ const CanvasPage: React.FC = () => {
   const handleStageClick = (e: any) => {
     // Clear selection if clicking on empty space
     if (selectedTool.id === 'select' && e.target === e.target.getStage()) {
-      setSelectedObjectId(null)
+      multiSelectionActions.clearSelection()
       setEditingObjectId(null)
       return
     }
@@ -2455,6 +2453,7 @@ const CanvasPage: React.FC = () => {
           onStageClick={handleStageClick}
           onStageMouseMove={handleStageMouseMove}
           onStageMouseUp={handleStageMouseUp}
+          onContextMenu={handleContextMenu}
           showZoomControls={true}
           zoomControlsPosition="bottom-right"
           enableKeyboardShortcuts={true}

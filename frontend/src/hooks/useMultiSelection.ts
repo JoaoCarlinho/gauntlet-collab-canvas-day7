@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { CanvasObject } from '../types'
 
 export interface MultiSelectionState {
@@ -38,7 +38,6 @@ export const useMultiSelection = (
     endY: number
   } | null>(null)
   
-  const selectionBoxRef = useRef<HTMLDivElement | null>(null)
 
   // Notify parent of selection changes
   useEffect(() => {
