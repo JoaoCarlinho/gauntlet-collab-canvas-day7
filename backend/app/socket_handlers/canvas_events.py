@@ -145,7 +145,7 @@ def register_canvas_handlers(socketio):
                 
                 # Record message size for connection monitoring
                 user_id = data.get('_authenticated_user', {}).get('id', 'unknown')
-                connection_monitor.record_message_size(user_id, message_size)
+                connection_monitor.record_message_size(message_size, user_id)
                 
                 # Analyze message for potential issues
                 analysis_result = message_analyzer.analyze_message('object_created', data, user_id)
