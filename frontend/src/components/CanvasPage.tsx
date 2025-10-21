@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Rect, Circle, Text, Group, Line, RegularPolygon, Star } from 'react-konva'
 import { ArrowLeft, Users, Settings, UserPlus, BarChart3 } from 'lucide-react'
@@ -28,6 +28,8 @@ import { enhancedErrorHandler } from '../services/enhancedErrorHandler'
 // import { socketEventOptimizer, useSocketOptimization } from '../utils/socketOptimizer'
 import { isDevelopmentMode, devModeDelay } from '../utils/devMode'
 import devToast from '../utils/toastConfig'
+import { zIndexManager } from '../utils/zIndexManager'
+import { useObjectDropShortcuts, useCanvasMousePosition, useZIndexShortcuts } from '../hooks/useObjectDropShortcuts'
 // import OptimisticUpdateIndicator from './OptimisticUpdateIndicator'
 import UpdateSuccessAnimation from './UpdateSuccessAnimation'
 import EnhancedLoadingIndicator from './EnhancedLoadingIndicator'
@@ -57,6 +59,7 @@ import { AIAgentPanel } from './AIAgentPanel'
 import SelectionBox from './SelectionBox'
 import MultiSelectionIndicator from './MultiSelectionIndicator'
 import ContextMenu from './ContextMenu'
+import LayerManagementPanel from './LayerManagementPanel'
 import { useMultiSelection } from '../hooks/useMultiSelection'
 import { useClipboard } from '../hooks/useClipboard'
 import { useUndoRedo, useUndoRedoShortcuts } from '../hooks/useUndoRedo'
@@ -80,6 +83,7 @@ const CanvasPage: React.FC = () => {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [showCollaborationSidebar, setShowCollaborationSidebar] = useState(false)
   const [showConnectionQualityDashboard, setShowConnectionQualityDashboard] = useState(false)
+  const [showLayerManagementPanel, setShowLayerManagementPanel] = useState(false)
   
   // AI Agent state
   const [showAIPanel, setShowAIPanel] = useState(false)
@@ -108,6 +112,54 @@ const CanvasPage: React.FC = () => {
   const [multiSelectionState, multiSelectionActions] = useMultiSelection(objects)
   const [clipboardState, clipboardActions] = useClipboard()
   const [undoRedoState, undoRedoActions] = useUndoRedo()
+  
+  // Stage ref for keyboard shortcuts
+  const stageRef = useRef<any>(null)
+  
+  // Mouse position for keyboard shortcuts
+  const { getMousePosition } = useCanvasMousePosition(stageRef)
+  
+  // Object drop shortcuts
+  useObjectDropShortcuts({
+    canvasId: canvasId || '',
+    userId: user?.id || '',
+    onObjectCreated: (object: CanvasObject) => {
+      setObjects(prev => [...prev, object])
+      devToast.success(`${object.object_type} created successfully!`)
+    },
+    onError: (error: string) => {
+      devToast.error(error)
+    },
+    getMousePosition
+  })
+  
+  // Z-index management shortcuts
+  useZIndexShortcuts(
+    multiSelectionState.selectedObjectIds.size === 1 ? Array.from(multiSelectionState.selectedObjectIds)[0] : null,
+    (objectId: string, zIndex: number) => {
+      setObjects(prev => prev.map(obj => 
+        obj.id === objectId ? { ...obj, z_index: zIndex } : obj
+      ))
+    },
+    (error: string) => {
+      devToast.error(error)
+    }
+  )
+
+  // Layer management panel shortcut
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'l') {
+        event.preventDefault()
+        setShowLayerManagementPanel(prev => !prev)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
   
   // Coordinate display for object placement and selection
   const coordinateDisplay = useCoordinateDisplay()
@@ -685,7 +737,7 @@ const CanvasPage: React.FC = () => {
         handleReconnectionSync()
       }
       
-      toast.success('Connection restored', { duration: 2000 })
+      // Connection monitoring - toast notifications suppressed
     })
 
     socketService.on('connection_lost', (_data: { reason: string; timestamp: number }) => {
@@ -701,7 +753,7 @@ const CanvasPage: React.FC = () => {
       // Notify offline manager
       offlineManager.handleConnectionLoss()
       
-      devToast.error(`Connection lost: ${_data.reason}`)
+      // Connection monitoring - toast notifications suppressed
     })
 
     // Enhanced connection event handlers
@@ -718,31 +770,25 @@ const CanvasPage: React.FC = () => {
     socketService.on('reconnection_attempt', (_data: { attempt: number; timestamp: number }) => {
       console.log(`Reconnection attempt ${_data.attempt}`)
       
-      toast.loading(`Reconnecting... (attempt ${_data.attempt})`, {
-        id: 'reconnection',
-        duration: 5000
-      })
+      // Connection monitoring - toast notifications suppressed
     })
 
     socketService.on('reconnection_success', (_data: { attempt: number; timestamp: number }) => {
       console.log(`Reconnection successful after ${_data.attempt} attempts`)
       
-      toast.dismiss('reconnection')
-      toast.success(`Reconnected after ${_data.attempt} attempts`, { duration: 3000 })
+      // Connection monitoring - toast notifications suppressed
     })
 
     socketService.on('reconnection_failed', (_data: { error: string; timestamp: number }) => {
       console.error('Reconnection failed:', _data)
       
-      toast.dismiss('reconnection')
-      toast.error(`Reconnection failed: ${_data.error}`, { duration: 4000 })
+      // Connection monitoring - toast notifications suppressed
     })
 
     socketService.on('reconnection_exhausted', (_data: { timestamp: number }) => {
       console.error('Reconnection exhausted - max attempts reached')
       
-      toast.dismiss('reconnection')
-      toast.error('Connection lost - please refresh the page', { duration: 6000 })
+      // Connection monitoring - toast notifications suppressed
       
       // Set offline mode
       setIsOffline(true)
@@ -959,23 +1005,16 @@ const CanvasPage: React.FC = () => {
     const handleQualityReport = (data: Record<string, unknown>) => {
       console.log('Connection quality report received:', data)
       
-      // Show recommendations to user if quality is poor
-      if (data.connectionQuality === 'poor' && Array.isArray(data.recommendations) && data.recommendations.length > 0) {
-        devToast.warning(`Connection quality is poor: ${data.recommendations[0]}`, { duration: 5000 })
-      }
+      // Connection quality monitoring - toast notifications suppressed
+      // Quality reports are still logged to console for debugging
     }
     
     // Listen for connection state changes
     const handleConnectionStateChange = (data: Record<string, unknown>) => {
       console.log('Connection state changed:', data)
       
-      if (data.connectionState === 'connected') {
-        devToast.success('Real-time connection established', { duration: 3000 })
-      } else if (data.connectionState === 'disconnected') {
-        devToast.error('Real-time connection lost. Using polling mode.', { duration: 5000 })
-      } else if (data.connectionState === 'reconnecting') {
-        devToast.loading('Reconnecting to real-time service...', { duration: 2000 })
-      }
+      // Connection state monitoring - toast notifications suppressed
+      // State changes are still logged to console for debugging
     }
     
     socketService.on('connection_quality_report', handleQualityReport)
@@ -1081,7 +1120,7 @@ const CanvasPage: React.FC = () => {
       } as any)
       
       if (stateSyncResult.conflicts && stateSyncResult.conflicts.length > 0) {
-        devToast.error(`${stateSyncResult.conflicts.length} conflicts detected after reconnection`)
+        // Connection monitoring - toast notifications suppressed
         setShowConflictDialog(true)
       }
 
@@ -1099,9 +1138,7 @@ const CanvasPage: React.FC = () => {
       
     } catch (error) {
       console.error('Enhanced reconnection sync failed:', error)
-      toast.error('Failed to sync after reconnection - some data may be outdated', {
-        duration: 5000
-      })
+      // Connection monitoring - toast notifications suppressed
     }
   }
 
@@ -1202,6 +1239,79 @@ const CanvasPage: React.FC = () => {
 
   const handleCloseContextMenu = () => {
     setContextMenu({ visible: false, x: 0, y: 0 })
+  }
+
+  // Z-index management functions
+  const handleBringToFront = async () => {
+    const selectedObjectId = Array.from(multiSelectionState.selectedObjectIds)[0]
+    if (!selectedObjectId) return
+
+    try {
+      const response = await canvasAPI.bringObjectToFront(selectedObjectId)
+      if (response.object) {
+        setObjects(prev => prev.map(obj => 
+          obj.id === selectedObjectId ? { ...obj, z_index: response.object.z_index } : obj
+        ))
+        devToast.success('Object brought to front')
+      }
+    } catch (error) {
+      devToast.error('Failed to bring object to front')
+    }
+    handleCloseContextMenu()
+  }
+
+  const handleSendToBack = async () => {
+    const selectedObjectId = Array.from(multiSelectionState.selectedObjectIds)[0]
+    if (!selectedObjectId) return
+
+    try {
+      const response = await canvasAPI.sendObjectToBack(selectedObjectId)
+      if (response.object) {
+        setObjects(prev => prev.map(obj => 
+          obj.id === selectedObjectId ? { ...obj, z_index: response.object.z_index } : obj
+        ))
+        devToast.success('Object sent to back')
+      }
+    } catch (error) {
+      devToast.error('Failed to send object to back')
+    }
+    handleCloseContextMenu()
+  }
+
+  const handleMoveUp = async () => {
+    const selectedObjectId = Array.from(multiSelectionState.selectedObjectIds)[0]
+    if (!selectedObjectId) return
+
+    try {
+      const response = await canvasAPI.moveObjectUp(selectedObjectId)
+      if (response.object) {
+        setObjects(prev => prev.map(obj => 
+          obj.id === selectedObjectId ? { ...obj, z_index: response.object.z_index } : obj
+        ))
+        devToast.success('Object moved up')
+      }
+    } catch (error) {
+      devToast.error('Failed to move object up')
+    }
+    handleCloseContextMenu()
+  }
+
+  const handleMoveDown = async () => {
+    const selectedObjectId = Array.from(multiSelectionState.selectedObjectIds)[0]
+    if (!selectedObjectId) return
+
+    try {
+      const response = await canvasAPI.moveObjectDown(selectedObjectId)
+      if (response.object) {
+        setObjects(prev => prev.map(obj => 
+          obj.id === selectedObjectId ? { ...obj, z_index: response.object.z_index } : obj
+        ))
+        devToast.success('Object moved down')
+      }
+    } catch (error) {
+      devToast.error('Failed to move object down')
+    }
+    handleCloseContextMenu()
   }
 
   // Helper function to save state for undo/redo
@@ -1913,6 +2023,7 @@ const CanvasPage: React.FC = () => {
           canvas_id: canvasId || 'temp-canvas',
           object_type: newObject.object_type!,
           properties: newObject.properties!,
+          z_index: 1,
           created_by: 'dev-user',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -2620,12 +2731,13 @@ const CanvasPage: React.FC = () => {
           showZoomControls={true}
           zoomControlsPosition="bottom-right"
           enableKeyboardShortcuts={true}
+          stageRef={stageRef}
           onTransformChange={({ scale, x, y, container }) => {
             setStageTransform({ scale, x, y })
             setStageContainer(container)
           }}
         >
-          {objects.map(renderObject)}
+          {zIndexManager.sortObjectsByZIndex(objects).map(renderObject)}
           {renderNewObject()}
           {renderCursors()}
           
@@ -3066,8 +3178,28 @@ const CanvasPage: React.FC = () => {
         canDelete={multiSelectionState.selectedObjectIds.size > 0}
         canUndo={undoRedoState.canUndo}
         canRedo={undoRedoState.canRedo}
+        onBringToFront={handleBringToFront}
+        onSendToBack={handleSendToBack}
+        onMoveUp={handleMoveUp}
+        onMoveDown={handleMoveDown}
+        canManageLayers={multiSelectionState.selectedObjectIds.size === 1}
       />
       
+      {/* Layer Management Panel */}
+      <LayerManagementPanel
+        objects={objects}
+        selectedObjectId={multiSelectionState.selectedObjectIds.size === 1 ? Array.from(multiSelectionState.selectedObjectIds)[0] : null}
+        onObjectSelect={(objectId) => {
+          multiSelectionActions.selectObject(objectId)
+        }}
+        onBringToFront={handleBringToFront}
+        onSendToBack={handleSendToBack}
+        onMoveUp={handleMoveUp}
+        onMoveDown={handleMoveDown}
+        isVisible={showLayerManagementPanel}
+        onClose={() => setShowLayerManagementPanel(false)}
+      />
+
       {/* Coordinate Status Bar */}
       <CoordinateStatusBar
         coordinates={coordinateDisplay.coordinateDisplay}

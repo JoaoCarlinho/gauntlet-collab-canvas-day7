@@ -18,6 +18,7 @@ interface ZoomableCanvasProps {
   zoomControlsPosition?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
   enableKeyboardShortcuts?: boolean
   onTransformChange?: (t: { scale: number; x: number; y: number; container: HTMLDivElement | null }) => void
+  stageRef?: React.RefObject<any>
 }
 
 const ZoomableCanvas: React.FC<ZoomableCanvasProps> = ({
@@ -33,9 +34,11 @@ const ZoomableCanvas: React.FC<ZoomableCanvasProps> = ({
   showZoomControls = true,
   zoomControlsPosition = 'bottom-right',
   enableKeyboardShortcuts = true,
-  onTransformChange
+  onTransformChange,
+  stageRef: externalStageRef
 }) => {
-  const stageRef = useRef<any>(null)
+  const internalStageRef = useRef<any>(null)
+  const stageRef = externalStageRef || internalStageRef
   const containerRef = useRef<HTMLDivElement>(null)
   
   const {

@@ -9,7 +9,6 @@
 import { errorLogger } from '../utils/errorLogger'
 import { retryWithCondition, isRetryableError } from '../utils/retryLogic'
 import { productionLogger } from '../utils/productionLogger'
-import toast from 'react-hot-toast'
 
 export interface NetworkStatus {
   isOnline: boolean
@@ -299,11 +298,11 @@ class NetworkHealthService {
 
     if (isOnline) {
       productionLogger.info('Network connection restored')
-      toast.success('Connection restored', { duration: 3000 })
+      // Network connection monitoring - toast notifications suppressed
       this.performHealthCheck()
     } else {
       productionLogger.warning('Network connection lost')
-      toast.error('Network connection lost. Some features may be limited.', { duration: 5000 })
+      // Network connection monitoring - toast notifications suppressed
     }
 
     this.notifyListeners('networkChange', this.networkStatus)

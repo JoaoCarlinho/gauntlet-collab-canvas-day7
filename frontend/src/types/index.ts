@@ -34,6 +34,13 @@ export interface Canvas {
   updated_at: string
   object_count: number
   collaborator_count: number
+  permissions?: {
+    can_edit?: boolean
+    can_view?: boolean
+    can_delete?: boolean
+    can_share?: boolean
+  }
+  last_accessed_at?: string
 }
 
 export interface CanvasObjectProperties {
@@ -99,6 +106,7 @@ export interface CanvasObject {
   canvas_id: string
   object_type: 'rectangle' | 'circle' | 'text' | 'heart' | 'star' | 'diamond' | 'line' | 'arrow'
   properties: CanvasObjectProperties
+  z_index: number
   created_by: string
   created_at: string
   updated_at: string

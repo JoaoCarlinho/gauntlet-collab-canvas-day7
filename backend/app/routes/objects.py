@@ -131,6 +131,7 @@ def create_object(current_user):
         canvas_id = validated_data['canvas_id']
         object_type = validated_data['object_type']
         properties = validated_data['properties']
+        z_index_behavior = data.get('z_index_behavior', 'top')  # Default to 'top'
         
         # Additional security validations
         from app.utils.validators import InputValidator
@@ -170,7 +171,8 @@ def create_object(current_user):
             canvas_id=canvas_id,
             object_type=object_type,
             properties=properties_json,
-            created_by=current_user.id
+            created_by=current_user.id,
+            z_index_behavior=z_index_behavior
         )
         
         return jsonify({
@@ -328,4 +330,137 @@ def delete_object(current_user, object_id):
         return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:
         # Secure error handling - don't expose internal details
+        return jsonify({'error': 'Internal server error'}), 500
+
+@objects_bp.route('/<object_id>/z-index', methods=['PUT'])
+@require_auth
+@object_rate_limit('update')
+def update_object_z_index(current_user, object_id):
+    """Update object z-index."""
+    try:
+        from app.models import CanvasObject
+        canvas_object = CanvasObject.query.filter_by(id=object_id).first()
+        if not canvas_object:
+            return jsonify({'error': 'Object not found'}), 404
+        
+        # Check permission
+        if not canvas_service.check_canvas_permission(canvas_object.canvas_id, current_user.id, 'edit'):
+            return jsonify({'error': 'Edit permission required'}), 403
+        
+        data = request.get_json()
+        if not data or 'z_index' not in data:
+            return jsonify({'error': 'z_index is required'}), 400
+        
+        z_index = data['z_index']
+        if not isinstance(z_index, int):
+            return jsonify({'error': 'z_index must be an integer'}), 400
+        
+        updated_object = canvas_service.update_object_z_index(object_id, z_index)
+        
+        return jsonify({
+            'message': 'Z-index updated successfully',
+            'object': updated_object.to_dict()
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': 'Internal server error'}), 500
+
+@objects_bp.route('/<object_id>/bring-to-front', methods=['POST'])
+@require_auth
+@object_rate_limit('update')
+def bring_object_to_front(current_user, object_id):
+    """Bring object to front."""
+    try:
+        from app.models import CanvasObject
+        canvas_object = CanvasObject.query.filter_by(id=object_id).first()
+        if not canvas_object:
+            return jsonify({'error': 'Object not found'}), 404
+        
+        # Check permission
+        if not canvas_service.check_canvas_permission(canvas_object.canvas_id, current_user.id, 'edit'):
+            return jsonify({'error': 'Edit permission required'}), 403
+        
+        updated_object = canvas_service.bring_object_to_front(object_id)
+        
+        return jsonify({
+            'message': 'Object brought to front',
+            'object': updated_object.to_dict()
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': 'Internal server error'}), 500
+
+@objects_bp.route('/<object_id>/send-to-back', methods=['POST'])
+@require_auth
+@object_rate_limit('update')
+def send_object_to_back(current_user, object_id):
+    """Send object to back."""
+    try:
+        from app.models import CanvasObject
+        canvas_object = CanvasObject.query.filter_by(id=object_id).first()
+        if not canvas_object:
+            return jsonify({'error': 'Object not found'}), 404
+        
+        # Check permission
+        if not canvas_service.check_canvas_permission(canvas_object.canvas_id, current_user.id, 'edit'):
+            return jsonify({'error': 'Edit permission required'}), 403
+        
+        updated_object = canvas_service.send_object_to_back(object_id)
+        
+        return jsonify({
+            'message': 'Object sent to back',
+            'object': updated_object.to_dict()
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': 'Internal server error'}), 500
+
+@objects_bp.route('/<object_id>/move-up', methods=['POST'])
+@require_auth
+@object_rate_limit('update')
+def move_object_up(current_user, object_id):
+    """Move object up one layer."""
+    try:
+        from app.models import CanvasObject
+        canvas_object = CanvasObject.query.filter_by(id=object_id).first()
+        if not canvas_object:
+            return jsonify({'error': 'Object not found'}), 404
+        
+        # Check permission
+        if not canvas_service.check_canvas_permission(canvas_object.canvas_id, current_user.id, 'edit'):
+            return jsonify({'error': 'Edit permission required'}), 403
+        
+        updated_object = canvas_service.move_object_up(object_id)
+        
+        return jsonify({
+            'message': 'Object moved up',
+            'object': updated_object.to_dict()
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': 'Internal server error'}), 500
+
+@objects_bp.route('/<object_id>/move-down', methods=['POST'])
+@require_auth
+@object_rate_limit('update')
+def move_object_down(current_user, object_id):
+    """Move object down one layer."""
+    try:
+        from app.models import CanvasObject
+        canvas_object = CanvasObject.query.filter_by(id=object_id).first()
+        if not canvas_object:
+            return jsonify({'error': 'Object not found'}), 404
+        
+        # Check permission
+        if not canvas_service.check_canvas_permission(canvas_object.canvas_id, current_user.id, 'edit'):
+            return jsonify({'error': 'Edit permission required'}), 403
+        
+        updated_object = canvas_service.move_object_down(object_id)
+        
+        return jsonify({
+            'message': 'Object moved down',
+            'object': updated_object.to_dict()
+        }), 200
+        
+    except Exception as e:
         return jsonify({'error': 'Internal server error'}), 500

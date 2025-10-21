@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { Copy, Scissors, Clipboard, RotateCcw, RotateCw, Trash2, Square } from 'lucide-react'
+import { Copy, Scissors, Clipboard, RotateCcw, RotateCw, Trash2, Square, Layers, ArrowUp, ArrowDown, MoveUp, MoveDown } from 'lucide-react'
 
 interface ContextMenuProps {
   visible: boolean
@@ -13,6 +13,10 @@ interface ContextMenuProps {
   onDelete: () => void
   onUndo: () => void
   onRedo: () => void
+  onBringToFront?: () => void
+  onSendToBack?: () => void
+  onMoveUp?: () => void
+  onMoveDown?: () => void
   canCopy: boolean
   canCut: boolean
   canPaste: boolean
@@ -20,6 +24,7 @@ interface ContextMenuProps {
   canDelete: boolean
   canUndo: boolean
   canRedo: boolean
+  canManageLayers?: boolean
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
@@ -34,13 +39,18 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   onDelete,
   onUndo,
   onRedo,
+  onBringToFront,
+  onSendToBack,
+  onMoveUp,
+  onMoveDown,
   canCopy,
   canCut,
   canPaste,
   canDuplicate,
   canDelete,
   canUndo,
-  canRedo
+  canRedo,
+  canManageLayers = false
 }) => {
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -124,6 +134,49 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
       className: 'text-red-600 hover:text-red-700'
     }
   ]
+
+  // Add layer management items if enabled
+  if (canManageLayers) {
+    menuItems.push(
+      { type: 'separator' },
+      {
+        icon: Layers,
+        label: 'Layer Management',
+        shortcut: '',
+        onClick: () => {},
+        disabled: true,
+        className: 'text-gray-500 font-semibold'
+      },
+      {
+        icon: ArrowUp,
+        label: 'Bring to Front',
+        shortcut: 'Ctrl+]',
+        onClick: onBringToFront || (() => {}),
+        disabled: !onBringToFront
+      },
+      {
+        icon: ArrowDown,
+        label: 'Send to Back',
+        shortcut: 'Ctrl+[',
+        onClick: onSendToBack || (() => {}),
+        disabled: !onSendToBack
+      },
+      {
+        icon: MoveUp,
+        label: 'Move Up',
+        shortcut: 'Ctrl+=',
+        onClick: onMoveUp || (() => {}),
+        disabled: !onMoveUp
+      },
+      {
+        icon: MoveDown,
+        label: 'Move Down',
+        shortcut: 'Ctrl+-',
+        onClick: onMoveDown || (() => {}),
+        disabled: !onMoveDown
+      }
+    )
+  }
 
   return (
     <div

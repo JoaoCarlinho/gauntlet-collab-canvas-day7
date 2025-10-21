@@ -123,3 +123,7 @@ security-reports/
 
 # screenshots
 frontend/cypress/screenshots/
+
+# testing
+test-results/
+test-screenshots*/
