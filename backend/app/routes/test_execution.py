@@ -241,6 +241,54 @@ def verify_authentication():
         logger.log_error(f"Failed to verify authentication: {str(e)}", e)
         return jsonify({'error': 'Authentication verification failed'}), 500
 
+@test_execution_bp.route('/auth/login', methods=['POST', 'OPTIONS'])
+@cross_origin(origins=['*'], supports_credentials=True)
+def test_user_login():
+    """Simple email/password authentication for test users."""
+    try:
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({'error': 'Email and password are required'}), 400
+        
+        # Check if this is a test user
+        if email == 'test@collabcanvas.com' and password == 'TestPassword123!':
+            # Create or find test user
+            user = TestUser.find_by_email(email)
+            if not user:
+                # Create test user if it doesn't exist
+                user_id = secrets.token_hex(16)
+                user = TestUser(
+                    id=user_id,
+                    email=email,
+                    name='Test User',
+                    can_execute_tests=True,
+                    can_view_results=True,
+                    can_manage_tests=False
+                )
+                db.session.add(user)
+                db.session.commit()
+                logger.log_info(f"Created new test user: {email}")
+            
+            # Generate session token
+            session_token = generate_session_token(user.id)
+            user.create_session(session_token, expires_in_minutes=60)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Test user authenticated successfully',
+                'token': session_token,
+                'user': user.to_dict()
+            }), 200
+        else:
+            return jsonify({'error': 'Invalid test user credentials'}), 401
+        
+    except Exception as e:
+        logger.log_error(f"Failed to authenticate test user: {str(e)}", e)
+        return jsonify({'error': 'Authentication failed'}), 500
+
 @test_execution_bp.route('/execute', methods=['POST', 'OPTIONS'])
 @cross_origin(origins=['*'], supports_credentials=True)
 @require_test_auth

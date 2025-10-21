@@ -182,17 +182,30 @@ class CanvasService:
                     raise ValueError(f"{object_type} coordinates out of range")
             
             elif object_type in ['line', 'arrow']:
-                # Validate required line coordinates
-                required_coords = ['x1', 'y1', 'x2', 'y2']
-                for coord in required_coords:
-                    if coord not in properties:
-                        raise ValueError(f"{object_type} requires {coord} coordinate")
+                # Validate line/arrow coordinates - support both formats
+                if 'points' in properties:
+                    # Frontend format: points array [x1, y1, x2, y2]
+                    points = properties['points']
+                    if not isinstance(points, list) or len(points) != 4:
+                        raise ValueError(f"{object_type} requires points array with 4 values [x1, y1, x2, y2]")
                     
-                    if not isinstance(properties[coord], (int, float)):
-                        raise ValueError(f"{object_type} {coord} must be numeric")
-                    
-                    if abs(properties[coord]) > 10000:
-                        raise ValueError(f"{object_type} {coord} out of range")
+                    for i, point in enumerate(points):
+                        if not isinstance(point, (int, float)):
+                            raise ValueError(f"{object_type} points[{i}] must be numeric")
+                        if abs(point) > 10000:
+                            raise ValueError(f"{object_type} points[{i}] out of range")
+                else:
+                    # Backend format: x1, y1, x2, y2 coordinates
+                    required_coords = ['x1', 'y1', 'x2', 'y2']
+                    for coord in required_coords:
+                        if coord not in properties:
+                            raise ValueError(f"{object_type} requires {coord} coordinate or points array")
+                        
+                        if not isinstance(properties[coord], (int, float)):
+                            raise ValueError(f"{object_type} {coord} must be numeric")
+                        
+                        if abs(properties[coord]) > 10000:
+                            raise ValueError(f"{object_type} {coord} out of range")
             
             elif object_type == 'text':
                 # Validate text content

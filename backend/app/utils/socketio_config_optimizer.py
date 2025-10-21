@@ -21,8 +21,8 @@ class SocketIOConfigOptimizer:
         'ping_interval': 25,
         'max_http_buffer_size': 1000000,  # 1MB
         'always_connect': True,
-        'allow_upgrades': False,  # Disable upgrades to prevent WebSocket issues
-        'transports': ['polling'],  # Force polling-only to prevent parse errors
+        'allow_upgrades': True,  # Allow upgrades for better WebSocket support
+        'transports': ['polling', 'websocket'],  # Allow both transports for better compatibility
         
         # Message settings
         'max_message_size': 1000000,  # 1MB
@@ -80,15 +80,19 @@ class SocketIOConfigOptimizer:
                 config.update({
                     'logger': False,
                     'engineio_logger': False,
-                    'max_http_buffer_size': 500000,  # 500KB for production
-                    'max_message_size': 500000,  # 500KB for production
+                    'max_http_buffer_size': 1000000,  # 1MB for production - increased for stability
+                    'max_message_size': 1000000,  # 1MB for production - increased for stability
                     'compression': True,
-                    'compression_threshold': 512,  # 512 bytes
-                    'reconnection_attempts': 3,  # Fewer attempts in production
-                    'reconnection_delay': 2000,  # 2 seconds
-                    'reconnection_delay_max': 10000,  # 10 seconds
-                    'transports': ['polling'],  # Force polling-only to prevent parse errors
-                    'allow_upgrades': False,  # Disable upgrades to prevent WebSocket issues
+                    'compression_threshold': 1024,  # 1KB - increased threshold
+                    'reconnection_attempts': 5,  # Increased attempts for better reliability
+                    'reconnection_delay': 1000,  # 1 second - faster reconnection
+                    'reconnection_delay_max': 5000,  # 5 seconds - faster max delay
+                    'transports': ['polling', 'websocket'],  # Allow both transports for better compatibility
+                    'allow_upgrades': True,  # Allow upgrades for better WebSocket support
+                    'ping_timeout': 60,  # Increased ping timeout for Railway
+                    'ping_interval': 25,  # Standard ping interval
+                    'timeout': 30000,  # 30 second connection timeout
+                    'force_new': False,  # Don't force new connections unnecessarily
                 })
             else:
                 # Development optimizations
