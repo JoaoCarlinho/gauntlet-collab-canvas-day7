@@ -102,7 +102,7 @@ class ConnectionMonitoringService:
         
         railway_logger.log('connection_monitor', 10, f"Reconnection success recorded for user: {user_id}")
     
-    def record_message_size(self, user_id: str = 'unknown', size: int) -> None:
+    def record_message_size(self, size: int, user_id: str = 'unknown') -> None:
         """Record message size for analysis."""
         self.message_size_history.append({
             'user_id': user_id,
