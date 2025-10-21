@@ -5,6 +5,8 @@ import { socketEventOptimizer } from '../utils/socketOptimizer'
 import { socketIOClientOptimizer } from '../utils/socketioClientOptimizer'
 import { canvasAPI } from './api'
 import { tokenOptimizationService } from './tokenOptimizationService'
+import { websocketCircuitBreaker } from './circuitBreakerService'
+import { recordWebSocketError } from './errorRateMonitor'
 import { 
   SocketConfig, 
   SocketConnectionState,
@@ -21,18 +23,20 @@ class SocketService {
   private connectionQuality: SocketConnectionQuality = 'unknown'
 
   connect(idToken?: string) {
-    const API_URL = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000') as string
-    
-    // Update connection state
-    this.connectionState = 'connecting'
-    this.connectionAttempts++
-    
-    // Check if we're in development mode
-    const isDevelopment = import.meta.env.DEV || 
-                         import.meta.env.MODE === 'development' ||
-                         import.meta.env.VITE_DEBUG_MODE === 'true' ||
-                         window.location.hostname === 'localhost' ||
-                         window.location.hostname === '127.0.0.1'
+    // Use circuit breaker to prevent connection attempts when WebSocket is failing
+    return websocketCircuitBreaker.execute(async () => {
+      const API_URL = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000') as string
+      
+      // Update connection state
+      this.connectionState = 'connecting'
+      this.connectionAttempts++
+      
+      // Check if we're in development mode
+      const isDevelopment = import.meta.env.DEV || 
+                           import.meta.env.MODE === 'development' ||
+                           import.meta.env.VITE_DEBUG_MODE === 'true' ||
+                           window.location.hostname === 'localhost' ||
+                           window.location.hostname === '127.0.0.1'
     
     // If we've had multiple connection failures, try polling-only mode
     // Note: shouldUsePollingOnly logic removed as it was unused
@@ -232,6 +236,9 @@ class SocketService {
       this.connectionState = 'disconnected'
       this.connectionQuality = 'poor'
       
+      // Record WebSocket error for monitoring
+      recordWebSocketError(`Connection Error: ${error.message}`, 'connect_error')
+      
       // Handle specific error types
       let errorType = 'connection_error'
       if (error.message.includes('CORS')) {
@@ -294,8 +301,10 @@ class SocketService {
       if (isParseError) {
         socketIOClientOptimizer.recordParseError()
         console.error('=== Socket.IO Parse Error Detected ===')
+        recordWebSocketError(`Parse Error: ${error?.message || 'Unknown parse error'}`, 'parse_error')
       } else {
         console.error('=== Socket.IO Error ===')
+        recordWebSocketError(`General Error: ${error?.message || 'Unknown error'}`, 'general_error')
       }
       
       console.error('Error type:', typeof error)
@@ -341,6 +350,7 @@ class SocketService {
 
     // Register event listeners
     this.registerEventListeners()
+    })
   }
 
   disconnect() {

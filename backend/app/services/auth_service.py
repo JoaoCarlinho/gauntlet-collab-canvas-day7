@@ -87,11 +87,18 @@ class AuthService:
             self._mock_firebase = True
     
     def verify_token(self, id_token):
-        """Verify Firebase ID token."""
+        """Verify Firebase ID token with enhanced error handling."""
         try:
+            # Enhanced token validation and logging
+            print(f"=== Token Verification Debug ===")
+            print(f"Token length: {len(id_token) if id_token else 0}")
+            print(f"Token type: {type(id_token)}")
+            print(f"Token starts with: {id_token[:50] if id_token else 'None'}...")
+            
             # Allow development tokens when enabled
             allow_dev = os.environ.get('ALLOW_DEV_TOKENS', 'false').lower() == 'true'
             if allow_dev and isinstance(id_token, str) and id_token.startswith('dev.'):
+                print("Processing development token")
                 # Expected format: dev.<b64header>.<b64payload>.<signature>
                 parts = id_token.split('.')
                 if len(parts) >= 4:
@@ -105,38 +112,53 @@ class AuthService:
                         payload_bytes = b64url_decode(parts[2])
                         payload = json.loads(payload_bytes.decode('utf-8'))
                         # Map to expected decoded_token shape
-                        return {
+                        result = {
                             'uid': payload.get('uid') or str(uuid.uuid4()),
                             'email': payload.get('email') or 'dev@example.com',
                             'name': payload.get('name') or 'Development User',
                             'dev': True
                         }
+                        print(f"Development token verified for user: {result['uid']}")
+                        return result
                     except Exception as e:
                         print(f"Failed to decode dev token payload: {str(e)}")
-                        raise Exception('Invalid dev token')
+                        raise Exception(f'Invalid dev token: {str(e)}')
                 else:
-                    raise Exception('Invalid dev token format')
+                    raise Exception('Invalid dev token format - expected 4 parts')
 
             if hasattr(self, '_mock_firebase') and self._mock_firebase:
+                print("Using mock Firebase for token verification")
                 # Mock token verification for testing
                 if id_token == 'valid-token':
-                    return {
+                    result = {
                         'uid': 'test-user-id',
                         'email': 'test@example.com',
                         'name': 'Test User'
                     }
+                    print(f"Mock token verified for user: {result['uid']}")
+                    return result
                 else:
-                    raise Exception('Invalid token')
+                    raise Exception('Invalid mock token')
             else:
                 from firebase_admin import auth
-                print(f"Verifying token, length: {len(id_token)}")
-                print(f"Token starts with: {id_token[:50]}...")
+                print("Verifying token with Firebase Admin SDK")
                 decoded_token = auth.verify_id_token(id_token)
-                print(f"Token verified successfully for user: {decoded_token.get('uid', 'unknown')}")
+                print(f"Firebase token verified successfully for user: {decoded_token.get('uid', 'unknown')}")
                 return decoded_token
         except Exception as e:
-            print(f"Token verification failed: {str(e)}")
-            raise Exception(f"Invalid token: {str(e)}")
+            print(f"=== Token Verification Failed ===")
+            print(f"Error: {str(e)}")
+            print(f"Error type: {type(e).__name__}")
+            print(f"Token length: {len(id_token) if id_token else 0}")
+            # Provide more specific error messages
+            if 'expired' in str(e).lower():
+                raise Exception('Token has expired. Please refresh your authentication.')
+            elif 'invalid' in str(e).lower():
+                raise Exception('Invalid token format. Please sign in again.')
+            elif 'network' in str(e).lower():
+                raise Exception('Network error during token verification. Please try again.')
+            else:
+                raise Exception(f'Token verification failed: {str(e)}')
     
     def register_user(self, id_token):
         """Register a new user."""
