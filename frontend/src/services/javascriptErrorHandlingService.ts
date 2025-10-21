@@ -68,7 +68,6 @@ class JavaScriptErrorHandlingService {
     userImpactLevels: []
   }
 
-  private readonly MAX_RECOVERY_ATTEMPTS = 3
   private readonly RECOVERY_TIMEOUT = 5000
   private readonly ERROR_REPORTING_ENABLED = true
 
@@ -146,37 +145,37 @@ class JavaScriptErrorHandlingService {
           error.message.includes('state') || 
           error.message.includes('undefined') ||
           context.component !== 'global',
-        execute: async (error, context) => this.executeStateReset(error, context),
+        execute: async () => this.executeStateReset(),
         priority: 1
       },
       {
         name: 'component_remount',
         description: 'Remount component to recover from rendering errors',
-        canHandle: (error, context) => 
+        canHandle: (error) => 
           error.message.includes('render') || 
           error.message.includes('component') ||
           error.name === 'TypeError',
-        execute: async (error, context) => this.executeComponentRemount(error, context),
+        execute: async () => this.executeComponentRemount(),
         priority: 2
       },
       {
         name: 'network_retry',
         description: 'Retry network operations with exponential backoff',
-        canHandle: (error, context) => 
+        canHandle: (error) => 
           error.message.includes('fetch') || 
           error.message.includes('network') ||
           error.message.includes('timeout'),
-        execute: async (error, context) => this.executeNetworkRetry(error, context),
+        execute: async () => this.executeNetworkRetry(),
         priority: 3
       },
       {
         name: 'validation_fix',
         description: 'Fix validation errors by providing default values',
-        canHandle: (error, context) => 
+        canHandle: (error) => 
           error.message.includes('validation') || 
           error.message.includes('required') ||
           error.message.includes('invalid'),
-        execute: async (error, context) => this.executeValidationFix(error, context),
+        execute: async () => this.executeValidationFix(),
         priority: 4
       },
       {
@@ -186,14 +185,14 @@ class JavaScriptErrorHandlingService {
           error.message.includes('render') || 
           error.message.includes('component') ||
           context.component !== 'global',
-        execute: async (error, context) => this.executeFallbackUI(error, context),
+        execute: async () => this.executeFallbackUI(),
         priority: 5
       },
       {
         name: 'user_notification',
         description: 'Notify user of error and provide recovery options',
-        canHandle: (error, context) => true, // Always available as fallback
-        execute: async (error, context) => this.executeUserNotification(error, context),
+        canHandle: () => true, // Always available as fallback
+        execute: async () => this.executeUserNotification(),
         priority: 6
       }
     ]
@@ -237,7 +236,7 @@ class JavaScriptErrorHandlingService {
         success: false,
         recovered: false,
         error: error.message,
-        userMessage: this.getUserFriendlyMessage(error, classification),
+        userMessage: this.getUserFriendlyMessage(classification),
         action: 'manual_intervention_required'
       }
 
@@ -325,12 +324,9 @@ class JavaScriptErrorHandlingService {
   private logError(error: Error, context: ErrorContext, classification: ErrorClassification): void {
     if (this.ERROR_REPORTING_ENABLED) {
       errorLogger.logError('JavaScript error handled', {
-        error: error.message,
-        stack: error.stack,
-        name: error.name,
-        context,
-        classification,
-        timestamp: new Date().toISOString()
+        operation: 'general',
+        additionalData: { error: error.message, stack: error.stack, name: error.name, context, classification },
+        timestamp: Date.now()
       })
     }
 
@@ -418,7 +414,7 @@ class JavaScriptErrorHandlingService {
   /**
    * Execute state reset recovery
    */
-  private async executeStateReset(error: Error, context: ErrorContext): Promise<ErrorRecoveryResult> {
+  private async executeStateReset(): Promise<ErrorRecoveryResult> {
     try {
       // This would integrate with state management to reset component state
       console.log('Executing state reset recovery')
@@ -445,7 +441,7 @@ class JavaScriptErrorHandlingService {
   /**
    * Execute component remount recovery
    */
-  private async executeComponentRemount(error: Error, context: ErrorContext): Promise<ErrorRecoveryResult> {
+  private async executeComponentRemount(): Promise<ErrorRecoveryResult> {
     try {
       // This would integrate with React or other framework to remount component
       console.log('Executing component remount recovery')
@@ -472,7 +468,7 @@ class JavaScriptErrorHandlingService {
   /**
    * Execute network retry recovery
    */
-  private async executeNetworkRetry(error: Error, context: ErrorContext): Promise<ErrorRecoveryResult> {
+  private async executeNetworkRetry(): Promise<ErrorRecoveryResult> {
     try {
       // This would integrate with network service to retry failed requests
       console.log('Executing network retry recovery')
@@ -499,7 +495,7 @@ class JavaScriptErrorHandlingService {
   /**
    * Execute validation fix recovery
    */
-  private async executeValidationFix(error: Error, context: ErrorContext): Promise<ErrorRecoveryResult> {
+  private async executeValidationFix(): Promise<ErrorRecoveryResult> {
     try {
       // This would integrate with validation service to fix validation errors
       console.log('Executing validation fix recovery')
@@ -526,7 +522,7 @@ class JavaScriptErrorHandlingService {
   /**
    * Execute fallback UI recovery
    */
-  private async executeFallbackUI(error: Error, context: ErrorContext): Promise<ErrorRecoveryResult> {
+  private async executeFallbackUI(): Promise<ErrorRecoveryResult> {
     try {
       // This would integrate with UI service to show fallback interface
       console.log('Executing fallback UI recovery')
@@ -553,7 +549,7 @@ class JavaScriptErrorHandlingService {
   /**
    * Execute user notification recovery
    */
-  private async executeUserNotification(error: Error, context: ErrorContext): Promise<ErrorRecoveryResult> {
+  private async executeUserNotification(): Promise<ErrorRecoveryResult> {
     try {
       // This would integrate with notification service to inform user
       console.log('Executing user notification recovery')
@@ -564,7 +560,7 @@ class JavaScriptErrorHandlingService {
       return {
         success: true,
         recovered: false, // User notification doesn't recover the error
-        userMessage: this.getUserFriendlyMessage(error, this.classifyError(error, context)),
+        userMessage: 'An error occurred. Please try again.',
         action: 'user_notification',
         metadata: { strategy: 'user_notification' }
       }
@@ -586,23 +582,21 @@ class JavaScriptErrorHandlingService {
     // Report to error tracking service
     if (this.ERROR_REPORTING_ENABLED) {
       errorLogger.logError('Unrecoverable error', {
-        error: error.message,
-        stack: error.stack,
-        context,
-        classification,
-        timestamp: new Date().toISOString()
+        operation: 'general',
+        additionalData: { error: error.message, stack: error.stack, context, classification },
+        timestamp: Date.now()
       })
     }
 
     // Show user-friendly error message
-    const userMessage = this.getUserFriendlyMessage(error, classification)
+    const userMessage = this.getUserFriendlyMessage(classification)
     this.showUserErrorNotification(userMessage, classification)
   }
 
   /**
    * Get user-friendly error message
    */
-  private getUserFriendlyMessage(error: Error, classification: ErrorClassification): string {
+  private getUserFriendlyMessage(classification: ErrorClassification): string {
     switch (classification.category) {
       case 'network':
         return 'Network connection issue. Please check your internet connection and try again.'
@@ -700,6 +694,5 @@ class JavaScriptErrorHandlingService {
 // Export singleton instance
 export const javascriptErrorHandlingService = new JavaScriptErrorHandlingService()
 
-// Export types and service
+// Export service
 export { JavaScriptErrorHandlingService }
-export type { ErrorContext, ErrorRecoveryStrategy, ErrorRecoveryResult, ErrorMetrics, ErrorClassification }

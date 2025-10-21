@@ -2,7 +2,6 @@
  * Canvas Loading State Management Service with Progress Tracking and Error Handling
  */
 
-import { errorLogger } from '../utils/errorLogger'
 import { networkTimeoutService } from './networkTimeoutService'
 import { canvasIdValidationService } from './canvasIdValidationService'
 
@@ -375,7 +374,7 @@ class CanvasLoadingStateService {
         async () => {
           // Simulate data fetch
           await new Promise(resolve => setTimeout(resolve, 1000))
-          return { success: true, data: { canvasId, objects: [] } }
+          return { success: true, data: { canvasId, objects: [] as any[] } }
         },
         10000,
         `data_fetch_${canvasId}`
@@ -561,7 +560,6 @@ class CanvasLoadingStateService {
    * Update average loading time
    */
   private updateAverageLoadingTime(): void {
-    const alpha = 0.1 // Smoothing factor
     const currentAverage = this.metrics.averageLoadingTime
     // This would be calculated from actual loading times
     this.metrics.averageLoadingTime = currentAverage
@@ -653,6 +651,5 @@ class CanvasLoadingStateService {
 // Export singleton instance
 export const canvasLoadingStateService = new CanvasLoadingStateService()
 
-// Export types and service
+// Export service
 export { CanvasLoadingStateService }
-export type { LoadingState, LoadingStage, LoadingConfig, LoadingMetrics, LoadingResult }

@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { X, RefreshCw, AlertTriangle, CheckCircle, Clock, Activity, Users, Database, Wifi, WifiOff } from 'lucide-react'
+import { X, RefreshCw, AlertTriangle, CheckCircle, Clock, Activity, Users, Database } from 'lucide-react'
 import { authService } from '../services/authService'
 import { enhancedSocketService } from '../services/enhancedSocketService'
 import { stateManagementService } from '../services/stateManagementService'

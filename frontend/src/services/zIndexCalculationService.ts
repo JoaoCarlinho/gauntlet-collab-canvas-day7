@@ -232,9 +232,9 @@ class ZIndexCalculationService {
       this.updateAverageCalculationTime(Date.now() - startTime)
 
       errorLogger.logError('Z-index calculation failed', {
-        context,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        operation: 'general',
+        additionalData: { context, error: error instanceof Error ? error.message : 'Unknown error' },
+        timestamp: Date.now()
       })
 
       return {
@@ -631,6 +631,5 @@ class ZIndexCalculationService {
 // Export singleton instance
 export const zIndexCalculationService = new ZIndexCalculationService()
 
-// Export types and service
+// Export service
 export { ZIndexCalculationService }
-export type { ZIndexLayer, ZIndexCalculationResult, ZIndexConflict, ZIndexStrategy, ZIndexCalculationContext, ZIndexMetrics }

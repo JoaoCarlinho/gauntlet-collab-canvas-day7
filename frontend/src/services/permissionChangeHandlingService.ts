@@ -76,7 +76,7 @@ class PermissionChangeHandlingService {
     realTimeEventProcessingRate: 0
   }
 
-  private readonly PERMISSION_KEYS = ['canView', 'canEdit', 'canDelete', 'canShare', 'canAdmin']
+  // private readonly PERMISSION_KEYS = ['canView', 'canEdit', 'canDelete', 'canShare', 'canAdmin'] // Unused variable
   private readonly MAX_CHANGE_HISTORY = 1000
   private readonly PERMISSION_SYNC_INTERVAL = 30000 // 30 seconds
 
@@ -170,9 +170,9 @@ class PermissionChangeHandlingService {
       this.updateAverageProcessingTime(Date.now() - startTime)
       
       errorLogger.logError('Permission change processing failed', {
-        change,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        operation: 'general',
+        additionalData: { change, error: error instanceof Error ? error.message : 'Unknown error' },
+        timestamp: Date.now()
       })
       
       return false
@@ -416,7 +416,7 @@ class PermissionChangeHandlingService {
             this.permissionStates.set(stateKey, latestState)
             
             // Emit sync event
-            this.emitPermissionSyncEvent(state.canvasId, currentUserId, latestState)
+            this.emitPermissionSyncEvent(state.canvasId, currentUserId)
           }
         } catch (error) {
           console.error(`Failed to sync permissions for canvas ${state.canvasId}:`, error)
@@ -464,7 +464,7 @@ class PermissionChangeHandlingService {
   /**
    * Emit permission sync event
    */
-  private emitPermissionSyncEvent(canvasId: string, userId: string, state: PermissionState): void {
+  private emitPermissionSyncEvent(canvasId: string, userId: string): void {
     const event: PermissionChangeEvent = {
       type: 'permission_changed',
       canvasId,
@@ -564,6 +564,5 @@ class PermissionChangeHandlingService {
 // Export singleton instance
 export const permissionChangeHandlingService = new PermissionChangeHandlingService()
 
-// Export types and service
+// Export service
 export { PermissionChangeHandlingService }
-export type { PermissionChange, PermissionState, PermissionChangeEvent, PermissionValidationResult, PermissionMetrics }

@@ -2,7 +2,6 @@
  * Canvas ID Validation Service with Comprehensive Validation and Recovery
  */
 
-import { errorLogger } from '../utils/errorLogger'
 import { canvasAPI } from './api'
 import { authService } from './authService'
 import { networkTimeoutService } from './networkTimeoutService'
@@ -438,23 +437,24 @@ class CanvasIdValidationService {
         `canvas_info_fetch_${canvasId}`
       )
 
-      if (result.success && result.data) {
+      if (result.success && result.data && result.data.canvas) {
+        const canvas = result.data.canvas
         const canvasInfo: CanvasInfo = {
-          id: result.data.id,
-          name: result.data.name,
-          description: result.data.description,
-          ownerId: result.data.owner_id,
+          id: canvas.id,
+          name: canvas.title,
+          description: canvas.description,
+          ownerId: canvas.owner_id,
           permissions: {
-            canEdit: result.data.permissions?.can_edit || false,
-            canView: result.data.permissions?.can_view || false,
-            canDelete: result.data.permissions?.can_delete || false,
-            canShare: result.data.permissions?.can_share || false
+            canEdit: canvas.permissions?.can_edit || false,
+            canView: canvas.permissions?.can_view || false,
+            canDelete: canvas.permissions?.can_delete || false,
+            canShare: canvas.permissions?.can_share || false
           },
-          isPublic: result.data.is_public || false,
-          createdAt: result.data.created_at,
-          updatedAt: result.data.updated_at,
-          objectCount: result.data.object_count || 0,
-          lastAccessedAt: result.data.last_accessed_at
+          isPublic: canvas.is_public || false,
+          createdAt: canvas.created_at,
+          updatedAt: canvas.updated_at,
+          objectCount: canvas.object_count || 0,
+          lastAccessedAt: canvas.last_accessed_at
         }
 
         // Cache the result
@@ -593,6 +593,5 @@ class CanvasIdValidationService {
 // Export singleton instance
 export const canvasIdValidationService = new CanvasIdValidationService()
 
-// Export types and service
+// Export service
 export { CanvasIdValidationService }
-export type { CanvasValidationResult, CanvasInfo, CanvasValidationConfig, CanvasValidationMetrics }

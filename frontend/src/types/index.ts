@@ -34,6 +34,13 @@ export interface Canvas {
   updated_at: string
   object_count: number
   collaborator_count: number
+  permissions?: {
+    can_edit?: boolean
+    can_view?: boolean
+    can_delete?: boolean
+    can_share?: boolean
+  }
+  last_accessed_at?: string
 }
 
 export interface CanvasObjectProperties {

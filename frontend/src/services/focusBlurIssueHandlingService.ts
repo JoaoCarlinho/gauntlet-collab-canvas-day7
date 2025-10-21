@@ -84,12 +84,12 @@ export class FocusBlurIssueHandlingService {
    */
   private setupEventListeners(): void {
     // Window focus/blur events
-    const handleWindowFocus = (event: FocusEvent) => {
-      this.handleFocusEvent('focus', 'window', event)
+    const handleWindowFocus = () => {
+      this.handleFocusEvent('focus', 'window')
     }
 
-    const handleWindowBlur = (event: FocusEvent) => {
-      this.handleBlurEvent('blur', 'window', event)
+    const handleWindowBlur = () => {
+      this.handleBlurEvent('blur', 'window')
     }
 
     // Document visibility change events
@@ -104,7 +104,7 @@ export class FocusBlurIssueHandlingService {
     }
 
     // Page show/hide events
-    const handlePageShow = (event: PageTransitionEvent) => {
+    const handlePageShow = () => {
       const focusEvent: FocusBlurEvent = {
         type: 'page_show',
         target: 'document',
@@ -114,7 +114,7 @@ export class FocusBlurIssueHandlingService {
       this.processFocusBlurEvent(focusEvent)
     }
 
-    const handlePageHide = (event: PageTransitionEvent) => {
+    const handlePageHide = () => {
       const blurEvent: FocusBlurEvent = {
         type: 'page_hide',
         target: 'document',
@@ -159,7 +159,7 @@ export class FocusBlurIssueHandlingService {
   /**
    * Handle focus event
    */
-  private handleFocusEvent(type: string, target: string, event: FocusEvent): void {
+  private handleFocusEvent(type: string, target: string): void {
     const focusEvent: FocusBlurEvent = {
       type: type as any,
       target,
@@ -177,7 +177,7 @@ export class FocusBlurIssueHandlingService {
   /**
    * Handle blur event
    */
-  private handleBlurEvent(type: string, target: string, event: FocusEvent): void {
+  private handleBlurEvent(type: string, target: string): void {
     const blurEvent: FocusBlurEvent = {
       type: type as any,
       target,

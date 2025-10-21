@@ -3,7 +3,6 @@
  */
 
 import { CanvasObject } from '../types'
-import { errorLogger } from '../utils/errorLogger'
 
 export interface DuplicateDetectionRule {
   name: string
@@ -137,7 +136,7 @@ class DuplicatePreventionService {
     const now = Date.now()
 
     // Check against recent objects first (most likely to be duplicates)
-    for (const [key, entry] of this.recentObjects.entries()) {
+    for (const [, entry] of this.recentObjects.entries()) {
       if (now - entry.timestamp > this.config.timeWindow) {
         continue // Skip old objects
       }
@@ -384,7 +383,7 @@ class DuplicatePreventionService {
       return {
         prevented: true,
         reason: `Potential duplicate detected: ${bestCandidate.reasons.join(', ')}`,
-        alternatives: this.generateAlternatives(newObject, bestCandidate.object)
+        alternatives: this.generateAlternatives(newObject)
       }
     }
 
@@ -411,7 +410,7 @@ class DuplicatePreventionService {
   /**
    * Generate alternatives for duplicate object
    */
-  private generateAlternatives(originalObject: CanvasObject, duplicateObject: CanvasObject): any[] {
+  private generateAlternatives(originalObject: CanvasObject): any[] {
     const alternatives = []
     const props = originalObject.properties
 
@@ -538,6 +537,5 @@ class DuplicatePreventionService {
 // Export singleton instance
 export const duplicatePreventionService = new DuplicatePreventionService()
 
-// Export types and service
+// Export service
 export { DuplicatePreventionService }
-export type { DuplicateDetectionRule, DuplicateCandidate, DuplicatePreventionConfig, DuplicateMetrics }

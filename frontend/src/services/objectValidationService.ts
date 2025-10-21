@@ -2,7 +2,7 @@
  * Comprehensive Object Validation Service with Detailed Error Messages
  */
 
-import { CanvasObject } from '../types'
+// import { CanvasObject } from '../types' // Unused import
 
 export interface ValidationRule {
   name: string
@@ -1290,13 +1290,6 @@ class ObjectValidationService {
   }
 
   /**
-   * Get valid object types
-   */
-  public getValidObjectTypes(): string[] {
-    return [...this.validObjectTypes]
-  }
-
-  /**
    * Add custom validation rule
    */
   public addValidationRule(rule: ValidationRule): void {
@@ -1314,6 +1307,5 @@ class ObjectValidationService {
 // Export singleton instance
 export const objectValidationService = new ObjectValidationService()
 
-// Export types and service
+// Export service
 export { ObjectValidationService }
-export type { ValidationRule, ValidationResult, ValidationError, ValidationWarning, ValidationInfo, ObjectConstraints }

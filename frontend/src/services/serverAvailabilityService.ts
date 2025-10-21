@@ -58,8 +58,8 @@ class ServerAvailabilityService {
   private readonly DEFAULT_HEALTH_CHECK_INTERVAL = 30000 // 30 seconds
   private readonly DEFAULT_TIMEOUT = 10000 // 10 seconds
   private readonly MAX_CONSECUTIVE_FAILURES = 3
-  private readonly DEGRADED_THRESHOLD = 0.8
-  private readonly UNHEALTHY_THRESHOLD = 0.5
+  // private readonly DEGRADED_THRESHOLD = 0.8 // Unused variable
+  // private readonly UNHEALTHY_THRESHOLD = 0.5 // Unused variable
 
   constructor() {
     this.initializeDefaultServers()
@@ -176,8 +176,9 @@ class ServerAvailabilityService {
     } catch (error) {
       console.error('Health check monitoring failed:', error)
       errorLogger.logError('Health check monitoring failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        operation: 'general',
+        additionalData: { error: error instanceof Error ? error.message : 'Unknown error' },
+        timestamp: Date.now()
       })
     }
   }
@@ -434,6 +435,5 @@ class ServerAvailabilityService {
 // Export singleton instance
 export const serverAvailabilityService = new ServerAvailabilityService()
 
-// Export types and service
+// Export service
 export { ServerAvailabilityService }
-export type { ServerHealth, ServerEndpoint, AvailabilityMetrics, HealthCheckResult }

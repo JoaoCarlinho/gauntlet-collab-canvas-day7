@@ -6,7 +6,6 @@ import { enhancedSocketService } from './enhancedSocketService'
 import { objectsAPI } from './api'
 import { authService } from './authService'
 import { retryWithBackoff, RETRY_PRESETS } from '../utils/retryLogic'
-import { errorLogger } from '../utils/errorLogger'
 import { CanvasObject } from '../types'
 
 export interface EnhancedCreationResult {
@@ -106,7 +105,7 @@ class EnhancedObjectCreationService {
     const warnings: string[] = []
     
     const objectType = object.type || (object as any).object_type
-    const properties = object.properties || object
+    const properties = object.properties || (object as any)
     
     // Validate required properties based on object type
     switch (objectType) {
@@ -208,8 +207,6 @@ class EnhancedObjectCreationService {
     creationId: string,
     startTime: number
   ): Promise<EnhancedCreationResult> {
-    const maxRetries = options.maxRetries || 3
-    const timeout = options.timeout || 30000
     const requireConfirmation = options.requireConfirmation !== false
 
     try {
@@ -242,7 +239,7 @@ class EnhancedObjectCreationService {
         result = await this.trySocketCreation(canvasId, idToken, object, options, creationId, startTime)
       } catch (socketError) {
         console.warn('Socket creation failed, trying REST API:', socketError)
-        result = await this.tryRestCreation(canvasId, idToken, object, options, creationId, startTime)
+        result = await this.tryRestCreation(canvasId, object, options)
       }
 
       // Confirm creation if required
@@ -373,32 +370,44 @@ class EnhancedObjectCreationService {
    */
   private async tryRestCreation(
     canvasId: string,
-    idToken: string,
     object: { type: string; properties: Record<string, any> },
-    options: EnhancedCreationOptions,
-    creationId: string,
-    startTime: number
+    options: EnhancedCreationOptions
   ): Promise<EnhancedCreationResult> {
-    const retryOptions = options.retryOptions || RETRY_PRESETS.OBJECT_CREATION
+    const retryOptions = options.retryOptions || RETRY_PRESETS.STANDARD
     
-    return retryWithBackoff(async () => {
+    const result = await retryWithBackoff(async () => {
       const response = await objectsAPI.createObject({
         canvas_id: canvasId,
         object_type: object.type || (object as any).object_type,
         properties: object.properties || object
       })
 
+      return response
+    }, retryOptions)
+
+    if (result.success && result.data) {
       return {
         success: true,
         method: 'rest',
-        object: response.object,
-        attempts: 1,
-        totalTime: Date.now() - startTime,
+        object: result.data.object,
+        attempts: result.attempts,
+        totalTime: result.totalTime,
         confirmationStatus: 'confirmed',
         retryable: false,
         errorType: 'unknown'
       }
-    }, retryOptions)
+    } else {
+      return {
+        success: false,
+        method: 'failed',
+        error: result.error,
+        attempts: result.attempts,
+        totalTime: result.totalTime,
+        confirmationStatus: 'failed',
+        retryable: true,
+        errorType: 'network'
+      }
+    }
   }
 
   /**
@@ -507,6 +516,5 @@ class EnhancedObjectCreationService {
 // Export singleton instance
 export const enhancedObjectCreationService = new EnhancedObjectCreationService()
 
-// Export types and service
+// Export service
 export { EnhancedObjectCreationService }
-export type { EnhancedCreationResult, EnhancedCreationOptions, ObjectValidationResult }

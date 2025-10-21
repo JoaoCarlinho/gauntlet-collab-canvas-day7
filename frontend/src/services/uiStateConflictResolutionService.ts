@@ -1,4 +1,4 @@
-import { CanvasObject } from '../types'
+// import { CanvasObject } from '../types' // Unused import
 import { DrawingTool } from '../types/toolbar'
 
 export interface UIStateConflict {
@@ -380,8 +380,8 @@ export class UIStateConflictResolutionService {
   }
 
   private resolveEndDrawingConflict(
-    currentState: UIStateSnapshot,
-    conflict: UIStateConflict
+    _currentState: UIStateSnapshot,
+    _conflict: UIStateConflict
   ): ConflictResolutionResult {
     return {
       success: true,
@@ -437,8 +437,8 @@ export class UIStateConflictResolutionService {
   }
 
   private resolveEndTextEditingConflict(
-    currentState: UIStateSnapshot,
-    conflict: UIStateConflict
+    _currentState: UIStateSnapshot,
+    _conflict: UIStateConflict
   ): ConflictResolutionResult {
     return {
       success: true,
@@ -504,8 +504,8 @@ export class UIStateConflictResolutionService {
   }
 
   private resolveEndMultiSelectionConflict(
-    currentState: UIStateSnapshot,
-    conflict: UIStateConflict
+    _currentState: UIStateSnapshot,
+    _conflict: UIStateConflict
   ): ConflictResolutionResult {
     return {
       success: true,

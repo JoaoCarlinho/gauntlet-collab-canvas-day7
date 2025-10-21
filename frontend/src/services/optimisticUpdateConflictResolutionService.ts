@@ -47,7 +47,7 @@ export class OptimisticUpdateConflictResolutionService {
   private conflictHistory: UpdateConflict[] = []
   private maxHistorySize = 100
   private maxRetries = 3
-  private conflictResolutionTimeout = 5000 // 5 seconds
+  // private conflictResolutionTimeout = 5000 // 5 seconds // Unused variable
 
   /**
    * Add an optimistic update to the queue
@@ -455,7 +455,7 @@ export class OptimisticUpdateConflictResolutionService {
       const merged: CanvasObject = {
         ...server,
         ...optimistic,
-        version: Math.max(optimistic.version, server.version) + 1,
+        version: Math.max(Number(optimistic.version), Number(server.version)) + 1,
         updated_at: new Date().toISOString()
       }
 
@@ -478,7 +478,7 @@ export class OptimisticUpdateConflictResolutionService {
           ...server.properties,
           ...optimistic.properties
         },
-        version: Math.max(optimistic.version, server.version) + 1,
+        version: Math.max(Number(optimistic.version), Number(server.version)) + 1,
         updated_at: new Date().toISOString()
       }
 

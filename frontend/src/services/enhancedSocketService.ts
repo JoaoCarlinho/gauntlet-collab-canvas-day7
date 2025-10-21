@@ -3,9 +3,7 @@
  */
 
 import { io, Socket } from 'socket.io-client'
-import { CursorData } from '../types'
 import { errorLogger, ErrorContext } from '../utils/errorLogger'
-import { socketEventOptimizer } from '../utils/socketOptimizer'
 import { socketIOClientOptimizer } from '../utils/socketioClientOptimizer'
 import { authService } from './authService'
 import { 
@@ -150,7 +148,7 @@ class EnhancedSocketService {
       } else if (responseTime < 500) {
         this.connectionQuality = 'good'
       } else if (responseTime < 1000) {
-        this.connectionQuality = 'fair'
+        this.connectionQuality = 'good'
       } else {
         this.connectionQuality = 'poor'
       }
@@ -283,9 +281,7 @@ class EnhancedSocketService {
         reconnection: true,
         reconnectionAttempts: this.reconnectionStrategy.maxAttempts,
         reconnectionDelay: this.reconnectionStrategy.baseDelay,
-        reconnectionDelayMax: this.reconnectionStrategy.maxDelay,
         maxReconnectionAttempts: this.reconnectionStrategy.maxAttempts,
-        randomizationFactor: this.reconnectionStrategy.jitter ? 0.5 : 0
       }
 
       // Add authentication if not in development mode
@@ -312,7 +308,7 @@ class EnhancedSocketService {
       this.connectionMetrics.connectionStreak = 0
       
       errorLogger.logError(error as Error, {
-        operation: 'enhanced_socket_connection',
+        operation: 'socket_connection',
         timestamp: Date.now(),
         additionalData: { 
           connectionMetrics: this.connectionMetrics,
@@ -491,7 +487,7 @@ class EnhancedSocketService {
     this.connectionMetrics.connectionStreak = 0
 
     const context: ErrorContext = {
-      operation: 'enhanced_socket_connection',
+      operation: 'socket_connection',
       timestamp: Date.now(),
       additionalData: { 
         error: error.message,
@@ -731,7 +727,7 @@ class EnhancedSocketService {
   /**
    * Listen for events
    */
-  public on(event: string, callback: Function): void {
+  public on(event: string, callback: (...args: any[]) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, [])
     }
@@ -745,7 +741,7 @@ class EnhancedSocketService {
   /**
    * Remove event listener
    */
-  public off(event: string, callback?: Function): void {
+  public off(event: string, callback?: (...args: any[]) => void): void {
     if (callback) {
       const callbacks = this.listeners.get(event) || []
       const index = callbacks.indexOf(callback)
@@ -774,6 +770,5 @@ class EnhancedSocketService {
 // Export singleton instance
 export const enhancedSocketService = new EnhancedSocketService()
 
-// Export types and service
+// Export service
 export { EnhancedSocketService }
-export type { ConnectionMetrics, ReconnectionStrategy }

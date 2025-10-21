@@ -2,7 +2,6 @@
  * Comprehensive Debugging Tools Service with Advanced Logging, Performance Monitoring, and Diagnostic Capabilities
  */
 
-import { errorLogger } from '../utils/errorLogger'
 
 export interface DebugLogEntry {
   id: string
@@ -729,6 +728,5 @@ class DebuggingToolsService {
 // Export singleton instance
 export const debuggingToolsService = new DebuggingToolsService()
 
-// Export types and service
+// Export service
 export { DebuggingToolsService }
-export type { DebugLogEntry, PerformanceMetric, DebugSession, DebugConfiguration, DebugMetrics }

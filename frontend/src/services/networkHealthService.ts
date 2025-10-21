@@ -9,7 +9,6 @@
 import { errorLogger } from '../utils/errorLogger'
 import { retryWithCondition, isRetryableError } from '../utils/retryLogic'
 import { productionLogger } from '../utils/productionLogger'
-import toast from 'react-hot-toast'
 
 export interface NetworkStatus {
   isOnline: boolean

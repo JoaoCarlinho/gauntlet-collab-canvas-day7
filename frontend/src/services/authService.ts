@@ -37,7 +37,6 @@ class AuthService {
   private refreshInterval: NodeJS.Timeout | null = null
   private validationTimeout: NodeJS.Timeout | null = null
   private readonly REFRESH_INTERVAL = 5 * 60 * 1000 // 5 minutes
-  private readonly VALIDATION_TIMEOUT = 30 * 1000 // 30 seconds
   private readonly MAX_VALIDATION_ATTEMPTS = 3
   private readonly MAX_USER_RECOVERY_ATTEMPTS = 5
 
@@ -54,7 +53,7 @@ class AuthService {
     
     // Monitor auth state changes
     if (auth && auth.onAuthStateChanged) {
-      auth.onAuthStateChanged((user) => {
+      auth.onAuthStateChanged((user: any) => {
         this.handleAuthStateChange(user)
       })
     }
@@ -190,9 +189,9 @@ class AuthService {
     } catch (error) {
       console.error('Token validation error:', error)
       errorLogger.logError('Token validation failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-        authState: this.authState
+        operation: 'general',
+        additionalData: { error: error instanceof Error ? error.message : 'Unknown error', authState: this.authState },
+        timestamp: Date.now()
       })
 
       return {
@@ -478,6 +477,5 @@ class AuthService {
 // Export singleton instance
 export const authService = new AuthService()
 
-// Export types and service
+// Export service
 export { AuthService }
-export type { TokenValidationResult, AuthState }

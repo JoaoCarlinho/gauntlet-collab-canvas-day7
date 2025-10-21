@@ -3,7 +3,7 @@
  */
 
 import { errorLogger } from '../utils/errorLogger'
-import { networkTimeoutService } from './networkTimeoutService'
+// import { networkTimeoutService } from './networkTimeoutService' // Unused import
 import { serverAvailabilityService } from './serverAvailabilityService'
 
 export interface RetryExhaustionConfig {
@@ -90,8 +90,8 @@ class RetryExhaustionService {
       {
         name: 'exponential_backoff',
         description: 'Apply exponential backoff with jitter',
-        canApply: (context, attempts) => attempts.length < this.DEFAULT_CONFIG.maxRetries,
-        execute: async (context, attempts) => {
+        canApply: (_, attempts) => attempts.length < this.DEFAULT_CONFIG.maxRetries,
+        execute: async (_, attempts) => {
           const delay = this.calculateExponentialBackoff(attempts.length)
           await this.sleep(delay)
           return true
@@ -101,14 +101,14 @@ class RetryExhaustionService {
       {
         name: 'circuit_breaker_reset',
         description: 'Reset circuit breaker and wait for recovery',
-        canApply: (context, attempts) => {
+        canApply: (context, _attempts) => {
           const exhaustionState = this.exhaustionStates.get(this.getOperationKey(context))
           return exhaustionState?.exhaustionReason === 'circuit_breaker'
         },
-        execute: async (context, attempts) => {
+        execute: async (_context, _attempts) => {
           const delay = this.DEFAULT_CONFIG.recoveryTimeout
           await this.sleep(delay)
-          this.clearExhaustionState(context)
+          this.clearExhaustionState(_context)
           return true
         },
         priority: 2
@@ -116,11 +116,11 @@ class RetryExhaustionService {
       {
         name: 'server_failover',
         description: 'Switch to backup server if available',
-        canApply: (context, attempts) => {
+        canApply: (_, _attempts) => {
           const availableServers = serverAvailabilityService.getAllServers()
           return availableServers.size > 1
         },
-        execute: async (context, attempts) => {
+        execute: async (_context, _attempts) => {
           const bestServer = serverAvailabilityService.getBestAvailableServer()
           if (bestServer) {
             console.log(`Switching to backup server: ${bestServer.name}`)
@@ -133,11 +133,11 @@ class RetryExhaustionService {
       {
         name: 'auth_token_refresh',
         description: 'Refresh authentication token',
-        canApply: (context, attempts) => {
+        canApply: (_, attempts) => {
           const lastError = attempts[attempts.length - 1]?.error
           return lastError?.includes('401') || lastError?.includes('Unauthorized')
         },
-        execute: async (context, attempts) => {
+        execute: async (_context, _attempts) => {
           // This would integrate with auth service
           console.log('Refreshing authentication token')
           return true
@@ -147,11 +147,11 @@ class RetryExhaustionService {
       {
         name: 'graceful_degradation',
         description: 'Switch to offline mode or reduced functionality',
-        canApply: (context, attempts) => {
+        canApply: (context, _attempts) => {
           return context.criticality === 'low' || context.criticality === 'medium'
         },
-        execute: async (context, attempts) => {
-          console.log(`Switching to graceful degradation for ${context.operationName}`)
+        execute: async (_context, _attempts) => {
+          console.log(`Switching to graceful degradation for ${_context.operationName}`)
           return true
         },
         priority: 5
@@ -159,11 +159,11 @@ class RetryExhaustionService {
       {
         name: 'user_notification',
         description: 'Notify user of service degradation',
-        canApply: (context, attempts) => {
+        canApply: (context, _attempts) => {
           return context.criticality === 'high' || context.criticality === 'critical'
         },
-        execute: async (context, attempts) => {
-          console.log(`Notifying user of service issues for ${context.operationName}`)
+        execute: async (_context, _attempts) => {
+          console.log(`Notifying user of service issues for ${_context.operationName}`)
           // This would integrate with user notification service
           return true
         },
@@ -202,12 +202,9 @@ class RetryExhaustionService {
     
     // Log the attempt
     errorLogger.logError('Retry attempt recorded', {
-      operation: context.operationName,
-      attemptNumber,
-      success,
-      error,
-      duration,
-      totalAttempts: attempts.length
+      operation: 'general',
+      additionalData: { operationName: context.operationName, attemptNumber, success, error, duration, totalAttempts: attempts.length },
+      timestamp: Date.now()
     })
   }
 
@@ -324,9 +321,9 @@ class RetryExhaustionService {
       } catch (error) {
         console.error(`Recovery strategy ${strategy.name} failed:`, error)
         errorLogger.logError('Recovery strategy failed', {
-          strategy: strategy.name,
-          operation: context.operationName,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          operation: 'general',
+          additionalData: { strategy: strategy.name, operationName: context.operationName, error: error instanceof Error ? error.message : 'Unknown error' },
+          timestamp: Date.now()
         })
       }
     }
@@ -485,6 +482,5 @@ class RetryExhaustionService {
 // Export singleton instance
 export const retryExhaustionService = new RetryExhaustionService()
 
-// Export types and service
+// Export service
 export { RetryExhaustionService }
-export type { RetryExhaustionConfig, RetryAttempt, RetryExhaustionResult, OperationContext, RecoveryStrategy }

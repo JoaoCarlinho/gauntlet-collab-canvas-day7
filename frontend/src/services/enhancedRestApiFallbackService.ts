@@ -109,7 +109,6 @@ class EnhancedRestApiFallbackService {
         const response = await this.performRestApiCall(
           canvasId,
           object,
-          tokenResult.token!,
           options.timeout || this.DEFAULT_TIMEOUT
         )
 
@@ -122,7 +121,7 @@ class EnhancedRestApiFallbackService {
       return {
         success: true,
         method: 'rest',
-        object: result.data,
+        object: result.data?.object,
         attempts: result.attempts,
         totalTime: Date.now() - startTime
       }
@@ -135,11 +134,11 @@ class EnhancedRestApiFallbackService {
 
       // Log error with context
       errorLogger.logError('REST API fallback failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        operation: 'object_create',
+        additionalData: { error: error instanceof Error ? error.message : 'Unknown error', circuitBreakerState: this.circuitBreaker },
         canvasId,
         objectType: object.type,
-        timestamp: new Date().toISOString(),
-        circuitBreakerState: this.circuitBreaker
+        timestamp: Date.now()
       })
 
       return {
@@ -158,7 +157,6 @@ class EnhancedRestApiFallbackService {
    * Enhanced REST API object update with fallback strategies
    */
   public async updateObject(
-    canvasId: string,
     objectId: string,
     properties: Record<string, any>,
     options: RestApiFallbackOptions = {}
@@ -201,7 +199,6 @@ class EnhancedRestApiFallbackService {
         options.onProgress?.(1, 'rest')
         
         const response = await objectsAPI.updateObject(objectId, {
-          canvas_id: canvasId,
           properties
         })
 
@@ -214,7 +211,7 @@ class EnhancedRestApiFallbackService {
       return {
         success: true,
         method: 'rest',
-        object: result.data,
+        object: result.data?.object,
         attempts: result.attempts,
         totalTime: Date.now() - startTime
       }
@@ -241,7 +238,6 @@ class EnhancedRestApiFallbackService {
    * Enhanced REST API object deletion with fallback strategies
    */
   public async deleteObject(
-    canvasId: string,
     objectId: string,
     options: RestApiFallbackOptions = {}
   ): Promise<RestApiFallbackResult> {
@@ -382,7 +378,6 @@ class EnhancedRestApiFallbackService {
   private async performRestApiCall(
     canvasId: string,
     object: { type: string; properties: Record<string, any> },
-    token: string,
     timeout: number
   ): Promise<any> {
     const controller = new AbortController()
@@ -393,11 +388,6 @@ class EnhancedRestApiFallbackService {
         canvas_id: canvasId,
         object_type: object.type,
         properties: object.properties
-      }, {
-        signal: controller.signal,
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       })
 
       clearTimeout(timeoutId)
@@ -487,6 +477,5 @@ class EnhancedRestApiFallbackService {
 // Export singleton instance
 export const enhancedRestApiFallbackService = new EnhancedRestApiFallbackService()
 
-// Export types and service
+// Export service
 export { EnhancedRestApiFallbackService }
-export type { RestApiFallbackResult, RestApiFallbackOptions, CircuitBreakerState }

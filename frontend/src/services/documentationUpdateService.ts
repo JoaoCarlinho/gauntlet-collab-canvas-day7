@@ -1211,7 +1211,6 @@ For questions or issues:
   updateSection(sectionId: string, updates: Partial<DocumentationSection>): void {
     const section = this.documentation.get(sectionId)
     if (section) {
-      const oldContent = section.content
       const newSection = { ...section, ...updates, lastUpdated: Date.now() }
       this.documentation.set(sectionId, newSection)
       

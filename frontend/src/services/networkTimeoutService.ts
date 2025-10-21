@@ -63,7 +63,6 @@ class NetworkTimeoutService {
   }
 
   private readonly MEASUREMENT_INTERVAL = 30000 // 30 seconds
-  private readonly MAX_MEASUREMENT_HISTORY = 10
 
   constructor() {
     this.initializeConnectionMonitoring()
@@ -96,7 +95,7 @@ class NetworkTimeoutService {
     return new Promise((resolve) => {
       const timeoutId = setTimeout(() => {
         const actualDuration = Date.now() - startTime
-        this.recordTimeout(operationName, timeout, actualDuration)
+        this.recordTimeout(timeout, actualDuration)
         
         resolve({
           success: false,
@@ -111,7 +110,7 @@ class NetworkTimeoutService {
         .then((data) => {
           clearTimeout(timeoutId)
           const actualDuration = Date.now() - startTime
-          this.recordSuccess(operationName, timeout, actualDuration)
+          this.recordSuccess(timeout, actualDuration)
           
           resolve({
             success: true,
@@ -209,7 +208,6 @@ class NetworkTimeoutService {
    */
   private async measureConnectionQuality(): Promise<void> {
     try {
-      const startTime = Date.now()
       
       // Measure latency using a simple ping-like approach
       const latency = await this.measureLatency()
@@ -345,32 +343,30 @@ class NetworkTimeoutService {
   /**
    * Record successful operation
    */
-  private recordSuccess(operationName: string, timeout: number, actualDuration: number): void {
+  private recordSuccess(timeout: number, actualDuration: number): void {
     this.updateSuccessRate(true)
     this.updateAverageLatency(actualDuration)
     
     // Log successful operation
     errorLogger.logError('Network operation successful', {
-      operation: operationName,
-      timeout,
-      actualDuration,
-      connectionQuality: this.connectionQuality
+      operation: 'general',
+      additionalData: { timeout, actualDuration, connectionQuality: this.connectionQuality },
+      timestamp: Date.now()
     })
   }
 
   /**
    * Record timeout
    */
-  private recordTimeout(operationName: string, timeout: number, actualDuration: number): void {
+  private recordTimeout(timeout: number, actualDuration: number): void {
     this.updateSuccessRate(false)
     this.updateTimeoutRate(true)
     
     // Log timeout
     errorLogger.logError('Network operation timed out', {
-      operation: operationName,
-      timeout,
-      actualDuration,
-      connectionQuality: this.connectionQuality
+      operation: 'general',
+      additionalData: { timeout, actualDuration, connectionQuality: this.connectionQuality },
+      timestamp: Date.now()
     })
   }
 
@@ -383,11 +379,9 @@ class NetworkTimeoutService {
     
     // Log error
     errorLogger.logError('Network operation failed', {
-      operation: operationName,
-      timeout,
-      actualDuration,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      connectionQuality: this.connectionQuality
+      operation: 'general',
+      additionalData: { operationName, timeout, actualDuration, error: error instanceof Error ? error.message : 'Unknown error', connectionQuality: this.connectionQuality },
+      timestamp: Date.now()
     })
   }
 
@@ -475,6 +469,5 @@ class NetworkTimeoutService {
 // Export singleton instance
 export const networkTimeoutService = new NetworkTimeoutService()
 
-// Export types and service
+// Export service
 export { NetworkTimeoutService }
-export type { TimeoutConfig, ConnectionQuality, TimeoutResult, NetworkMetrics }

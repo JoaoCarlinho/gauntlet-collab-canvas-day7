@@ -4,6 +4,7 @@
 
 import { errorLogger } from '../utils/errorLogger'
 import { authService } from './authService'
+import { unifiedCanvasService } from './unifiedCanvasService'
 
 export interface CanvasPermission {
   id: string
@@ -66,10 +67,10 @@ class CanvasPermissionService {
    */
   private initializePermissionSystem(): void {
     // Listen for permission changes
-    window.addEventListener('permissionChanged', this.handlePermissionChange.bind(this))
+    window.addEventListener('permissionChanged', this.handlePermissionChange.bind(this) as EventListener)
     
     // Listen for user changes
-    window.addEventListener('userChanged', this.handleUserChange.bind(this))
+    window.addEventListener('userChanged', this.handleUserChange.bind(this) as EventListener)
     
     // Clear cache periodically
     setInterval(() => {
@@ -197,7 +198,7 @@ class CanvasPermissionService {
     } catch (error) {
       console.error('Permission check failed:', error)
       errorLogger.logError(error as Error, {
-        operation: 'check_permission',
+        operation: 'general',
         timestamp: Date.now(),
         additionalData: { canvasId, requiredPermission, userId }
       })
@@ -350,7 +351,7 @@ class CanvasPermissionService {
     } catch (error) {
       console.error('Failed to grant permission:', error)
       errorLogger.logError(error as Error, {
-        operation: 'grant_permission',
+        operation: 'general',
         timestamp: Date.now(),
         additionalData: { canvasId, userId, permissionType }
       })
@@ -400,7 +401,7 @@ class CanvasPermissionService {
     } catch (error) {
       console.error('Failed to revoke permission:', error)
       errorLogger.logError(error as Error, {
-        operation: 'revoke_permission',
+        operation: 'general',
         timestamp: Date.now(),
         additionalData: { canvasId, userId }
       })
@@ -455,7 +456,7 @@ class CanvasPermissionService {
     } catch (error) {
       console.error('Failed to update permission:', error)
       errorLogger.logError(error as Error, {
-        operation: 'update_permission',
+        operation: 'general',
         timestamp: Date.now(),
         additionalData: { canvasId, userId, newPermissionType }
       })
@@ -541,7 +542,7 @@ class CanvasPermissionService {
   /**
    * Handle user change event
    */
-  private handleUserChange(event: CustomEvent): void {
+  private handleUserChange(): void {
     // Clear all cache when user changes
     this.permissionCache.clear()
   }
@@ -618,6 +619,5 @@ class CanvasPermissionService {
 // Export singleton instance
 export const canvasPermissionService = new CanvasPermissionService()
 
-// Export types and service
+// Export service
 export { CanvasPermissionService }
-export type { CanvasPermission, PermissionCheck, PermissionChange, PermissionMetrics }

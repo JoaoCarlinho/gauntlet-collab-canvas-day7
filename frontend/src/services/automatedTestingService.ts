@@ -242,7 +242,7 @@ export class AutomatedTestingService {
           test: async () => {
             // Test conflict detection and resolution
             console.log('Testing drawing and text editing conflict')
-            return { success: true, warnings: [], metrics: {} }
+            return { success: true, duration: 0, warnings: [], metrics: {}, timestamp: Date.now() }
           },
           teardown: async () => {
             // Cleanup
@@ -262,7 +262,7 @@ export class AutomatedTestingService {
           },
           test: async () => {
             console.log('Testing tool selection conflict')
-            return { success: true, warnings: [], metrics: {} }
+            return { success: true, duration: 0, warnings: [], metrics: {}, timestamp: Date.now() }
           },
           teardown: async () => {
             console.log('Cleaning up tool selection state')
@@ -300,7 +300,7 @@ export class AutomatedTestingService {
           },
           test: async () => {
             console.log('Testing memory usage monitoring')
-            return { success: true, warnings: [], metrics: {} }
+            return { success: true, duration: 0, warnings: [], metrics: {}, timestamp: Date.now() }
           },
           teardown: async () => {
             console.log('Cleaning up memory monitoring')
@@ -319,7 +319,7 @@ export class AutomatedTestingService {
           },
           test: async () => {
             console.log('Testing memory optimization')
-            return { success: true, warnings: [], metrics: {} }
+            return { success: true, duration: 0, warnings: [], metrics: {}, timestamp: Date.now() }
           },
           teardown: async () => {
             console.log('Cleaning up memory optimization test')
@@ -357,7 +357,7 @@ export class AutomatedTestingService {
           },
           test: async () => {
             console.log('Testing FPS monitoring')
-            return { success: true, warnings: [], metrics: {} }
+            return { success: true, duration: 0, warnings: [], metrics: {}, timestamp: Date.now() }
           },
           teardown: async () => {
             console.log('Cleaning up FPS monitoring')
@@ -376,7 +376,7 @@ export class AutomatedTestingService {
           },
           test: async () => {
             console.log('Testing performance optimization')
-            return { success: true, warnings: [], metrics: {} }
+            return { success: true, duration: 0, warnings: [], metrics: {}, timestamp: Date.now() }
           },
           teardown: async () => {
             console.log('Cleaning up performance optimization test')
@@ -414,7 +414,7 @@ export class AutomatedTestingService {
           },
           test: async () => {
             console.log('Testing optimistic update conflicts')
-            return { success: true, warnings: [], metrics: {} }
+            return { success: true, duration: 0, warnings: [], metrics: {}, timestamp: Date.now() }
           },
           teardown: async () => {
             console.log('Cleaning up optimistic update conflict test')
@@ -433,7 +433,7 @@ export class AutomatedTestingService {
           },
           test: async () => {
             console.log('Testing event handler conflicts')
-            return { success: true, warnings: [], metrics: {} }
+            return { success: true, duration: 0, warnings: [], metrics: {}, timestamp: Date.now() }
           },
           teardown: async () => {
             console.log('Cleaning up event handler conflict test')
@@ -471,7 +471,7 @@ export class AutomatedTestingService {
           },
           test: async () => {
             console.log('Testing service integration')
-            return { success: true, warnings: [], metrics: {} }
+            return { success: true, duration: 0, warnings: [], metrics: {}, timestamp: Date.now() }
           },
           teardown: async () => {
             console.log('Cleaning up service integration test')

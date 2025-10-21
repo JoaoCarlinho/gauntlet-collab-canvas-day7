@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react'
 import { CanvasObject } from '../types'
-import { zIndexManager, ZIndexBehavior, createObjectWithZIndex } from '../utils/zIndexManager'
-import { canvasAPI } from '../services/api'
+import { ZIndexBehavior, createObjectWithZIndex } from '../utils/zIndexManager'
+import { canvasAPI, objectsAPI } from '../services/api'
 
 export interface ObjectDropShortcutsConfig {
   canvasId: string
@@ -80,17 +80,17 @@ export const useObjectDropShortcuts = (config: ObjectDropShortcutsConfig): Objec
         existingObjects
       )
 
-      const response = await canvasAPI.createObject({
+      const response = await objectsAPI.createObject({
         canvas_id: canvasId,
         object_type: objectType,
         properties: objectData.properties,
         z_index_behavior: behavior
       })
 
-      if (response.data) {
-        onObjectCreated(response.data.object)
+      if (response.object) {
+        onObjectCreated(response.object)
       } else {
-        onError(response.error || 'Failed to create object')
+        onError('Failed to create object')
       }
     } catch (error) {
       onError(`Failed to create ${objectType}: ${error}`)
@@ -246,10 +246,10 @@ const handleZIndexAction = async (
         return
     }
 
-    if (response.data) {
-      onZIndexUpdate(objectId, response.data.object.z_index)
+    if (response.object) {
+      onZIndexUpdate(objectId, response.object.z_index)
     } else {
-      onError(response.error || `Failed to ${action.replace('-', ' ')} object`)
+      onError(`Failed to ${action.replace('-', ' ')} object`)
     }
   } catch (error) {
     onError(`Failed to ${action.replace('-', ' ')} object: ${error}`)

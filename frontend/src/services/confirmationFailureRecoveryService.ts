@@ -3,8 +3,7 @@
  */
 
 import { errorLogger } from '../utils/errorLogger'
-import { objectsAPI } from './api'
-import { authService } from './authService'
+import { objectsAPI, canvasAPI } from './api'
 import { networkTimeoutService } from './networkTimeoutService'
 
 export interface ConfirmationFailureContext {
@@ -88,8 +87,8 @@ class ConfirmationFailureRecoveryService {
       {
         name: 'socket_verification',
         description: 'Use socket connection to verify object state',
-        canApply: (context) => true,
-        execute: async (context) => this.socketVerification(context),
+        canApply: () => true,
+        execute: async () => this.socketVerification(),
         priority: 3,
         maxAttempts: 2
       },
@@ -178,9 +177,9 @@ class ConfirmationFailureRecoveryService {
         } catch (error) {
           console.error(`Recovery strategy ${strategy.name} threw error:`, error)
           errorLogger.logError('Recovery strategy error', {
-            strategy: strategy.name,
-            context,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            operation: 'general',
+            additionalData: { strategy: strategy.name, context, error: error instanceof Error ? error.message : 'Unknown error' },
+            timestamp: Date.now()
           })
         }
       }
@@ -246,10 +245,10 @@ class ConfirmationFailureRecoveryService {
    */
   private async canvasObjectsScan(context: ConfirmationFailureContext): Promise<ConfirmationResult> {
     try {
-      const response = await objectsAPI.getCanvasObjects(context.canvasId)
+        const response = await canvasAPI.getCanvasObjects(context.canvasId)
       
       if (response.objects) {
-        const foundObject = response.objects.find(obj => obj.id === context.objectId)
+        const foundObject = response.objects.find((obj: any) => obj.id === context.objectId)
         
         if (foundObject) {
           return {
@@ -280,7 +279,7 @@ class ConfirmationFailureRecoveryService {
   /**
    * Socket verification strategy
    */
-  private async socketVerification(context: ConfirmationFailureContext): Promise<ConfirmationResult> {
+  private async socketVerification(): Promise<ConfirmationResult> {
     try {
       // This would integrate with socket service to verify object state
       // For now, we'll simulate the verification
@@ -504,6 +503,5 @@ class ConfirmationFailureRecoveryService {
 // Export singleton instance
 export const confirmationFailureRecoveryService = new ConfirmationFailureRecoveryService()
 
-// Export types and service
+// Export service
 export { ConfirmationFailureRecoveryService }
-export type { ConfirmationFailureContext, ConfirmationResult, RecoveryStrategy, ConfirmationFailureMetrics }

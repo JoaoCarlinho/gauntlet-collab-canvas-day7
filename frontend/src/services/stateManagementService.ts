@@ -105,9 +105,10 @@ class StateManagementService {
     } catch (error) {
       console.error('Error processing operation queue:', error)
       errorLogger.logError(error as Error, {
-        operation: 'process_operation_queue',
+        operation: 'general',
         timestamp: Date.now(),
         additionalData: {
+          operationType: 'process_operation_queue',
           queueLength: this.operationQueue.length,
           activeOperations: this.activeOperations.size
         }
@@ -126,20 +127,18 @@ class StateManagementService {
     this.activeOperations.set(operation.id, operation)
 
     try {
-      let result: any
-
       switch (operation.type) {
         case 'create':
-          result = await this.executeCreateOperation(operation)
+          await this.executeCreateOperation(operation)
           break
         case 'update':
-          result = await this.executeUpdateOperation(operation)
+          await this.executeUpdateOperation(operation)
           break
         case 'delete':
-          result = await this.executeDeleteOperation(operation)
+          await this.executeDeleteOperation(operation)
           break
         case 'sync':
-          result = await this.executeSyncOperation(operation)
+          await this.executeSyncOperation(operation)
           break
         default:
           throw new Error(`Unknown operation type: ${operation.type}`)
@@ -595,6 +594,5 @@ class StateManagementService {
 // Export singleton instance
 export const stateManagementService = new StateManagementService()
 
-// Export types and service
+// Export service
 export { StateManagementService }
-export type { StateOperation, StateConflict, StateMetrics }

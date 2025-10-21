@@ -8,7 +8,7 @@ import { enhancedSocketService } from './enhancedSocketService'
 import { authService } from './authService'
 import { objectValidationService } from './objectValidationService'
 import { errorRecoveryService } from './errorRecoveryService'
-import { errorLogger } from '../utils/errorLogger'
+// import { errorLogger } from '../utils/errorLogger' // Unused import
 
 export interface UnifiedOperationResult<T = any> {
   success: boolean
@@ -86,36 +86,36 @@ class UnifiedCanvasService {
   /**
    * Get canvases with unified handling
    */
-  public async getCanvases(options: CanvasOperationOptions = {}): Promise<UnifiedOperationResult<Canvas[]>> {
-    const startTime = Date.now()
+  public async getCanvases(_options: CanvasOperationOptions = {}): Promise<UnifiedOperationResult<Canvas[]>> {
+    // const _startTime = Date.now() // Unused variable
     
     try {
       if (this.isDevelopment) {
-        return await this.getCanvasesDevelopment(options)
+        return await this.getCanvasesDevelopment(_options)
       } else {
-        return await this.getCanvasesProduction(options)
+        return await this.getCanvasesProduction(_options)
       }
     } catch (error) {
       console.error('Failed to get canvases:', error)
       
       // Attempt recovery
-      if (options.retryOnFailure !== false) {
+      if (_options.retryOnFailure !== false) {
         const recoveryResult = await errorRecoveryService.attemptRecovery(
           error,
           'get_canvases',
-          { options }
+          { _options }
         )
         
         if (recoveryResult.success && recoveryResult.recovered) {
           // Retry the operation
-          return this.getCanvases({ ...options, retryOnFailure: false })
+          return this.getCanvases({ ..._options, retryOnFailure: false })
         }
       }
       
       // Fallback to development mode if enabled
-      if (options.fallbackToDev && !this.isDevelopment) {
+      if (_options.fallbackToDev && !this.isDevelopment) {
         console.log('Falling back to development mode for getCanvases')
-        return await this.getCanvasesDevelopment(options)
+        return await this.getCanvasesDevelopment(_options)
       }
       
       return {
@@ -130,7 +130,8 @@ class UnifiedCanvasService {
   /**
    * Get canvases in development mode
    */
-  private async getCanvasesDevelopment(options: CanvasOperationOptions): Promise<UnifiedOperationResult<Canvas[]>> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private async getCanvasesDevelopment(__options: CanvasOperationOptions): Promise<UnifiedOperationResult<Canvas[]>> {
     // Simulate network delay
     await this.simulateDelay(300)
     
@@ -145,7 +146,7 @@ class UnifiedCanvasService {
   /**
    * Get canvases in production mode
    */
-  private async getCanvasesProduction(options: CanvasOperationOptions): Promise<UnifiedOperationResult<Canvas[]>> {
+  private async getCanvasesProduction(_options: CanvasOperationOptions): Promise<UnifiedOperationResult<Canvas[]>> {
     const response = await canvasAPI.getCanvases()
     
     return {
@@ -159,33 +160,33 @@ class UnifiedCanvasService {
   /**
    * Get canvas by ID with unified handling
    */
-  public async getCanvas(canvasId: string, options: CanvasOperationOptions = {}): Promise<UnifiedOperationResult<Canvas>> {
+  public async getCanvas(__canvasId: string, _options: CanvasOperationOptions = {}): Promise<UnifiedOperationResult<Canvas>> {
     try {
       if (this.isDevelopment) {
-        return await this.getCanvasDevelopment(canvasId, options)
+        return await this.getCanvasDevelopment(__canvasId, _options)
       } else {
-        return await this.getCanvasProduction(canvasId, options)
+        return await this.getCanvasProduction(__canvasId, _options)
       }
     } catch (error) {
       console.error('Failed to get canvas:', error)
       
       // Attempt recovery
-      if (options.retryOnFailure !== false) {
+      if (_options.retryOnFailure !== false) {
         const recoveryResult = await errorRecoveryService.attemptRecovery(
           error,
           'get_canvas',
-          { canvasId, options }
+          { __canvasId, _options }
         )
         
         if (recoveryResult.success && recoveryResult.recovered) {
-          return this.getCanvas(canvasId, { ...options, retryOnFailure: false })
+          return this.getCanvas(__canvasId, { ..._options, retryOnFailure: false })
         }
       }
       
       // Fallback to development mode if enabled
-      if (options.fallbackToDev && !this.isDevelopment) {
+      if (_options.fallbackToDev && !this.isDevelopment) {
         console.log('Falling back to development mode for getCanvas')
-        return await this.getCanvasDevelopment(canvasId, options)
+        return await this.getCanvasDevelopment(__canvasId, _options)
       }
       
       return {
@@ -200,15 +201,15 @@ class UnifiedCanvasService {
   /**
    * Get canvas in development mode
    */
-  private async getCanvasDevelopment(canvasId: string, options: CanvasOperationOptions): Promise<UnifiedOperationResult<Canvas>> {
+  private async getCanvasDevelopment(__canvasId: string, _options: CanvasOperationOptions): Promise<UnifiedOperationResult<Canvas>> {
     await this.simulateDelay(200)
     
-    const canvas = this.mockData.canvases.find(c => c.id === canvasId)
+    const canvas = this.mockData.canvases.find(c => c.id === __canvasId)
     if (!canvas) {
       // Create a new mock canvas if not found
       const newCanvas: Canvas = {
-        id: canvasId,
-        title: `Development Canvas ${canvasId}`,
+        id: __canvasId,
+        title: `Development Canvas ${__canvasId}`,
         description: 'A test canvas for development',
         owner_id: 'dev-user',
         is_public: false,
@@ -238,8 +239,8 @@ class UnifiedCanvasService {
   /**
    * Get canvas in production mode
    */
-  private async getCanvasProduction(canvasId: string, options: CanvasOperationOptions): Promise<UnifiedOperationResult<Canvas>> {
-    const response = await canvasAPI.getCanvas(canvasId)
+  private async getCanvasProduction(__canvasId: string, _options: CanvasOperationOptions): Promise<UnifiedOperationResult<Canvas>> {
+    const response = await canvasAPI.getCanvas(__canvasId)
     
     return {
       success: true,
@@ -252,33 +253,33 @@ class UnifiedCanvasService {
   /**
    * Get canvas objects with unified handling
    */
-  public async getCanvasObjects(canvasId: string, options: CanvasOperationOptions = {}): Promise<UnifiedOperationResult<CanvasObject[]>> {
+  public async getCanvasObjects(__canvasId: string, _options: CanvasOperationOptions = {}): Promise<UnifiedOperationResult<CanvasObject[]>> {
     try {
       if (this.isDevelopment) {
-        return await this.getCanvasObjectsDevelopment(canvasId, options)
+        return await this.getCanvasObjectsDevelopment(__canvasId, _options)
       } else {
-        return await this.getCanvasObjectsProduction(canvasId, options)
+        return await this.getCanvasObjectsProduction(__canvasId, _options)
       }
     } catch (error) {
       console.error('Failed to get canvas objects:', error)
       
       // Attempt recovery
-      if (options.retryOnFailure !== false) {
+      if (_options.retryOnFailure !== false) {
         const recoveryResult = await errorRecoveryService.attemptRecovery(
           error,
           'get_canvas_objects',
-          { canvasId, options }
+          { __canvasId, _options }
         )
         
         if (recoveryResult.success && recoveryResult.recovered) {
-          return this.getCanvasObjects(canvasId, { ...options, retryOnFailure: false })
+          return this.getCanvasObjects(__canvasId, { ..._options, retryOnFailure: false })
         }
       }
       
       // Fallback to development mode if enabled
-      if (options.fallbackToDev && !this.isDevelopment) {
+      if (_options.fallbackToDev && !this.isDevelopment) {
         console.log('Falling back to development mode for getCanvasObjects')
-        return await this.getCanvasObjectsDevelopment(canvasId, options)
+        return await this.getCanvasObjectsDevelopment(__canvasId, _options)
       }
       
       return {
@@ -293,15 +294,15 @@ class UnifiedCanvasService {
   /**
    * Get canvas objects in development mode
    */
-  private async getCanvasObjectsDevelopment(canvasId: string, options: CanvasOperationOptions): Promise<UnifiedOperationResult<CanvasObject[]>> {
+  private async getCanvasObjectsDevelopment(__canvasId: string, _options: CanvasOperationOptions): Promise<UnifiedOperationResult<CanvasObject[]>> {
     await this.simulateDelay(150)
     
-    let objects = this.mockData.objects.get(canvasId) || []
+    let objects = this.mockData.objects.get(__canvasId) || []
     
     // If no objects exist, create some mock objects
     if (objects.length === 0) {
-      objects = this.createMockObjects(canvasId)
-      this.mockData.objects.set(canvasId, objects)
+      objects = this.createMockObjects(__canvasId)
+      this.mockData.objects.set(__canvasId, objects)
     }
     
     return {
@@ -315,8 +316,8 @@ class UnifiedCanvasService {
   /**
    * Get canvas objects in production mode
    */
-  private async getCanvasObjectsProduction(canvasId: string, options: CanvasOperationOptions): Promise<UnifiedOperationResult<CanvasObject[]>> {
-    const response = await canvasAPI.getCanvasObjects(canvasId)
+  private async getCanvasObjectsProduction(__canvasId: string, _options: CanvasOperationOptions): Promise<UnifiedOperationResult<CanvasObject[]>> {
+    const response = await canvasAPI.getCanvasObjects(__canvasId)
     
     return {
       success: true,
@@ -330,13 +331,13 @@ class UnifiedCanvasService {
    * Create object with unified handling
    */
   public async createObject(
-    canvasId: string,
+    __canvasId: string,
     object: { type: string; properties: Record<string, any> },
-    options: CanvasOperationOptions = {}
+    _options: CanvasOperationOptions = {}
   ): Promise<UnifiedOperationResult<CanvasObject>> {
     try {
       // Validate object data if requested
-      if (options.validateData !== false) {
+      if (_options.validateData !== false) {
         const validation = objectValidationService.validateObject(object)
         if (!validation.isValid) {
           return {
@@ -349,30 +350,30 @@ class UnifiedCanvasService {
       }
 
       if (this.isDevelopment) {
-        return await this.createObjectDevelopment(canvasId, object, options)
+        return await this.createObjectDevelopment(__canvasId, object, _options)
       } else {
-        return await this.createObjectProduction(canvasId, object, options)
+        return await this.createObjectProduction(__canvasId, object, _options)
       }
     } catch (error) {
       console.error('Failed to create object:', error)
       
       // Attempt recovery
-      if (options.retryOnFailure !== false) {
+      if (_options.retryOnFailure !== false) {
         const recoveryResult = await errorRecoveryService.attemptRecovery(
           error,
           'create_object',
-          { canvasId, object, options }
+          { __canvasId, object, _options }
         )
         
         if (recoveryResult.success && recoveryResult.recovered) {
-          return this.createObject(canvasId, object, { ...options, retryOnFailure: false })
+          return this.createObject(__canvasId, object, { ..._options, retryOnFailure: false })
         }
       }
       
       // Fallback to development mode if enabled
-      if (options.fallbackToDev && !this.isDevelopment) {
+      if (_options.fallbackToDev && !this.isDevelopment) {
         console.log('Falling back to development mode for createObject')
-        return await this.createObjectDevelopment(canvasId, object, options)
+        return await this.createObjectDevelopment(__canvasId, object, _options)
       }
       
       return {
@@ -388,29 +389,30 @@ class UnifiedCanvasService {
    * Create object in development mode
    */
   private async createObjectDevelopment(
-    canvasId: string,
+    __canvasId: string,
     object: { type: string; properties: Record<string, any> },
-    options: CanvasOperationOptions
+    _options: CanvasOperationOptions
   ): Promise<UnifiedOperationResult<CanvasObject>> {
     await this.simulateDelay(100)
     
     const newObject: CanvasObject = {
       id: `dev-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      canvas_id: canvasId,
-      object_type: object.type,
-      properties: object.properties,
+      canvas_id: __canvasId,
+      object_type: object.type as 'text' | 'rectangle' | 'circle' | 'heart' | 'star' | 'diamond' | 'line' | 'arrow',
+      properties: object.properties as any,
+      z_index: 1,
       created_by: 'dev-user',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
     
     // Add to mock data
-    const objects = this.mockData.objects.get(canvasId) || []
+    const objects = this.mockData.objects.get(__canvasId) || []
     objects.push(newObject)
-    this.mockData.objects.set(canvasId, objects)
+    this.mockData.objects.set(__canvasId, objects)
     
     // Update canvas object count
-    const canvas = this.mockData.canvases.find(c => c.id === canvasId)
+    const canvas = this.mockData.canvases.find(c => c.id === __canvasId)
     if (canvas) {
       canvas.object_count = objects.length
       canvas.updated_at = new Date().toISOString()
@@ -428,9 +430,9 @@ class UnifiedCanvasService {
    * Create object in production mode
    */
   private async createObjectProduction(
-    canvasId: string,
+    __canvasId: string,
     object: { type: string; properties: Record<string, any> },
-    options: CanvasOperationOptions
+    _options: CanvasOperationOptions
   ): Promise<UnifiedOperationResult<CanvasObject>> {
     // Try socket first, then REST API
     if (enhancedSocketService.isConnected()) {
@@ -441,7 +443,7 @@ class UnifiedCanvasService {
           return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
               reject(new Error('Socket creation timeout'))
-            }, options.timeout || 10000)
+            }, _options.timeout || 10000)
 
             const onSuccess = (data: { object: CanvasObject }) => {
               clearTimeout(timeout)
@@ -466,7 +468,7 @@ class UnifiedCanvasService {
             enhancedSocketService.on('object_created', onSuccess)
             enhancedSocketService.on('object_create_failed', onFailure)
             enhancedSocketService.emit('object_created', {
-              canvas_id: canvasId,
+              canvas_id: __canvasId,
               id_token: token,
               object
             })
@@ -479,7 +481,7 @@ class UnifiedCanvasService {
 
     // Fallback to REST API
     const response = await objectsAPI.createObject({
-      canvas_id: canvasId,
+      canvas_id: __canvasId,
       object_type: object.type,
       properties: object.properties
     })
@@ -498,27 +500,27 @@ class UnifiedCanvasService {
   public async updateObject(
     objectId: string,
     properties: Record<string, any>,
-    options: CanvasOperationOptions = {}
+    _options: CanvasOperationOptions = {}
   ): Promise<UnifiedOperationResult<CanvasObject>> {
     try {
       if (this.isDevelopment) {
-        return await this.updateObjectDevelopment(objectId, properties, options)
+        return await this.updateObjectDevelopment(objectId, properties, _options)
       } else {
-        return await this.updateObjectProduction(objectId, properties, options)
+        return await this.updateObjectProduction(objectId, properties, _options)
       }
     } catch (error) {
       console.error('Failed to update object:', error)
       
       // Attempt recovery
-      if (options.retryOnFailure !== false) {
+      if (_options.retryOnFailure !== false) {
         const recoveryResult = await errorRecoveryService.attemptRecovery(
           error,
           'update_object',
-          { objectId, properties, options }
+          { objectId, properties, _options }
         )
         
         if (recoveryResult.success && recoveryResult.recovered) {
-          return this.updateObject(objectId, properties, { ...options, retryOnFailure: false })
+          return this.updateObject(objectId, properties, { ..._options, retryOnFailure: false })
         }
       }
       
@@ -537,12 +539,12 @@ class UnifiedCanvasService {
   private async updateObjectDevelopment(
     objectId: string,
     properties: Record<string, any>,
-    options: CanvasOperationOptions
+    _options: CanvasOperationOptions
   ): Promise<UnifiedOperationResult<CanvasObject>> {
     await this.simulateDelay(50)
     
     // Find and update object in mock data
-    for (const [canvasId, objects] of this.mockData.objects.entries()) {
+    for (const [__canvasId, objects] of this.mockData.objects.entries()) {
       const objectIndex = objects.findIndex(obj => obj.id === objectId)
       if (objectIndex !== -1) {
         objects[objectIndex] = {
@@ -569,7 +571,7 @@ class UnifiedCanvasService {
   private async updateObjectProduction(
     objectId: string,
     properties: Record<string, any>,
-    options: CanvasOperationOptions
+    _options: CanvasOperationOptions
   ): Promise<UnifiedOperationResult<CanvasObject>> {
     const response = await objectsAPI.updateObject(objectId, { properties })
     
@@ -584,12 +586,12 @@ class UnifiedCanvasService {
   /**
    * Delete object with unified handling
    */
-  public async deleteObject(objectId: string, options: CanvasOperationOptions = {}): Promise<UnifiedOperationResult<void>> {
+  public async deleteObject(objectId: string, _options: CanvasOperationOptions = {}): Promise<UnifiedOperationResult<void>> {
     try {
       if (this.isDevelopment) {
-        return await this.deleteObjectDevelopment(objectId, options)
+        return await this.deleteObjectDevelopment(objectId, _options)
       } else {
-        return await this.deleteObjectProduction(objectId, options)
+        return await this.deleteObjectProduction(objectId, _options)
       }
     } catch (error) {
       console.error('Failed to delete object:', error)
@@ -606,17 +608,17 @@ class UnifiedCanvasService {
   /**
    * Delete object in development mode
    */
-  private async deleteObjectDevelopment(objectId: string, options: CanvasOperationOptions): Promise<UnifiedOperationResult<void>> {
+  private async deleteObjectDevelopment(objectId: string, _options: CanvasOperationOptions): Promise<UnifiedOperationResult<void>> {
     await this.simulateDelay(50)
     
     // Find and remove object from mock data
-    for (const [canvasId, objects] of this.mockData.objects.entries()) {
+    for (const [__canvasId, objects] of this.mockData.objects.entries()) {
       const objectIndex = objects.findIndex(obj => obj.id === objectId)
       if (objectIndex !== -1) {
         objects.splice(objectIndex, 1)
         
         // Update canvas object count
-        const canvas = this.mockData.canvases.find(c => c.id === canvasId)
+        const canvas = this.mockData.canvases.find(c => c.id === __canvasId)
         if (canvas) {
           canvas.object_count = objects.length
           canvas.updated_at = new Date().toISOString()
@@ -636,7 +638,7 @@ class UnifiedCanvasService {
   /**
    * Delete object in production mode
    */
-  private async deleteObjectProduction(objectId: string, options: CanvasOperationOptions): Promise<UnifiedOperationResult<void>> {
+  private async deleteObjectProduction(objectId: string, _options: CanvasOperationOptions): Promise<UnifiedOperationResult<void>> {
     await objectsAPI.deleteObject(objectId)
     
     return {
@@ -649,13 +651,13 @@ class UnifiedCanvasService {
   /**
    * Create mock objects for development
    */
-  private createMockObjects(canvasId: string): CanvasObject[] {
+  private createMockObjects(__canvasId: string): CanvasObject[] {
     const now = new Date().toISOString()
     
     return [
       {
-        id: `dev-obj-1-${canvasId}`,
-        canvas_id: canvasId,
+        id: `dev-obj-1-${__canvasId}`,
+        canvas_id: __canvasId,
         object_type: 'rectangle',
         properties: {
           x: 100,
@@ -666,13 +668,14 @@ class UnifiedCanvasService {
           stroke: '#1e40af',
           strokeWidth: 2
         },
+        z_index: 1,
         created_by: 'dev-user',
         created_at: now,
         updated_at: now
       },
       {
-        id: `dev-obj-2-${canvasId}`,
-        canvas_id: canvasId,
+        id: `dev-obj-2-${__canvasId}`,
+        canvas_id: __canvasId,
         object_type: 'text',
         properties: {
           x: 150,
@@ -682,13 +685,14 @@ class UnifiedCanvasService {
           fill: '#1f2937',
           fontFamily: 'Arial'
         },
+        z_index: 2,
         created_by: 'dev-user',
         created_at: now,
         updated_at: now
       },
       {
-        id: `dev-obj-3-${canvasId}`,
-        canvas_id: canvasId,
+        id: `dev-obj-3-${__canvasId}`,
+        canvas_id: __canvasId,
         object_type: 'circle',
         properties: {
           x: 300,
@@ -698,6 +702,7 @@ class UnifiedCanvasService {
           stroke: '#dc2626',
           strokeWidth: 2
         },
+        z_index: 3,
         created_by: 'dev-user',
         created_at: now,
         updated_at: now
@@ -741,6 +746,5 @@ class UnifiedCanvasService {
 // Export singleton instance
 export const unifiedCanvasService = new UnifiedCanvasService()
 
-// Export types and service
+// Export service
 export { UnifiedCanvasService }
-export type { UnifiedOperationResult, CanvasOperationOptions }

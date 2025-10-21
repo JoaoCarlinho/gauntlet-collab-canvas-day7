@@ -2,7 +2,7 @@
  * Comprehensive User Feedback System
  */
 
-import { errorLogger } from '../utils/errorLogger'
+// import { errorLogger } from '../utils/errorLogger' // Unused import
 
 export interface FeedbackMessage {
   id: string
@@ -283,10 +283,10 @@ class UserFeedbackService {
    */
   private setupEventListeners(): void {
     // Listen for custom events
-    window.addEventListener('duplicateDetected', this.handleDuplicateDetected.bind(this))
-    window.addEventListener('stateConflict', this.handleStateConflict.bind(this))
-    window.addEventListener('connectionLost', this.handleConnectionLost.bind(this))
-    window.addEventListener('connectionRestored', this.handleConnectionRestored.bind(this))
+    window.addEventListener('duplicateDetected', this.handleDuplicateDetected.bind(this) as EventListener)
+    window.addEventListener('stateConflict', this.handleStateConflict.bind(this) as EventListener)
+    window.addEventListener('connectionLost', this.handleConnectionLost.bind(this) as EventListener)
+    window.addEventListener('connectionRestored', this.handleConnectionRestored.bind(this) as EventListener)
   }
 
   /**
@@ -614,7 +614,7 @@ class UserFeedbackService {
    * Handle state conflict event
    */
   private handleStateConflict(event: CustomEvent): void {
-    const { conflict } = event.detail
+    const { conflict: _conflict } = event.detail
     
     this.error(
       'State Conflict Detected',
@@ -643,7 +643,7 @@ class UserFeedbackService {
   /**
    * Handle connection lost event
    */
-  private handleConnectionLost(event: CustomEvent): void {
+  private handleConnectionLost(_event: CustomEvent): void {
     this.warning(
       'Connection Lost',
       'You have lost connection to the server. Changes will be saved when connection is restored.',
@@ -656,7 +656,7 @@ class UserFeedbackService {
   /**
    * Handle connection restored event
    */
-  private handleConnectionRestored(event: CustomEvent): void {
+  private handleConnectionRestored(_event: CustomEvent): void {
     this.success(
       'Connection Restored',
       'Your connection to the server has been restored.',
@@ -729,6 +729,5 @@ class UserFeedbackService {
 // Export singleton instance
 export const userFeedbackService = new UserFeedbackService()
 
-// Export types and service
+// Export service
 export { UserFeedbackService }
-export type { FeedbackMessage, FeedbackAction, FeedbackConfig, FeedbackMetrics }

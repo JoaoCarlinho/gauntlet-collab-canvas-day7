@@ -181,9 +181,9 @@ class SocketEventReliabilityService {
     } catch (error) {
       console.error('Failed to emit event:', error)
       errorLogger.logError('Event emission failed', {
-        eventType,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        operation: 'socket_connection',
+        additionalData: { eventType, error: error instanceof Error ? error.message : 'Unknown error' },
+        timestamp: Date.now()
       })
 
       return {
@@ -219,9 +219,9 @@ class SocketEventReliabilityService {
     } catch (error) {
       console.error('Event queue processing error:', error)
       errorLogger.logError('Event queue processing failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        queueSize: this.eventQueue.length,
-        timestamp: new Date().toISOString()
+        operation: 'socket_connection',
+        additionalData: { error: error instanceof Error ? error.message : 'Unknown error', queueSize: this.eventQueue.length },
+        timestamp: Date.now()
       })
     } finally {
       this.isProcessing = false
@@ -342,11 +342,9 @@ class SocketEventReliabilityService {
       
       // Log failure
       errorLogger.logError('Event processing failed', {
-        eventId: event.id,
-        eventType: event.type,
-        retryCount: event.retryCount,
-        error,
-        timestamp: new Date().toISOString()
+        operation: 'socket_connection',
+        additionalData: { eventId: event.id, eventType: event.type, retryCount: event.retryCount, error },
+        timestamp: Date.now()
       })
       
       // Remove from pending acknowledgments
@@ -575,6 +573,5 @@ class SocketEventReliabilityService {
 // Export singleton instance
 export const socketEventReliabilityService = new SocketEventReliabilityService()
 
-// Export types and service
+// Export service
 export { SocketEventReliabilityService }
-export type { SocketEvent, EventAcknowledgment, EventQueueStats, ReliabilityConfig, EventReliabilityResult }

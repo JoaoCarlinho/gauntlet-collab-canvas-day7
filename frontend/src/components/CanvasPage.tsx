@@ -120,7 +120,7 @@ const CanvasPage: React.FC = () => {
   const { getMousePosition } = useCanvasMousePosition(stageRef)
   
   // Object drop shortcuts
-  const objectDropShortcuts = useObjectDropShortcuts({
+  useObjectDropShortcuts({
     canvasId: canvasId || '',
     userId: user?.id || '',
     onObjectCreated: (object: CanvasObject) => {
@@ -1248,9 +1248,9 @@ const CanvasPage: React.FC = () => {
 
     try {
       const response = await canvasAPI.bringObjectToFront(selectedObjectId)
-      if (response.data) {
+      if (response.object) {
         setObjects(prev => prev.map(obj => 
-          obj.id === selectedObjectId ? { ...obj, z_index: response.data.object.z_index } : obj
+          obj.id === selectedObjectId ? { ...obj, z_index: response.object.z_index } : obj
         ))
         devToast.success('Object brought to front')
       }
@@ -1266,9 +1266,9 @@ const CanvasPage: React.FC = () => {
 
     try {
       const response = await canvasAPI.sendObjectToBack(selectedObjectId)
-      if (response.data) {
+      if (response.object) {
         setObjects(prev => prev.map(obj => 
-          obj.id === selectedObjectId ? { ...obj, z_index: response.data.object.z_index } : obj
+          obj.id === selectedObjectId ? { ...obj, z_index: response.object.z_index } : obj
         ))
         devToast.success('Object sent to back')
       }
@@ -1284,9 +1284,9 @@ const CanvasPage: React.FC = () => {
 
     try {
       const response = await canvasAPI.moveObjectUp(selectedObjectId)
-      if (response.data) {
+      if (response.object) {
         setObjects(prev => prev.map(obj => 
-          obj.id === selectedObjectId ? { ...obj, z_index: response.data.object.z_index } : obj
+          obj.id === selectedObjectId ? { ...obj, z_index: response.object.z_index } : obj
         ))
         devToast.success('Object moved up')
       }
@@ -1302,9 +1302,9 @@ const CanvasPage: React.FC = () => {
 
     try {
       const response = await canvasAPI.moveObjectDown(selectedObjectId)
-      if (response.data) {
+      if (response.object) {
         setObjects(prev => prev.map(obj => 
-          obj.id === selectedObjectId ? { ...obj, z_index: response.data.object.z_index } : obj
+          obj.id === selectedObjectId ? { ...obj, z_index: response.object.z_index } : obj
         ))
         devToast.success('Object moved down')
       }
@@ -2023,6 +2023,7 @@ const CanvasPage: React.FC = () => {
           canvas_id: canvasId || 'temp-canvas',
           object_type: newObject.object_type!,
           properties: newObject.properties!,
+          z_index: 1,
           created_by: 'dev-user',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()

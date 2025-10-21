@@ -1,7 +1,7 @@
 import React from 'react'
 import { CanvasObject } from '../types'
-import { zIndexManager, getZIndexDisplayInfo } from '../utils/zIndexManager'
-import { ArrowUp, ArrowDown, MoveUp, MoveDown, Eye, EyeOff } from 'lucide-react'
+import { getZIndexDisplayInfo } from '../utils/zIndexManager'
+import { ArrowUp, ArrowDown, MoveUp, MoveDown, Eye } from 'lucide-react'
 
 interface LayerManagementPanelProps {
   objects: CanvasObject[]
