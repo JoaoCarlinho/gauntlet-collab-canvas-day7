@@ -276,7 +276,7 @@ class EnhancedSocketService {
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization'
         },
-        transports: ['polling'], // Force polling-only transport to prevent parse errors
+        transports: ['polling', 'websocket'], // Allow both transports for better compatibility
         timeout: 30000, // Increased timeout
         reconnection: true,
         reconnectionAttempts: this.reconnectionStrategy.maxAttempts,

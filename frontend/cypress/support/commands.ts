@@ -24,6 +24,8 @@ declare global {
       verifyObjectVisible(objectIndex: number): Chainable<void>
       clickKonvaAt(percentX: number, percentY: number): Chainable<void>
       dragKonva(fromPercentX: number, fromPercentY: number, toPercentX: number, toPercentY: number): Chainable<void>
+      startVideoRecording(name: string): Chainable<void>
+      stopVideoRecording(): Chainable<void>
     }
   }
 }
@@ -229,4 +231,15 @@ Cypress.Commands.add('dragKonva', (fromPercentX: number, fromPercentY: number, t
       .trigger('pointermove', { clientX: endX, clientY: endY, force: true })
       .trigger('pointerup', { force: true })
   })
+})
+
+// Video recording commands for test instructions
+Cypress.Commands.add('startVideoRecording', (name: string) => {
+  cy.task('startVideoRecording', name)
+  cy.log(`🎥 Started video recording: ${name}`)
+})
+
+Cypress.Commands.add('stopVideoRecording', () => {
+  cy.task('stopVideoRecording')
+  cy.log('🎥 Stopped video recording')
 })
