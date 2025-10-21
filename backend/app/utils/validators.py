@@ -346,6 +346,7 @@ class InputValidator:
         
         elif object_type in ['line', 'arrow']:
             if 'points' in properties:
+                # Frontend format: points array [x1, y1, x2, y2]
                 points = properties['points']
                 if not isinstance(points, list) or len(points) != 4:
                     raise ValidationError("Points must be an array of 4 numbers [x1, y1, x2, y2]")
@@ -355,6 +356,15 @@ class InputValidator:
                     InputValidator.validate_coordinate(points[2], 'point x2'),
                     InputValidator.validate_coordinate(points[3], 'point y2')
                 ]
+            else:
+                # Backend format: x1, y1, x2, y2 coordinates
+                required_coords = ['x1', 'y1', 'x2', 'y2']
+                for coord in required_coords:
+                    if coord not in properties:
+                        raise ValidationError(f"{object_type} requires {coord} coordinate or points array")
+                    validated_props[coord] = InputValidator.validate_coordinate(
+                        properties[coord], f'{object_type} {coord}'
+                    )
         
         return validated_props
 
