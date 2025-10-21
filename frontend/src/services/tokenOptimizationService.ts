@@ -154,7 +154,7 @@ class TokenOptimizationService {
    */
   private async validateTokenWithBackend(token: string, userId: string): Promise<TokenValidationResult> {
     try {
-      const response = await canvasAPI.post('/api/token-analysis/validate', {
+      const response = await canvasAPI.post('/token-analysis/validate', {
         token,
         user_id: userId
       })
