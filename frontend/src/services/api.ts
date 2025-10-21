@@ -2,6 +2,8 @@ import axios from 'axios'
 import { User, Canvas, CanvasObject, Invitation } from '../types'
 import { getApiUrl } from '../utils/env'
 import { authService } from './authService'
+import { apiCircuitBreaker } from './circuitBreakerService'
+import { recordApiError, recordAuthError } from './errorRateMonitor'
 
 const API_URL = getApiUrl()
 
@@ -54,7 +56,7 @@ api.interceptors.request.use(async (config) => {
   return config
 })
 
-// Enhanced response interceptor with authentication error handling
+// Enhanced response interceptor with authentication error handling, circuit breaker, and exponential backoff
 api.interceptors.response.use(
   (response) => {
     console.log('API response received:', response.status, response.config.url)
@@ -73,22 +75,88 @@ api.interceptors.response.use(
         data: error.response?.data
       })
       
-      // Handle authentication errors
+      // Add retry count to config if not present
+      error.config.retryCount = error.config.retryCount || 0
+      const maxRetries = 3
+      
+      // Handle authentication errors with circuit breaker protection
       if (error.response?.status === 401) {
         console.warn('Authentication error - attempting token refresh')
+        recordAuthError(`401 Unauthorized: ${error.config?.url}`, error.config?.url)
+        
+        // Don't retry on auth errors if we've already tried too many times
+        if (error.config.retryCount >= maxRetries) {
+          console.error('Max retry attempts reached for authentication')
+          authService.clearAuth()
+          return Promise.reject(error)
+        }
+        
         try {
-          await authService.forceTokenRefresh()
-          // Retry the original request with new token
-          const newToken = await authService.getValidToken()
-          if (newToken && error.config) {
-            error.config.headers.Authorization = `Bearer ${newToken}`
-            return api.request(error.config)
-          }
+          // Use circuit breaker for token refresh to prevent infinite loops
+          await apiCircuitBreaker.execute(async () => {
+            await authService.forceTokenRefresh()
+            // Retry the original request with new token
+            const newToken = await authService.getValidToken()
+            if (newToken && error.config) {
+              error.config.headers.Authorization = `Bearer ${newToken}`
+              error.config.retryCount = (error.config.retryCount || 0) + 1
+              return api.request(error.config)
+            }
+          })
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError)
+          recordAuthError(`Token refresh failed: ${refreshError}`, error.config?.url)
           // Clear auth state if refresh fails
           authService.clearAuth()
         }
+      } 
+      // Handle server errors with exponential backoff
+      else if (error.response?.status >= 500 && error.config.retryCount < maxRetries) {
+        console.warn(`Server error ${error.response.status} - attempting retry ${error.config.retryCount + 1}/${maxRetries}`)
+        recordApiError(`Server Error ${error.response.status}: ${error.message}`, error.config?.url)
+        
+        // Calculate exponential backoff delay with jitter
+        const baseDelay = 1000 // 1 second
+        const retryCount = error.config.retryCount
+        const delay = Math.min(
+          baseDelay * Math.pow(2, retryCount) + Math.random() * 1000, // Add jitter
+          10000 // Max 10 seconds
+        )
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, delay))
+        
+        // Increment retry count and retry
+        error.config.retryCount = retryCount + 1
+        return api.request(error.config)
+      }
+      // Handle rate limiting with longer backoff
+      else if (error.response?.status === 429 && error.config.retryCount < maxRetries) {
+        console.warn('Rate limited - waiting before retry')
+        recordApiError(`Rate Limited: ${error.message}`, error.config?.url)
+        
+        // Wait longer for rate limiting (5-15 seconds)
+        const delay = 5000 + Math.random() * 10000
+        await new Promise(resolve => setTimeout(resolve, delay))
+        
+        error.config.retryCount = (error.config.retryCount || 0) + 1
+        return api.request(error.config)
+      }
+      // Handle network errors with retry
+      else if (!error.response && error.config.retryCount < maxRetries) {
+        console.warn('Network error - attempting retry')
+        recordApiError(`Network Error: ${error.message}`, error.config?.url)
+        
+        // Shorter delay for network errors
+        const delay = 1000 + Math.random() * 2000
+        await new Promise(resolve => setTimeout(resolve, delay))
+        
+        error.config.retryCount = (error.config.retryCount || 0) + 1
+        return api.request(error.config)
+      }
+      else {
+        // Record other API errors
+        recordApiError(`API Error ${error.response?.status}: ${error.message}`, error.config?.url)
       }
       
       // Handle specific error cases

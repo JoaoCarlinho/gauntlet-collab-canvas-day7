@@ -4,6 +4,7 @@
 
 import { auth, refreshFirebaseToken, isUserAuthenticated } from './firebase'
 import { errorLogger } from '../utils/errorLogger'
+import { authenticationCircuitBreaker } from './circuitBreakerService'
 
 export interface TokenValidationResult {
   isValid: boolean
@@ -130,77 +131,79 @@ class AuthService {
    * Validate current token and refresh if needed
    */
   public async validateAndRefreshToken(): Promise<TokenValidationResult> {
-    try {
-      // Check if we're in development mode
-      const isDevelopment = import.meta.env.DEV || 
-                           import.meta.env.VITE_DEBUG_MODE === 'true' ||
-                           window.location.hostname === 'localhost' ||
-                           window.location.hostname === '127.0.0.1'
+    return await authenticationCircuitBreaker.execute(async () => {
+      try {
+        // Check if we're in development mode
+        const isDevelopment = import.meta.env.DEV || 
+                             import.meta.env.VITE_DEBUG_MODE === 'true' ||
+                             window.location.hostname === 'localhost' ||
+                             window.location.hostname === '127.0.0.1'
 
-      if (isDevelopment) {
-        return this.handleDevelopmentMode()
-      }
-
-      // Check if user is authenticated
-      if (!isUserAuthenticated()) {
-        return {
-          isValid: false,
-          needsRefresh: false,
-          token: null,
-          error: 'User not authenticated'
+        if (isDevelopment) {
+          return this.handleDevelopmentMode()
         }
-      }
 
-      // Get current token from localStorage
-      const currentToken = localStorage.getItem('idToken')
-      if (!currentToken) {
+        // Check if user is authenticated
+        if (!isUserAuthenticated()) {
+          return {
+            isValid: false,
+            needsRefresh: false,
+            token: null,
+            error: 'User not authenticated'
+          }
+        }
+
+        // Get current token from localStorage
+        const currentToken = localStorage.getItem('idToken')
+        if (!currentToken) {
+          return {
+            isValid: false,
+            needsRefresh: true,
+            token: null,
+            error: 'No token found in localStorage'
+          }
+        }
+
+        // Validate token format and expiration
+        const validationResult = await this.validateTokenFormat(currentToken)
+        if (!validationResult.isValid) {
+          return validationResult
+        }
+
+        // Check if token needs refresh (expires within 10 minutes)
+        const needsRefresh = this.shouldRefreshToken(validationResult.expiresAt)
+        if (needsRefresh) {
+          return await this.refreshToken()
+        }
+
+        // Token is valid and doesn't need refresh
+        this.authState.token = currentToken
+        this.authState.lastValidation = Date.now()
+        this.authState.validationAttempts = 0
+
+        return {
+          isValid: true,
+          needsRefresh: false,
+          token: currentToken,
+          expiresAt: validationResult.expiresAt
+        }
+
+      } catch (error) {
+        console.error('Token validation error:', error)
+        errorLogger.logError('Token validation failed', {
+          operation: 'general',
+          additionalData: { error: error instanceof Error ? error.message : 'Unknown error', authState: this.authState },
+          timestamp: Date.now()
+        })
+
         return {
           isValid: false,
           needsRefresh: true,
           token: null,
-          error: 'No token found in localStorage'
+          error: error instanceof Error ? error.message : 'Token validation failed'
         }
       }
-
-      // Validate token format and expiration
-      const validationResult = await this.validateTokenFormat(currentToken)
-      if (!validationResult.isValid) {
-        return validationResult
-      }
-
-      // Check if token needs refresh (expires within 10 minutes)
-      const needsRefresh = this.shouldRefreshToken(validationResult.expiresAt)
-      if (needsRefresh) {
-        return await this.refreshToken()
-      }
-
-      // Token is valid and doesn't need refresh
-      this.authState.token = currentToken
-      this.authState.lastValidation = Date.now()
-      this.authState.validationAttempts = 0
-
-      return {
-        isValid: true,
-        needsRefresh: false,
-        token: currentToken,
-        expiresAt: validationResult.expiresAt
-      }
-
-    } catch (error) {
-      console.error('Token validation error:', error)
-      errorLogger.logError('Token validation failed', {
-        operation: 'general',
-        additionalData: { error: error instanceof Error ? error.message : 'Unknown error', authState: this.authState },
-        timestamp: Date.now()
-      })
-
-      return {
-        isValid: false,
-        needsRefresh: true,
-        token: null,
-        error: error instanceof Error ? error.message : 'Token validation failed'
-      }
-    }
+    })
   }
 
   /**

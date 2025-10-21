@@ -43,7 +43,6 @@ def analyze_token():
         }), 500
 
 @token_analysis_bp.route('/validate', methods=['POST'])
-@require_auth
 def validate_token():
     """Validate a token for socket usage."""
     try:
@@ -57,9 +56,14 @@ def validate_token():
         token = data['token']
         user_id = data.get('user_id', 'unknown')
         
+        # Add detailed logging for debugging
+        railway_logger.log('token_analysis', 10, f"Token validation request received for user: {user_id}")
+        railway_logger.log('token_analysis', 10, f"Token length: {len(token)}")
+        railway_logger.log('token_analysis', 10, f"Token starts with: {token[:50]}...")
+        
         validation_result = token_optimization_service.validate_token_for_socket(token, user_id)
         
-        railway_logger.log('token_analysis', 10, f"Token validation requested for user: {user_id}")
+        railway_logger.log('token_analysis', 10, f"Token validation completed for user: {user_id}, valid: {validation_result.get('is_valid', False)}")
         
         return jsonify({
             'status': 'success',
@@ -69,7 +73,7 @@ def validate_token():
         railway_logger.log('token_analysis', 40, f"Token validation failed: {str(e)}")
         return jsonify({
             'status': 'error',
-            'message': 'Token validation failed'
+            'message': f'Token validation failed: {str(e)}'
         }), 500
 
 @token_analysis_bp.route('/optimize-message', methods=['POST'])
