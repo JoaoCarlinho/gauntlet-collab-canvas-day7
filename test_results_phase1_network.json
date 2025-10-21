@@ -1,0 +1,46 @@
+{
+  "1.2.1": {
+    "name": "Socket Connection Status",
+    "status": "failed",
+    "details": [
+      {
+        "type": "error",
+        "message": "page is not defined",
+        "timestamp": 1761014270971
+      }
+    ]
+  },
+  "1.2.2": {
+    "name": "REST API Fallback Testing",
+    "status": "failed",
+    "details": [
+      {
+        "type": "error",
+        "message": "page is not defined",
+        "timestamp": 1761014270973
+      }
+    ]
+  },
+  "1.2.3": {
+    "name": "Network Timeout Testing",
+    "status": "failed",
+    "details": [
+      {
+        "type": "error",
+        "message": "page is not defined",
+        "timestamp": 1761014270973
+      }
+    ]
+  },
+  "1.2.4": {
+    "name": "Server Availability Testing",
+    "status": "failed",
+    "details": [
+      {
+        "type": "error",
+        "message": "page is not defined",
+        "timestamp": 1761014270973
+      }
+    ]
+  }
+}
