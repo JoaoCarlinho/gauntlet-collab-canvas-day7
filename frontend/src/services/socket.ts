@@ -4,6 +4,7 @@ import { errorLogger, ErrorContext } from '../utils/errorLogger'
 import { socketEventOptimizer } from '../utils/socketOptimizer'
 import { socketIOClientOptimizer } from '../utils/socketioClientOptimizer'
 import { canvasAPI } from './api'
+import { tokenOptimizationService } from './tokenOptimizationService'
 import { 
   SocketConfig, 
   SocketConnectionState,
@@ -59,7 +60,7 @@ class SocketService {
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
       },
-      transports: shouldUsePollingOnly ? ['polling'] : ['polling', 'websocket'], // Use polling-only after failures
+      transports: ['polling'], // Force polling-only transport to prevent parse errors
       timeout: 20000,
       reconnection: true,
       reconnectionAttempts: 5,
@@ -92,11 +93,17 @@ class SocketService {
       this.lastConnectionTime = Date.now()
       this.connectionQuality = 'excellent' // Reset quality on successful connection
       
+      // Log connection success for debugging
+      console.log('=== Socket.IO Connected Successfully ===')
+      console.log('Socket ID:', this.socket?.id)
+      console.log('Connection state:', this.connectionState)
+      console.log('Connection attempts:', this.connectionAttempts)
+      console.log('Connection quality:', this.connectionQuality)
+      console.log('Transport:', this.socket?.io?.engine?.transport?.name)
+      console.log('Parse error metrics:', socketIOClientOptimizer.getParseErrorMetrics())
+      
       if (this.debugMode) {
-        console.log('=== Socket.IO Connected Successfully ===')
-        console.log('Socket ID:', this.socket?.id)
-        console.log('Connection state:', this.connectionState)
-        console.log('Connection attempts:', this.connectionAttempts)
+        console.log('Debug mode: Additional connection details logged above')
       }
       
       // Notify connection monitor of successful connection
@@ -501,19 +508,61 @@ class SocketService {
     }
   }
 
-  createObject(canvasId: string, idToken: string, object: { type: string; properties: Record<string, any> }) {
+  async createObject(canvasId: string, idToken: string, object: { type: string; properties: Record<string, any> }) {
     // Enhanced authentication context validation (relaxed in dev by validateAuthContext)
     this.validateAuthContext(canvasId, idToken)
     
     if (this.socket) {
-      // Preserve passed idToken; augment with user fields only if available
-      const payload: Record<string, unknown> = {
-        canvas_id: canvasId,
-        id_token: idToken,
-        object
+      try {
+        // Validate and optimize token
+        const tokenValidation = await tokenOptimizationService.validateTokenForSocket(idToken)
+        if (!tokenValidation.isValid) {
+          console.error('Token validation failed for object creation:', tokenValidation.issues)
+          this.emit('object_create_failed', {
+            error: 'Token validation failed',
+            issues: tokenValidation.issues,
+            object_type: object.type
+          })
+          return
+        }
+
+        // Preserve passed idToken; augment with user fields only if available
+        const payload: Record<string, unknown> = {
+          canvas_id: canvasId,
+          id_token: idToken,
+          object
+        }
+        const enhancedData = this.ensureAuthContext(payload)
+        
+        // Optimize message with token
+        const optimizedData = await tokenOptimizationService.optimizeSocketMessageWithToken(enhancedData, idToken)
+        
+        // Log object creation payload for parse error debugging
+        try {
+          const messageSize = new Blob([JSON.stringify(optimizedData)]).size
+          console.log('=== Object Creation Payload ===')
+          console.log('Message size:', messageSize, 'bytes')
+          console.log('Canvas ID:', canvasId)
+          console.log('Object type:', object.type)
+          console.log('Token length:', idToken.length)
+          console.log('Token validation:', tokenValidation.isValid ? 'PASSED' : 'FAILED')
+          console.log('Payload keys:', Object.keys(optimizedData))
+          console.log('Object properties keys:', Object.keys(object.properties || {}))
+          if (tokenValidation.hasIssues) {
+            console.log('Token issues:', tokenValidation.issues)
+          }
+        } catch (logError) {
+          console.error('Failed to log object creation payload:', logError)
+        }
+        
+        this.socket.emit('object_created', optimizedData)
+      } catch (error) {
+        console.error('Object creation failed:', error)
+        this.emit('object_create_failed', {
+          error: String(error),
+          object_type: object.type
+        })
       }
-      const enhancedData = this.ensureAuthContext(payload)
-      this.socket.emit('object_created', enhancedData)
     }
   }
 

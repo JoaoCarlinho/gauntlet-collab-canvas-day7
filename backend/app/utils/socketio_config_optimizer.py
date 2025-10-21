@@ -21,8 +21,8 @@ class SocketIOConfigOptimizer:
         'ping_interval': 25,
         'max_http_buffer_size': 1000000,  # 1MB
         'always_connect': True,
-        'allow_upgrades': True,
-        'transports': ['websocket', 'polling'],
+        'allow_upgrades': False,  # Disable upgrades to prevent WebSocket issues
+        'transports': ['polling'],  # Force polling-only to prevent parse errors
         
         # Message settings
         'max_message_size': 1000000,  # 1MB
@@ -87,8 +87,8 @@ class SocketIOConfigOptimizer:
                     'reconnection_attempts': 3,  # Fewer attempts in production
                     'reconnection_delay': 2000,  # 2 seconds
                     'reconnection_delay_max': 10000,  # 10 seconds
-                    'transports': ['polling', 'websocket'],  # Allow both transports with polling as primary
-                    'allow_upgrades': True,  # Allow upgrade attempts for better compatibility
+                    'transports': ['polling'],  # Force polling-only to prevent parse errors
+                    'allow_upgrades': False,  # Disable upgrades to prevent WebSocket issues
                 })
             else:
                 # Development optimizations
@@ -204,7 +204,7 @@ class SocketIOConfigOptimizer:
             'logger': False,
             'engineio_logger': False,
             
-            # Force specific transport order
-            'transports': ['websocket', 'polling'],
-            'allow_upgrades': True,
+            # Force polling-only transport
+            'transports': ['polling'],
+            'allow_upgrades': False,
         }

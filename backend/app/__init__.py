@@ -219,6 +219,9 @@ def create_app(config_class=Config):
     from .routes.cors_debug import cors_debug_bp
     from .routes.test_cors import test_cors_bp
     from .routes.health import health_bp
+    from .routes.connection_monitoring import connection_monitoring_bp
+    from .routes.message_analysis import message_analysis_bp
+    from .routes.token_analysis import token_analysis_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(canvas_bp, url_prefix='/api/canvas')
@@ -231,6 +234,9 @@ def create_app(config_class=Config):
     app.register_blueprint(cors_debug_bp, url_prefix='/api/debug')
     app.register_blueprint(test_cors_bp, url_prefix='/api/test')
     app.register_blueprint(health_bp)
+    app.register_blueprint(connection_monitoring_bp, url_prefix='/api/connection-monitoring')
+    app.register_blueprint(message_analysis_bp, url_prefix='/api/message-analysis')
+    app.register_blueprint(token_analysis_bp, url_prefix='/api/token-analysis')
     
     # Initialize cache system
     from .extensions import init_cache
@@ -268,6 +274,10 @@ def create_app(config_class=Config):
         try:
             import time
             from flask import session
+            from app.services.connection_monitoring_service import connection_monitor
+            
+            # Record connection attempt
+            connection_monitor.record_connection_attempt('unknown')
             
             # Enhanced session management
             session.permanent = True
@@ -342,6 +352,9 @@ def create_app(config_class=Config):
                 print(f"Socket.IO connection authenticated for user: {user.email}")
                 print(f"Session stored with keys: {list(session.keys())}")
                 print(f"User ID: {user.id}, Token UID: {decoded_token.get('uid')}")
+                
+                # Record successful connection
+                connection_monitor.record_connection_success(user.id)
                 return True
 
             except Exception as e:
@@ -352,6 +365,9 @@ def create_app(config_class=Config):
                     'timestamp': time.time(),
                     'auth_data': auth
                 }
+                
+                # Record connection failure
+                connection_monitor.record_connection_failure('unknown', 'authentication_failed')
                 return False
 
         except Exception as e:
@@ -361,6 +377,16 @@ def create_app(config_class=Config):
     @socketio.on('disconnect')
     def handle_disconnect():
         """Handle Socket.IO disconnection."""
+        try:
+            from app.services.connection_monitoring_service import connection_monitor
+            from flask import session
+            
+            # Record connection drop
+            user_id = session.get('authenticated_user', {}).get('id', 'unknown')
+            connection_monitor.record_connection_drop(user_id, 'client_disconnect')
+        except Exception as e:
+            print(f"Error recording connection drop: {str(e)}")
+        
         # Only log in development mode
         if app.config.get('DEBUG', False):
             print("=== Socket.IO Connection Disconnected ===")

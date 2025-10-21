@@ -5,6 +5,7 @@ from app.services.sanitization_service import SanitizationService
 from app.middleware.rate_limiting import check_socket_rate_limit
 from app.utils.railway_logger import railway_logger, log_socket_event
 from app.utils.socketio_config_optimizer import SocketIOConfigOptimizer
+from app.services.token_optimization_service import token_optimization_service
 import json
 
 def register_presence_handlers(socketio):
@@ -38,6 +39,31 @@ def register_presence_handlers(socketio):
     def handle_user_online(data):
         """Handle user coming online with parse error prevention."""
         try:
+            # Log incoming message details for parse error debugging
+            try:
+                message_size = len(json.dumps(data).encode('utf-8'))
+                railway_logger.log('presence', 10, f"=== User Online Message Received ===")
+                railway_logger.log('presence', 10, f"Message size: {message_size} bytes")
+                railway_logger.log('presence', 10, f"Message type: {type(data).__name__}")
+                railway_logger.log('presence', 10, f"Message keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+                railway_logger.log('presence', 10, f"Canvas ID: {data.get('canvas_id', 'Missing')}")
+                railway_logger.log('presence', 10, f"Token length: {len(data.get('id_token', '')) if data.get('id_token') else 0}")
+            except Exception as log_error:
+                railway_logger.log('presence', 40, f"Failed to log presence message details: {str(log_error)}")
+            
+            # Validate and optimize token before message validation
+            user_id = data.get('_authenticated_user', {}).get('id', 'unknown')
+            id_token = data.get('id_token')
+            
+            if id_token:
+                token_validation = token_optimization_service.validate_token_for_socket(id_token, user_id)
+                if not token_validation['is_valid']:
+                    railway_logger.log('presence', 30, f"Token validation failed for user {user_id}: {token_validation['issues']}")
+                    return
+                
+                # Optimize message with token
+                data = token_optimization_service.optimize_socket_message_with_token(data, id_token, user_id)
+            
             # Validate message size to prevent parse errors
             if not SocketIOConfigOptimizer.validate_message_size(data, max_size=5000):  # 5KB for presence data
                 railway_logger.log('presence', 40, "User online message too large, rejecting")

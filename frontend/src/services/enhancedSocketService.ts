@@ -276,7 +276,7 @@ class EnhancedSocketService {
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization'
         },
-        transports: ['polling', 'websocket'], // Try both transports
+        transports: ['polling'], // Force polling-only transport to prevent parse errors
         timeout: 30000, // Increased timeout
         reconnection: true,
         reconnectionAttempts: this.reconnectionStrategy.maxAttempts,
@@ -429,11 +429,16 @@ class EnhancedSocketService {
     const totalTime = this.connectionMetrics.averageConnectionTime * (this.connectionMetrics.successfulConnections - 1) + connectionTime
     this.connectionMetrics.averageConnectionTime = totalTime / this.connectionMetrics.successfulConnections
 
+    // Log connection success for debugging
+    console.log('=== Enhanced Socket Connected ===')
+    console.log('Connection time:', connectionTime + 'ms')
+    console.log('Connection streak:', this.connectionMetrics.connectionStreak)
+    console.log('Socket ID:', this.socket?.id)
+    console.log('Transport:', this.socket?.io?.engine?.transport?.name)
+    console.log('Connection metrics:', this.connectionMetrics)
+    
     if (this.debugMode) {
-      console.log('=== Enhanced Socket Connected ===')
-      console.log('Connection time:', connectionTime + 'ms')
-      console.log('Connection streak:', this.connectionMetrics.connectionStreak)
-      console.log('Socket ID:', this.socket?.id)
+      console.log('Debug mode: Additional connection details logged above')
     }
 
     this.emit('connection_success', {
