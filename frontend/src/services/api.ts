@@ -177,6 +177,12 @@ export const canvasAPI = {
   moveObjectDown: async (objectId: string): Promise<{ object: CanvasObject }> => {
     return objectsAPI.moveObjectDown(objectId)
   },
+
+  // Generic POST method for token analysis endpoints
+  post: async (path: string, data: any): Promise<any> => {
+    const response = await api.post(path, data)
+    return response.data
+  },
 }
 
 // Objects API
