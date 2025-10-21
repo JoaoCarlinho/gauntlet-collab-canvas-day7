@@ -17,6 +17,9 @@ from app.socket_handlers.error_handlers import (
     handle_permission_error, emit_error_response
 )
 from app.utils.socket_message_validator import SocketMessageValidator
+from app.services.connection_monitoring_service import connection_monitor
+from app.utils.message_analysis import message_analyzer
+from app.services.token_optimization_service import token_optimization_service
 import json
 
 def register_canvas_handlers(socketio):
@@ -129,9 +132,47 @@ def register_canvas_handlers(socketio):
     def handle_object_created(data):
         """Handle canvas object creation with comprehensive security and validation."""
         try:
+            # Log incoming message details for parse error debugging
+            try:
+                message_size = len(json.dumps(data).encode('utf-8'))
+                railway_logger.log('socket_io', 10, f"=== Object Creation Message Received ===")
+                railway_logger.log('socket_io', 10, f"Message size: {message_size} bytes")
+                railway_logger.log('socket_io', 10, f"Message type: {type(data).__name__}")
+                railway_logger.log('socket_io', 10, f"Message keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+                railway_logger.log('socket_io', 10, f"Canvas ID: {data.get('canvas_id', 'Missing')}")
+                railway_logger.log('socket_io', 10, f"Object type: {data.get('object', {}).get('type', 'Missing') if isinstance(data.get('object'), dict) else 'Invalid object'}")
+                railway_logger.log('socket_io', 10, f"Token length: {len(data.get('id_token', '')) if data.get('id_token') else 0}")
+                
+                # Record message size for connection monitoring
+                user_id = data.get('_authenticated_user', {}).get('id', 'unknown')
+                connection_monitor.record_message_size(user_id, message_size)
+                
+                # Analyze message for potential issues
+                analysis_result = message_analyzer.analyze_message('object_created', data, user_id)
+                if analysis_result.get('has_issues', False):
+                    railway_logger.log('socket_io', 30, f"Message analysis found issues: {analysis_result.get('issues', [])}")
+            except Exception as log_error:
+                railway_logger.log('socket_io', 40, f"Failed to log message details: {str(log_error)}")
+            
+            # Validate and optimize token before message validation
+            user_id = data.get('_authenticated_user', {}).get('id', 'unknown')
+            id_token = data.get('id_token')
+            
+            if id_token:
+                token_validation = token_optimization_service.validate_token_for_socket(id_token, user_id)
+                if not token_validation['is_valid']:
+                    railway_logger.log('socket_io', 30, f"Token validation failed for user {user_id}: {token_validation['issues']}")
+                    connection_monitor.record_parse_error(user_id, {'token_validation_failed': True, 'issues': token_validation['issues']})
+                    emit('error', {'message': 'Token validation failed', 'type': 'token_error', 'issues': token_validation['issues']})
+                    return
+                
+                # Optimize message with token
+                data = token_optimization_service.optimize_socket_message_with_token(data, id_token, user_id)
+            
             # Validate message data to prevent parse errors
             if not SocketMessageValidator.validate_socket_message('object_created', data):
                 railway_logger.log('socket_io', 40, "Object creation message validation failed")
+                connection_monitor.record_parse_error(user_id, {'validation_failed': True, 'message_type': 'object_created'})
                 emit('error', {'message': 'Invalid message format', 'type': 'validation_error'})
                 return
             

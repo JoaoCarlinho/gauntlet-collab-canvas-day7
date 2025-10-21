@@ -73,11 +73,11 @@ class ProductionConfig(Config):
     DEBUG = False
     FLASK_ENV = 'production'
     
-    # Aggressive logging reduction for Railway production
-    SOCKETIO_LOGGER = False  # Completely disable Socket.IO logging
-    SOCKETIO_ENGINEIO_LOGGER = False  # Completely disable Engine.IO logging
-    LOG_LEVEL = 'ERROR'  # Only log errors in production
-    CURSOR_LOG_LEVEL = 'ERROR'  # Only log cursor errors in production
+    # Enable comprehensive logging for parse error debugging
+    SOCKETIO_LOGGER = True  # Enable Socket.IO logging for parse error debugging
+    SOCKETIO_ENGINEIO_LOGGER = True  # Enable Engine.IO logging for parse error debugging
+    LOG_LEVEL = 'INFO'  # Enable info level logging for debugging
+    CURSOR_LOG_LEVEL = 'WARNING'  # Enable cursor warnings for debugging
     
     # Railway logging optimization - more aggressive
     RAILWAY_LOG_OPTIMIZATION = True
@@ -85,12 +85,12 @@ class ProductionConfig(Config):
     LOG_AGGREGATION_ENABLED = True
     LOG_RATE_LIMITING_ENABLED = True
     
-    # Component-specific log levels - all set to ERROR only
-    SOCKET_IO_LOG_LEVEL = 'ERROR'
-    AI_AGENT_LOG_LEVEL = 'ERROR'
-    NETWORK_HEALTH_LOG_LEVEL = 'ERROR'
-    CURSOR_EVENTS_LOG_LEVEL = 'ERROR'
-    OBJECT_UPDATE_LOG_LEVEL = 'ERROR'
-    AUTH_LOG_LEVEL = 'ERROR'
-    CANVAS_LOG_LEVEL = 'ERROR'
-    COLLABORATION_LOG_LEVEL = 'ERROR'
+    # Component-specific log levels - enable detailed logging for parse error debugging
+    SOCKET_IO_LOG_LEVEL = 'INFO'  # Enable Socket.IO info logging for debugging
+    AI_AGENT_LOG_LEVEL = 'WARNING'
+    NETWORK_HEALTH_LOG_LEVEL = 'INFO'  # Enable network health logging for debugging
+    CURSOR_EVENTS_LOG_LEVEL = 'WARNING'
+    OBJECT_UPDATE_LOG_LEVEL = 'INFO'  # Enable object update logging for debugging
+    AUTH_LOG_LEVEL = 'WARNING'
+    CANVAS_LOG_LEVEL = 'INFO'  # Enable canvas logging for debugging
+    COLLABORATION_LOG_LEVEL = 'INFO'  # Enable collaboration logging for debugging

@@ -61,12 +61,12 @@ class SocketIOClientOptimizer {
 
   /**
    * Production configuration optimized for stability
-   * Note: Railway doesn't support WebSocket connections, so we use polling only
+   * Note: Force polling-only to prevent parse errors and WebSocket issues
    */
   private getProductionConfig(): SocketIOClientConfig {
     return {
-      transports: ['polling'], // Railway doesn't support WebSocket, use polling only
-      upgrade: false, // Disable upgrade attempts since WebSocket doesn't work on Railway
+      transports: ['polling'], // Force polling-only to prevent parse errors
+      upgrade: false, // Disable upgrade attempts to prevent WebSocket issues
       rememberUpgrade: false,
       timeout: 20000, // 20 seconds
       forceNew: false,
@@ -85,12 +85,13 @@ class SocketIOClientOptimizer {
 
   /**
    * Development configuration with more verbose logging
+   * Note: Force polling-only to prevent parse errors during development
    */
   private getDevelopmentConfig(): SocketIOClientConfig {
     return {
-      transports: ['polling', 'websocket'],
-      upgrade: true,
-      rememberUpgrade: true,
+      transports: ['polling'], // Force polling-only to prevent parse errors
+      upgrade: false, // Disable upgrade attempts to prevent WebSocket issues
+      rememberUpgrade: false,
       timeout: 30000, // 30 seconds
       forceNew: true,
       reconnection: true,
@@ -108,12 +109,13 @@ class SocketIOClientOptimizer {
 
   /**
    * Default configuration
+   * Note: Force polling-only to prevent parse errors
    */
   private getDefaultConfig(): SocketIOClientConfig {
     return {
-      transports: ['websocket', 'polling'],
-      upgrade: true,
-      rememberUpgrade: true,
+      transports: ['polling'], // Force polling-only to prevent parse errors
+      upgrade: false, // Disable upgrade attempts to prevent WebSocket issues
+      rememberUpgrade: false,
       timeout: 20000,
       forceNew: false,
       reconnection: true,
