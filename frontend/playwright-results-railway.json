@@ -1,0 +1,133 @@
+{
+  "config": {
+    "configFile": "/Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright.config.railway.ts",
+    "rootDir": "/Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report-railway"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "playwright-results-railway.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "railway-chrome",
+        "name": "railway-chrome",
+        "testDir": "/Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/playwright-tests",
+        "testIgnore": [],
+        "testMatch": [
+          "railway-production-tests.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "railway-production-tests.spec.ts",
+      "file": "railway-production-tests.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Railway Production API Endpoints",
+          "file": "railway-production-tests.spec.ts",
+          "line": 145,
+          "column": 6,
+          "specs": [
+            {
+              "title": "6. Create a canvas with name and description",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "railway-chrome",
+                  "projectName": "railway-chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1547,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-21T04:39:21.443Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/joaocarlinho/gauntlet/24hr-mvp/collabcanvas-mvp-day7/frontend/test-results/railway-production-tests-R-b3069-s-with-name-and-description-railway-chrome/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8330da655c02a3ebac77-c7ff283d50afb253d666",
+              "file": "railway-production-tests.spec.ts",
+              "line": 159,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-10-21T04:39:21.013Z",
+    "duration": 3017.281,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

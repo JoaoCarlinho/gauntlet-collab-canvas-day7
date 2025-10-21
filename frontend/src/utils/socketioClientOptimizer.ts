@@ -65,8 +65,8 @@ class SocketIOClientOptimizer {
    */
   private getProductionConfig(): SocketIOClientConfig {
     return {
-      transports: ['polling'], // Force polling-only to prevent parse errors
-      upgrade: false, // Disable upgrade attempts to prevent WebSocket issues
+      transports: ['polling', 'websocket'], // Allow both transports for better compatibility
+      upgrade: true, // Allow upgrade attempts for better WebSocket support
       rememberUpgrade: false,
       timeout: 20000, // 20 seconds
       forceNew: false,
@@ -89,8 +89,8 @@ class SocketIOClientOptimizer {
    */
   private getDevelopmentConfig(): SocketIOClientConfig {
     return {
-      transports: ['polling'], // Force polling-only to prevent parse errors
-      upgrade: false, // Disable upgrade attempts to prevent WebSocket issues
+      transports: ['polling', 'websocket'], // Allow both transports for better compatibility
+      upgrade: true, // Allow upgrade attempts for better WebSocket support
       rememberUpgrade: false,
       timeout: 30000, // 30 seconds
       forceNew: true,
@@ -113,8 +113,8 @@ class SocketIOClientOptimizer {
    */
   private getDefaultConfig(): SocketIOClientConfig {
     return {
-      transports: ['polling'], // Force polling-only to prevent parse errors
-      upgrade: false, // Disable upgrade attempts to prevent WebSocket issues
+      transports: ['polling', 'websocket'], // Allow both transports for better compatibility
+      upgrade: true, // Allow upgrade attempts for better WebSocket support
       rememberUpgrade: false,
       timeout: 20000,
       forceNew: false,

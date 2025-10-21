@@ -19,6 +19,9 @@ import './commands'
 // Import authentication helpers for production testing
 import './auth-helpers'
 
+// Import passkey authentication helpers
+import './passkey-auth-helpers'
+
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 

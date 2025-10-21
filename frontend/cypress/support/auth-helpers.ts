@@ -31,10 +31,10 @@ Cypress.Commands.add('authenticateTestUser', () => {
 
   cy.log(`🔐 Attempting to authenticate real test user: ${testEmail}`)
   
-  // Try to authenticate via API first
+  // Try to authenticate via test execution API first
   cy.request({
     method: 'POST',
-    url: `${apiUrl}/api/auth/login`,
+    url: `${apiUrl}/api/test-execution/auth/login`,
     body: {
       email: testEmail,
       password: testPassword
@@ -42,7 +42,7 @@ Cypress.Commands.add('authenticateTestUser', () => {
     failOnStatusCode: false
   }).then((response) => {
     if (response.status === 200) {
-      cy.log('✅ Real test user authenticated via API')
+      cy.log('✅ Real test user authenticated via test execution API')
       const { token, user } = response.body
       
       // Store token for API calls
@@ -56,7 +56,7 @@ Cypress.Commands.add('authenticateTestUser', () => {
         win.localStorage.setItem('isAuthenticated', 'true')
       })
     } else {
-      cy.log(`⚠️ API authentication failed (${response.status}), trying Firebase direct authentication`)
+      cy.log(`⚠️ Test execution API authentication failed (${response.status}), trying Firebase direct authentication`)
       cy.authenticateWithFirebase(testEmail, testPassword)
     }
   })
@@ -178,11 +178,11 @@ Cypress.Commands.add('loginWithTestUser', () => {
     
     if (bodyText.includes('email') && bodyText.includes('password')) {
       // Try to find and fill login form
-      cy.get('input[type="email"], input[name="email"], input[placeholder*="email" i]')
+      cy.get('input[type="email"], input[name="email"], input[placeholder*="email"]')
         .first()
         .type(testEmail)
       
-      cy.get('input[type="password"], input[name="password"], input[placeholder*="password" i]')
+      cy.get('input[type="password"], input[name="password"], input[placeholder*="password"]')
         .first()
         .type(testPassword)
       
