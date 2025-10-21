@@ -56,7 +56,7 @@ export class ErrorMessageService {
   /**
    * Get user-friendly message for HTTP errors
    */
-  private getHttpErrorMessage(error: any, context?: ErrorContext): UserFriendlyError {
+  private getHttpErrorMessage(error: any, _context?: ErrorContext): UserFriendlyError {
     const status = error.response?.status;
     const url = error.config?.url || '';
     
@@ -139,7 +139,7 @@ export class ErrorMessageService {
   /**
    * Get user-friendly message for error codes
    */
-  private getCodeErrorMessage(error: any, context?: ErrorContext): UserFriendlyError {
+  private getCodeErrorMessage(error: any, _context?: ErrorContext): UserFriendlyError {
     const code = error.code;
     
     switch (code) {
@@ -268,7 +268,7 @@ export class ErrorMessageService {
   /**
    * Get user-friendly message based on error message content
    */
-  private getMessageBasedError(error: any, context?: ErrorContext): UserFriendlyError {
+  private getMessageBasedError(error: any, _context?: ErrorContext): UserFriendlyError {
     const message = error.message.toLowerCase();
     
     if (message.includes('network') || message.includes('connection')) {

@@ -256,5 +256,3 @@ export const circuitBreakerManager = new CircuitBreakerManager();
 
 // Export individual circuit breakers for convenience
 export { authenticationCircuitBreaker as authCircuitBreaker };
-export { apiCircuitBreaker };
-export { websocketCircuitBreaker };
