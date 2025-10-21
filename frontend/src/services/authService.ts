@@ -343,6 +343,20 @@ class AuthService {
   }
 
   /**
+   * Public method to refresh authentication token
+   * @returns Promise<string | null> - The new token or null if refresh failed
+   */
+  public async publicRefreshToken(): Promise<string | null> {
+    try {
+      const result = await this.refreshToken()
+      return result.isValid ? result.token : null
+    } catch (error) {
+      console.error('Public token refresh failed:', error)
+      return null
+    }
+  }
+
+  /**
    * Check if user has valid authentication
    */
   public async isAuthenticated(): Promise<boolean> {

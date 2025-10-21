@@ -310,7 +310,7 @@ class TokenOptimizationService {
       }
 
       // Try to refresh token
-      const newToken = await authService.refreshToken()
+      const newToken = await authService.publicRefreshToken()
       if (newToken && newToken !== currentToken) {
         const refreshResult = await this.handleTokenRefresh(currentToken, newToken)
         return { 

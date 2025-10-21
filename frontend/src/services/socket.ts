@@ -35,7 +35,7 @@ class SocketService {
                          window.location.hostname === '127.0.0.1'
     
     // If we've had multiple connection failures, try polling-only mode
-    const shouldUsePollingOnly = this.connectionAttempts > 2
+    // Note: shouldUsePollingOnly logic removed as it was unused
     
     // Only log in debug mode
     if (this.debugMode) {
