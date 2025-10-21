@@ -5,7 +5,7 @@ Optimizes Firebase token handling for socket connections to prevent parse errors
 
 import time
 import json
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 from app.utils.railway_logger import railway_logger
 from app.utils.firebase_token_analyzer import firebase_token_analyzer
 
