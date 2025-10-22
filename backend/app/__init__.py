@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 from flask_cors import CORS
@@ -273,7 +273,6 @@ def create_app(config_class=Config):
         """Handle Socket.IO connection with enhanced authentication and session management."""
         try:
             import time
-            from flask import session
             from app.services.connection_monitoring_service import connection_monitor
             
             # Record connection attempt

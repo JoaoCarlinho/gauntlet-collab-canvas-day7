@@ -2,7 +2,7 @@ import axios from 'axios'
 import { User, Canvas, CanvasObject, Invitation } from '../types'
 import { getApiUrl } from '../utils/env'
 import { authService } from './authService'
-import { apiCircuitBreaker } from './circuitBreakerService'
+import { apiCircuitBreaker, authenticationCircuitBreaker } from './circuitBreakerService'
 import { recordApiError, recordAuthError } from './errorRateMonitor'
 
 const API_URL = getApiUrl()
@@ -92,14 +92,16 @@ api.interceptors.response.use(
         }
         
         try {
-          // Use circuit breaker for token refresh to prevent infinite loops
-          await apiCircuitBreaker.execute(async () => {
+          // Use authentication circuit breaker for token refresh (not API circuit breaker)
+          await authenticationCircuitBreaker.execute(async () => {
             await authService.forceTokenRefresh()
             // Retry the original request with new token
             const newToken = await authService.getValidToken()
             if (newToken && error.config) {
               error.config.headers.Authorization = `Bearer ${newToken}`
               error.config.retryCount = (error.config.retryCount || 0) + 1
+              // Reset API circuit breaker on successful token refresh
+              apiCircuitBreaker.reset()
               return api.request(error.config)
             }
           })
