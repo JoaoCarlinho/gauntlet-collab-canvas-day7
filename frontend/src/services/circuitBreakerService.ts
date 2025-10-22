@@ -176,10 +176,10 @@ export class CircuitBreaker {
 
 // Global circuit breaker instances
 export const authenticationCircuitBreaker = new CircuitBreaker('authentication', {
-  failureThreshold: 3,
-  recoveryTimeout: 30000, // 30 seconds
-  monitoringPeriod: 60000, // 1 minute
-  halfOpenMaxCalls: 2
+  failureThreshold: 5, // Increased threshold for auth operations
+  recoveryTimeout: 15000, // Reduced timeout for faster recovery
+  monitoringPeriod: 30000, // Reduced monitoring period
+  halfOpenMaxCalls: 3 // Allow more calls in half-open state
 });
 
 export const apiCircuitBreaker = new CircuitBreaker('api', {
