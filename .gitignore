@@ -129,3 +129,5 @@ test-results/
 test-screenshots*/
 playwright-report/
 playwright*.*
+branches.txt
+scripts/delete_branches.sh
