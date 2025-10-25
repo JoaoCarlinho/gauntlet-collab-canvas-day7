@@ -42,11 +42,11 @@ import ConflictResolutionDialog from './ConflictResolutionDialog'
 // import SyncStatusIndicator from './SyncStatusIndicator'
 // import QueueStatusIndicator from './QueueStatusIndicator'
 // import QueueManagementDialog from './QueueManagementDialog'
-import ConnectionStatusIndicator from './ConnectionStatusIndicator'
-import OfflineIndicator from './OfflineIndicator'
+// import ConnectionStatusIndicator from './ConnectionStatusIndicator'
+// import OfflineIndicator from './OfflineIndicator'
 import toast from 'react-hot-toast'
 import InviteCollaboratorModal from './InviteCollaboratorModal'
-import PresenceIndicators from './PresenceIndicators'
+// import PresenceIndicators from './PresenceIndicators'
 // import UserStatus from './UserStatus'
 import CollaborationSidebar from './CollaborationSidebar'
 // import NotificationCenter from './NotificationCenter'
@@ -2622,19 +2622,19 @@ const CanvasPage: React.FC = () => {
         
         <div className="flex items-center space-x-4">
           {/* Presence Indicators */}
-          <PresenceIndicators 
+          {/* <PresenceIndicators 
             canvasId={canvasId!} 
             currentUserId={user?.id || ''} 
             maxVisible={3}
-          />
+          /> */}
           
           <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          {/* <div className="flex items-center space-x-2"> */}
+            {/* <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
             <span className="text-sm text-gray-600">
               {isConnected ? 'Connected' : 'Disconnected'}
             </span>
-            </div>
+            </div> */}
             
             {/* Sync Status Indicator */}
             {/* <SyncStatusIndicator
@@ -2644,18 +2644,18 @@ const CanvasPage: React.FC = () => {
             /> */}
 
             {/* Connection Status Indicator */}
-            <ConnectionStatusIndicator
-              // metrics={connectionMetrics}
-              // isConnected={isConnected}
-            />
+            {/* <ConnectionStatusIndicator
+              metrics={connectionMetrics}
+              isConnected={isConnected}
+            /> */}
 
             {/* Offline Indicator */}
-            <OfflineIndicator
-              // isOffline={isOffline}
-              // offlineData={offlineData}
-              // onForceSync={() => offlineManager.forceSync()}
-              // onClearCache={() => {/* offlineManager.clearCache() */}}
-            />
+            {/* <OfflineIndicator
+              isOffline={isOffline}
+              offlineData={offlineData}
+              onForceSync={() => offlineManager.forceSync()}
+              onClearCache={() => { offlineManager.clearCache() }}
+            /> */}
             
             {/* Queue Status Indicator */}
             {/* <QueueStatusIndicator
