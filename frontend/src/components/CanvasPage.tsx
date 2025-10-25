@@ -2626,11 +2626,11 @@ const CanvasPage: React.FC = () => {
             </div>
             
             {/* Sync Status Indicator */}
-            <SyncStatusIndicator
+            {/* <SyncStatusIndicator
               status={syncStatus}
               onManualSync={handleManualSync}
               onShowConflicts={() => setShowConflictDialog(true)}
-            />
+            /> */}
 
             {/* Connection Status Indicator */}
             <ConnectionStatusIndicator
@@ -2647,35 +2647,35 @@ const CanvasPage: React.FC = () => {
             />
             
             {/* Queue Status Indicator */}
-            <QueueStatusIndicator
+            {/* <QueueStatusIndicator
               stats={queueStats}
               onShowQueue={() => setShowQueueDialog(true)}
               onRetryFailed={() => handleQueueAction('retry_failed')}
               onClearCompleted={() => handleQueueAction('clear_completed')}
               onClearFailed={() => handleQueueAction('clear_failed')}
-            />
+            /> */}
           </div>
           
           {/* User Status */}
-          {user && (
+          {/* {user && (
             <UserStatus 
               compact={true}
             />
-          )}
+          )} */}
           
           {/* Collaboration buttons - only show for canvas owner */}
           {canvas && user && canvas.owner_id === user.id && (
             <>
-              <button
+              {/* <button
                 onClick={() => setShowInviteModal(true)}
                 className="flex items-center space-x-2 px-3 py-1.5 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
                 title="Invite collaborators"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>Invite</span>
-              </button>
+              </button> */}
               
-              <button
+              {/* <button
                 onClick={() => setShowCollaborationSidebar(!showCollaborationSidebar)}
                 className={`p-2 rounded-lg transition-colors ${
                   showCollaborationSidebar 
@@ -2685,12 +2685,12 @@ const CanvasPage: React.FC = () => {
                 title="Collaboration panel"
               >
                 <Users className="w-5 h-5" />
-              </button>
+              </button> */}
             </>
           )}
           
           {/* Notification Center */}
-          <NotificationCenter />
+          {/* <NotificationCenter /> */}
           
           <button className="p-2 hover:bg-gray-100 rounded-lg">
             <Settings className="w-5 h-5" />
@@ -3115,10 +3115,10 @@ const CanvasPage: React.FC = () => {
       />
 
       {/* Queue Management Dialog */}
-      <QueueManagementDialog
+      {/* <QueueManagementDialog
         isOpen={showQueueDialog}
         onClose={() => setShowQueueDialog(false)}
-      />
+      /> */}
 
       {/* AI Agent Components */}
       <AIAgentButton
