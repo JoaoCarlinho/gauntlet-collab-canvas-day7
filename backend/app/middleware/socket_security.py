@@ -21,6 +21,9 @@ from app.utils.logger import SmartLogger
 # Initialize logger
 security_logger = SmartLogger('socket_security', 'INFO')
 
+# Use cache_client as redis_client (they're the same)
+redis_client = cache_client
+
 
 class SocketSecurityError(Exception):
     """Custom exception for Socket.IO security violations."""

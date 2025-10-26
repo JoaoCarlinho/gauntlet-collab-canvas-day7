@@ -44,15 +44,15 @@ class PresenceService:
             
             # Store presence data
             presence_key = f"presence:{canvas_id}:{user_id}"
-            self.redis_client.setex(
-                presence_key, 
-                self.presence_ttl, 
+            self.cache_client.set(
+                presence_key,
+                self.presence_ttl,
                 json.dumps(presence_data)
             )
-            
+
             # Store activity data separately for longer tracking
             activity_key = f"activity:{canvas_id}:{user_id}"
-            self.redis_client.setex(
+            self.cache_client.set(
                 activity_key,
                 self.activity_ttl,
                 json.dumps({
@@ -71,16 +71,16 @@ class PresenceService:
     def get_canvas_presence(self, canvas_id: str) -> List[Dict]:
         """Get all active users for a canvas."""
         try:
-            if not self.redis_client:
+            if not self.cache_client:
                 return []
-            
+
             # Get all presence keys for this canvas
-            presence_keys = self.redis_client.keys(f"presence:{canvas_id}:*")
+            presence_keys = self.cache_client.keys(f"presence:{canvas_id}:*")
             active_users = []
-            
+
             for key in presence_keys:
                 try:
-                    presence_data = self.redis_client.get(key)
+                    presence_data = self.cache_client.get(key)
                     if presence_data:
                         user_data = json.loads(presence_data)
                         # Check if presence is still valid
@@ -102,11 +102,11 @@ class PresenceService:
     def get_user_activity(self, user_id: str, canvas_id: str) -> Optional[Dict]:
         """Get user's current activity."""
         try:
-            if not self.redis_client:
+            if not self.cache_client:
                 return None
-            
+
             activity_key = f"activity:{canvas_id}:{user_id}"
-            activity_data = self.redis_client.get(activity_key)
+            activity_data = self.cache_client.get(activity_key)
             
             if activity_data:
                 return json.loads(activity_data)
@@ -119,15 +119,15 @@ class PresenceService:
     def remove_user_presence(self, user_id: str, canvas_id: str) -> bool:
         """Remove user presence from canvas."""
         try:
-            if not self.redis_client:
+            if not self.cache_client:
                 return False
-            
+
             # Remove presence and activity data
             presence_key = f"presence:{canvas_id}:{user_id}"
             activity_key = f"activity:{canvas_id}:{user_id}"
-            
-            self.redis_client.delete(presence_key)
-            self.redis_client.delete(activity_key)
+
+            self.cache_client.delete(presence_key)
+            self.cache_client.delete(activity_key)
             
             logger.debug(f"Removed presence for user {user_id} from canvas {canvas_id}")
             return True
@@ -139,30 +139,30 @@ class PresenceService:
     def cleanup_expired_presence(self, canvas_id: str) -> int:
         """Clean up expired presence data for a canvas."""
         try:
-            if not self.redis_client:
+            if not self.cache_client:
                 return 0
-            
-            presence_keys = self.redis_client.keys(f"presence:{canvas_id}:*")
+
+            presence_keys = self.cache_client.keys(f"presence:{canvas_id}:*")
             cleaned_count = 0
-            
+
             for key in presence_keys:
                 try:
-                    presence_data = self.redis_client.get(key)
+                    presence_data = self.cache_client.get(key)
                     if presence_data:
                         user_data = json.loads(presence_data)
                         last_seen = datetime.fromisoformat(user_data['last_seen'])
-                        
+
                         # If presence is expired, remove it
                         if datetime.utcnow() - last_seen >= timedelta(seconds=self.presence_ttl):
-                            self.redis_client.delete(key)
+                            self.cache_client.delete(key)
                             # Also remove corresponding activity
                             user_id = user_data['user_id']
                             activity_key = f"activity:{canvas_id}:{user_id}"
-                            self.redis_client.delete(activity_key)
+                            self.cache_client.delete(activity_key)
                             cleaned_count += 1
                 except (json.JSONDecodeError, KeyError, ValueError):
                     # Remove invalid data
-                    self.redis_client.delete(key)
+                    self.cache_client.delete(key)
                     cleaned_count += 1
             
             if cleaned_count > 0:
