@@ -30,7 +30,49 @@ def create_app(config_class=Config):
     
     # Initialize extensions
     db.init_app(app)
-    
+
+    # Verify database connection on startup
+    with app.app_context():
+        try:
+            # Test database connection
+            db.engine.connect()
+            db_url = app.config['SQLALCHEMY_DATABASE_URI']
+
+            # Check if using SQLite (should warn in production)
+            if 'sqlite' in db_url.lower():
+                print("=" * 60)
+                print("⚠️  WARNING: Using SQLite database!")
+                print("=" * 60)
+                print("SQLite is NOT recommended for production.")
+                print("Objects will be lost on every deployment.")
+                print("Please add a Postgres service in Railway:")
+                print("  1. Go to Railway dashboard")
+                print("  2. Click '+ New Service'")
+                print("  3. Select 'Database' → 'PostgreSQL'")
+                print("=" * 60)
+            else:
+                print("=" * 60)
+                print("✅ Database connected successfully!")
+                print(f"Database type: {'PostgreSQL' if 'postgres' in db_url.lower() else 'Unknown'}")
+                print("=" * 60)
+        except Exception as e:
+            print("=" * 60)
+            print("❌ DATABASE CONNECTION FAILED!")
+            print("=" * 60)
+            print(f"Error: {str(e)}")
+            print("")
+            print("CRITICAL: Cannot connect to database.")
+            print("Objects WILL NOT be saved!")
+            print("")
+            print("Please check:")
+            print("  1. DATABASE_URL environment variable is set")
+            print("  2. Database service is running in Railway")
+            print("  3. Network connectivity to database")
+            print("=" * 60)
+            # Don't crash the app, but log the error prominently
+            import traceback
+            traceback.print_exc()
+
     # Configure CORS using environment variables
     cors_origins = app.config.get('CORS_ORIGINS', [])
     if isinstance(cors_origins, str):

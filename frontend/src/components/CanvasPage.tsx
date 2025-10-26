@@ -714,11 +714,23 @@ const CanvasPage: React.FC = () => {
       })
     })
 
-    socketService.on('object_create_failed', (data: { object_type: string; error: ErrorWithDetails; message?: string }) => {
+    socketService.on('object_create_failed', (data: { object_type: string; error: ErrorWithDetails | string; message?: string; type?: string }) => {
       console.error('Object creation failed:', data)
-      
+
       const errorMessage = data.message || `Failed to create ${data.object_type}`
-      toast.error(errorMessage, { duration: 4000 })
+
+      // Show special handling for database errors
+      if (data.type === 'database_error') {
+        toast.error(errorMessage, {
+          duration: 10000, // Show longer for critical database errors
+          icon: '🔴'
+        })
+        console.error('DATABASE ERROR:', data.error)
+        console.error('This usually means the database service is not available.')
+        console.error('Check Railway dashboard to ensure Postgres service is running.')
+      } else {
+        toast.error(errorMessage, { duration: 4000 })
+      }
     })
 
     socketService.on('object_delete_failed', (data: { object_id: string; error: ErrorWithDetails; message?: string }) => {

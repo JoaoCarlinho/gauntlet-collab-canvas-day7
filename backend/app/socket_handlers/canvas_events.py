@@ -238,8 +238,39 @@ def register_canvas_handlers(socketio):
             canvas_id = data.get('canvas_id', 'unknown') if data else 'unknown'
             object_type = data.get('object', {}).get('type', 'unknown') if data else 'unknown'
             log_object_event(canvas_id, 'created', object_type, False)
+
+            # Detailed error logging with stack trace
+            import traceback
+            error_details = traceback.format_exc()
             railway_logger.log('socket_io', 40, f"Object creation failed: {str(e)}")
-            emit('error', {'message': 'Object creation failed', 'type': 'creation_error'})
+            railway_logger.log('socket_io', 40, f"Full error trace: {error_details}")
+
+            # Determine error type for better frontend handling
+            error_type = 'creation_error'
+            error_message = 'Object creation failed'
+
+            if 'database' in str(e).lower() or 'sqlalchemy' in str(e).lower():
+                error_type = 'database_error'
+                error_message = 'Database connection error - please check if database service is running'
+                railway_logger.log('socket_io', 50, "DATABASE ERROR: Database service may be unavailable!")
+            elif 'permission' in str(e).lower() or 'authorization' in str(e).lower():
+                error_type = 'permission_error'
+                error_message = 'Permission denied - you may not have access to this canvas'
+            elif 'timeout' in str(e).lower():
+                error_type = 'timeout_error'
+                error_message = 'Operation timed out - please try again'
+
+            # Emit detailed error to frontend
+            emit('object_create_failed', {
+                'message': error_message,
+                'type': error_type,
+                'error': str(e),
+                'canvas_id': canvas_id,
+                'object_type': object_type
+            })
+
+            # Also emit generic error for backward compatibility
+            emit('error', {'message': error_message, 'type': error_type})
     
     @socketio.on('object_updated')
     def handle_object_updated(data):
