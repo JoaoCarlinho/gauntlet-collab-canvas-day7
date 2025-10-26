@@ -3,11 +3,17 @@ Socket.IO Event Validation Schemas
 Provides comprehensive validation for all Socket.IO events to prevent security vulnerabilities
 """
 
-from marshmallow import Schema, fields, validate, validates_schema, ValidationError
+from marshmallow import Schema, fields, validate, validates_schema, ValidationError, INCLUDE
 from app.utils.validators import InputValidator
 
 
-class CanvasJoinEventSchema(Schema):
+class BaseSocketEventSchema(Schema):
+    """Base schema for all socket events that allows unknown fields."""
+    class Meta:
+        unknown = INCLUDE  # Allow unknown fields (like _token_metadata) without raising errors
+
+
+class CanvasJoinEventSchema(BaseSocketEventSchema):
     """Schema for canvas join events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -26,7 +32,7 @@ class CanvasJoinEventSchema(Schema):
                 raise ValidationError(f'Invalid canvas ID: {str(e)}')
 
 
-class CanvasLeaveEventSchema(Schema):
+class CanvasLeaveEventSchema(BaseSocketEventSchema):
     """Schema for canvas leave events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -35,7 +41,7 @@ class CanvasLeaveEventSchema(Schema):
     id_token = fields.Str(required=True, validate=validate.Length(min=10, max=2000))
 
 
-class ObjectCreateEventSchema(Schema):
+class ObjectCreateEventSchema(BaseSocketEventSchema):
     """Schema for object creation events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -67,7 +73,7 @@ class ObjectCreateEventSchema(Schema):
                 raise ValidationError(f'Invalid object data: {str(e)}')
 
 
-class ObjectUpdateEventSchema(Schema):
+class ObjectUpdateEventSchema(BaseSocketEventSchema):
     """Schema for object update events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -93,7 +99,7 @@ class ObjectUpdateEventSchema(Schema):
                     raise ValidationError(f'Invalid update properties: {str(e)}')
 
 
-class ObjectDeleteEventSchema(Schema):
+class ObjectDeleteEventSchema(BaseSocketEventSchema):
     """Schema for object deletion events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -103,7 +109,7 @@ class ObjectDeleteEventSchema(Schema):
     object_id = fields.Str(required=True, validate=validate.Length(min=1, max=255))
 
 
-class CursorMoveEventSchema(Schema):
+class CursorMoveEventSchema(BaseSocketEventSchema):
     """Schema for cursor movement events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -132,7 +138,7 @@ class CursorMoveEventSchema(Schema):
                 raise ValidationError(f'Invalid cursor position: {str(e)}')
 
 
-class CursorLeaveEventSchema(Schema):
+class CursorLeaveEventSchema(BaseSocketEventSchema):
     """Schema for cursor leave events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -141,7 +147,7 @@ class CursorLeaveEventSchema(Schema):
     id_token = fields.Str(required=True, validate=validate.Length(min=10, max=2000))
 
 
-class UserOnlineEventSchema(Schema):
+class UserOnlineEventSchema(BaseSocketEventSchema):
     """Schema for user online events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -151,7 +157,7 @@ class UserOnlineEventSchema(Schema):
     timestamp = fields.Float(required=False, validate=validate.Range(min=0))
 
 
-class UserOfflineEventSchema(Schema):
+class UserOfflineEventSchema(BaseSocketEventSchema):
     """Schema for user offline events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -161,7 +167,7 @@ class UserOfflineEventSchema(Schema):
     timestamp = fields.Float(required=False, validate=validate.Range(min=0))
 
 
-class PresenceUpdateEventSchema(Schema):
+class PresenceUpdateEventSchema(BaseSocketEventSchema):
     """Schema for presence update events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -176,7 +182,7 @@ class PresenceUpdateEventSchema(Schema):
     timestamp = fields.Float(required=False, validate=validate.Range(min=0))
 
 
-class CollaborationInviteEventSchema(Schema):
+class CollaborationInviteEventSchema(BaseSocketEventSchema):
     """Schema for collaboration invite events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -198,7 +204,7 @@ class CollaborationInviteEventSchema(Schema):
                 raise ValidationError(f'Invalid email: {str(e)}')
 
 
-class CollaborationAcceptEventSchema(Schema):
+class CollaborationAcceptEventSchema(BaseSocketEventSchema):
     """Schema for collaboration accept events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
@@ -208,7 +214,7 @@ class CollaborationAcceptEventSchema(Schema):
     invitation_id = fields.Str(required=True, validate=validate.Length(min=1, max=255))
 
 
-class CollaborationRejectEventSchema(Schema):
+class CollaborationRejectEventSchema(BaseSocketEventSchema):
     """Schema for collaboration reject events."""
     canvas_id = fields.Str(required=True, validate=[
         validate.Length(min=1, max=255),
