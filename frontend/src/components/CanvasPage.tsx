@@ -107,6 +107,7 @@ const CanvasPage: React.FC = () => {
   } = useToolbarState()
   
   // New state for enhanced object interactions
+  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null)
   const [editingObjectId, setEditingObjectId] = useState<string | null>(null)
   const [hoveredObjectId, setHoveredObjectId] = useState<string | null>(null)
   const [stageTransform, setStageTransform] = useState<{ scale: number; x: number; y: number }>({ scale: 1, x: 0, y: 0 })
@@ -1154,25 +1155,16 @@ const CanvasPage: React.FC = () => {
   }
 
   // New handler functions for enhanced interactions
-  const handleObjectSelect = (objectId: string, event?: any) => {
+  const handleObjectSelect = (objectId: string) => {
     if (selectedTool.id === 'select') {
+      setSelectedObjectId(objectId)
       setEditingObjectId(null)
-      
-      // Handle multi-selection with Ctrl/Cmd key
-      const isMultiSelect = event?.evt?.ctrlKey || event?.evt?.metaKey
-      multiSelectionActions.selectObject(objectId, isMultiSelect)
-      
-      // Show coordinates for selected object(s)
-      setTimeout(() => {
-        const selectedObjects = multiSelectionActions.getSelectedObjects()
-        coordinateDisplay.showSelectedCoordinates(selectedObjects)
-      }, 0)
     }
   }
 
   const handleStartTextEdit = (objectId: string) => {
     setEditingObjectId(objectId)
-    multiSelectionActions.selectObject(objectId, false)
+    setSelectedObjectId(objectId)
   }
 
   const handleEndTextEdit = async (objectId: string, newText: string) => {
@@ -1341,22 +1333,6 @@ const CanvasPage: React.FC = () => {
     
     // End movement tracking
     coordinateDisplay.endMoving()
-  }
-  
-  const handleObjectDragStart = (objectId: string, x: number, y: number) => {
-    const obj = objects.find(o => o.id === objectId)
-    if (!obj) return
-    
-    const props = obj.properties
-    coordinateDisplay.startMoving(x, y, props.width, props.height, props.radius)
-  }
-  
-  const handleObjectDragMove = (objectId: string, x: number, y: number) => {
-    const obj = objects.find(o => o.id === objectId)
-    if (!obj) return
-    
-    const props = obj.properties
-    coordinateDisplay.updateMovingCoordinates(x, y, props.width, props.height, props.radius)
   }
 
   const performObjectResize = async (objectId: string, newProperties: Record<string, unknown>) => {
@@ -2085,7 +2061,7 @@ const CanvasPage: React.FC = () => {
     const optimisticObject = optimisticUpdateManager.getOptimisticObject(obj.id, obj)
     const displayObject = optimisticObject
     const props = displayObject.properties
-    const isSelected = multiSelectionActions.isObjectSelected(obj.id)
+    const isSelected = selectedObjectId === obj.id
     const isEditing = editingObjectId === obj.id
     const isHovered = hoveredObjectId === obj.id
     // const isOptimistic = optimisticObjects.has(obj.id)
@@ -2110,9 +2086,7 @@ const CanvasPage: React.FC = () => {
               stroke={props.stroke}
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={(e) => handleObjectSelect(obj.id, e)}
-              onDragStart={(e) => handleObjectDragStart(obj.id, e.target.x(), e.target.y())}
-              onDragMove={(e) => handleObjectDragMove(obj.id, e.target.x(), e.target.y())}
+              onClick={() => handleObjectSelect(obj.id)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -2153,9 +2127,7 @@ const CanvasPage: React.FC = () => {
               stroke={props.stroke}
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={(e) => handleObjectSelect(obj.id, e)}
-              onDragStart={(e) => handleObjectDragStart(obj.id, e.target.x(), e.target.y())}
-              onDragMove={(e) => handleObjectDragMove(obj.id, e.target.x(), e.target.y())}
+              onClick={() => handleObjectSelect(obj.id)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -2200,7 +2172,7 @@ const CanvasPage: React.FC = () => {
                 stroke={props.stroke}
                 strokeWidth={props.strokeWidth}
                 draggable={selectedTool.id === 'select' && !isEditing}
-                onClick={(e) => handleObjectSelect(obj.id, e)}
+                onClick={() => handleObjectSelect(obj.id)}
                 onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
                 onMouseEnter={() => setHoveredObjectId(obj.id)}
                 onMouseLeave={() => setHoveredObjectId(null)}
@@ -2251,7 +2223,7 @@ const CanvasPage: React.FC = () => {
               stroke={props.stroke}
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={(e) => handleObjectSelect(obj.id, e)}
+              onClick={() => handleObjectSelect(obj.id)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -2283,7 +2255,7 @@ const CanvasPage: React.FC = () => {
               stroke={props.stroke}
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={(e) => handleObjectSelect(obj.id, e)}
+              onClick={() => handleObjectSelect(obj.id)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -2312,7 +2284,7 @@ const CanvasPage: React.FC = () => {
               stroke={props.stroke}
               strokeWidth={props.strokeWidth}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={(e) => handleObjectSelect(obj.id, e)}
+              onClick={() => handleObjectSelect(obj.id)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
@@ -2338,7 +2310,7 @@ const CanvasPage: React.FC = () => {
               x={props.x}
               y={props.y}
               draggable={selectedTool.id === 'select' && !isEditing}
-              onClick={(e) => handleObjectSelect(obj.id, e)}
+              onClick={() => handleObjectSelect(obj.id)}
               onDragEnd={(e) => handleObjectUpdatePosition(obj.id, e.target.x(), e.target.y())}
               onMouseEnter={() => setHoveredObjectId(obj.id)}
               onMouseLeave={() => setHoveredObjectId(null)}
