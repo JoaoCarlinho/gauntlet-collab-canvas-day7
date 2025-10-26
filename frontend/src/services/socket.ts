@@ -291,11 +291,21 @@ class SocketService {
     })
 
     this.socket.on('error', (error) => {
+      // Check for canvas not found error
+      if (error?.type === 'canvas_not_found') {
+        console.warn('Canvas not found:', error.canvas_id)
+        // Redirect to dashboard
+        if (typeof window !== 'undefined') {
+          window.location.href = '/dashboard?error=canvas_not_found'
+        }
+        return
+      }
+
       // Check if this is a parse error
-      const isParseError = error?.message?.includes('parse error') || 
+      const isParseError = error?.message?.includes('parse error') ||
                           error?.description?.includes('parse error') ||
                           error?.code === 'parse_error'
-      
+
       if (isParseError) {
         socketIOClientOptimizer.recordParseError()
         console.error('=== Socket.IO Parse Error Detected ===')

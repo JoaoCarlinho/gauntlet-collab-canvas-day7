@@ -12,9 +12,10 @@ class PresenceService:
     
     def __init__(self):
         self.cache_client = cache_client
-        self.presence_ttl = 60  # 60 seconds
-        self.activity_ttl = 300  # 5 minutes
+        self.presence_ttl = int(60)  # 60 seconds (ensure int type)
+        self.activity_ttl = int(300)  # 5 minutes (ensure int type)
         self._memory_store = {}  # In-memory fallback storage
+        self._active_users_by_canvas = {}  # Track active user IDs per canvas for SimpleCache
     
     def update_user_presence(self, user_id: str, canvas_id: str, status: str = 'online', activity: str = 'viewing') -> bool:
         """Update user presence information."""
@@ -60,7 +61,12 @@ class PresenceService:
                     'timestamp': datetime.utcnow().timestamp()
                 })
             )
-            
+
+            # Track active user for SimpleCache compatibility
+            if canvas_id not in self._active_users_by_canvas:
+                self._active_users_by_canvas[canvas_id] = set()
+            self._active_users_by_canvas[canvas_id].add(user_id)
+
             logger.debug(f"Updated presence for user {user_id} on canvas {canvas_id}")
             return True
             
@@ -74,27 +80,33 @@ class PresenceService:
             if not self.cache_client:
                 return []
 
-            # Get all presence keys for this canvas
-            presence_keys = self.cache_client.keys(f"presence:{canvas_id}:*")
+            # Get tracked user IDs for this canvas (SimpleCache compatible)
+            user_ids = self._active_users_by_canvas.get(canvas_id, set())
             active_users = []
 
-            for key in presence_keys:
+            for user_id in user_ids:
                 try:
-                    presence_data = self.cache_client.get(key)
+                    presence_key = f"presence:{canvas_id}:{user_id}"
+                    presence_data = self.cache_client.get(presence_key)
                     if presence_data:
                         user_data = json.loads(presence_data)
                         # Check if presence is still valid
                         last_seen = datetime.fromisoformat(user_data['last_seen'])
                         if datetime.utcnow() - last_seen < timedelta(seconds=self.presence_ttl):
                             active_users.append(user_data)
+                        else:
+                            # Remove expired user from tracking
+                            self._active_users_by_canvas[canvas_id].discard(user_id)
                 except (json.JSONDecodeError, KeyError, ValueError) as e:
-                    logger.warning(f"Invalid presence data for key {key}: {str(e)}")
+                    logger.warning(f"Invalid presence data for user {user_id}: {str(e)}")
+                    # Remove invalid user from tracking
+                    self._active_users_by_canvas[canvas_id].discard(user_id)
                     continue
-            
+
             # Sort by last seen (most recent first)
             active_users.sort(key=lambda x: x['timestamp'], reverse=True)
             return active_users
-            
+
         except Exception as e:
             logger.error(f"Failed to get canvas presence: {str(e)}")
             return []
@@ -128,10 +140,14 @@ class PresenceService:
 
             self.cache_client.delete(presence_key)
             self.cache_client.delete(activity_key)
-            
+
+            # Remove from active users tracking
+            if canvas_id in self._active_users_by_canvas:
+                self._active_users_by_canvas[canvas_id].discard(user_id)
+
             logger.debug(f"Removed presence for user {user_id} from canvas {canvas_id}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to remove user presence: {str(e)}")
             return False
@@ -142,27 +158,33 @@ class PresenceService:
             if not self.cache_client:
                 return 0
 
-            presence_keys = self.cache_client.keys(f"presence:{canvas_id}:*")
+            # Get tracked user IDs for this canvas (SimpleCache compatible)
+            user_ids = self._active_users_by_canvas.get(canvas_id, set()).copy()
             cleaned_count = 0
 
-            for key in presence_keys:
+            for user_id in user_ids:
                 try:
-                    presence_data = self.cache_client.get(key)
+                    presence_key = f"presence:{canvas_id}:{user_id}"
+                    presence_data = self.cache_client.get(presence_key)
                     if presence_data:
                         user_data = json.loads(presence_data)
                         last_seen = datetime.fromisoformat(user_data['last_seen'])
 
                         # If presence is expired, remove it
                         if datetime.utcnow() - last_seen >= timedelta(seconds=self.presence_ttl):
-                            self.cache_client.delete(key)
+                            self.cache_client.delete(presence_key)
                             # Also remove corresponding activity
-                            user_id = user_data['user_id']
                             activity_key = f"activity:{canvas_id}:{user_id}"
                             self.cache_client.delete(activity_key)
+                            # Remove from tracking
+                            self._active_users_by_canvas[canvas_id].discard(user_id)
                             cleaned_count += 1
                 except (json.JSONDecodeError, KeyError, ValueError):
                     # Remove invalid data
-                    self.cache_client.delete(key)
+                    presence_key = f"presence:{canvas_id}:{user_id}"
+                    self.cache_client.delete(presence_key)
+                    # Remove from tracking
+                    self._active_users_by_canvas[canvas_id].discard(user_id)
                     cleaned_count += 1
             
             if cleaned_count > 0:

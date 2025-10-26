@@ -5,6 +5,12 @@ from app.models import Canvas, CanvasObject, CanvasPermission, User
 from app.extensions import db
 from app.utils.railway_logger import railway_logger
 
+
+class CanvasNotFoundError(Exception):
+    """Exception raised when a canvas is not found."""
+    pass
+
+
 class CanvasService:
     """Canvas related business logic."""
     
@@ -72,16 +78,20 @@ class CanvasService:
         return True
     
     def check_canvas_permission(self, canvas_id, user_id, permission_type='view'):
-        """Check if user has permission on canvas."""
+        """Check if user has permission on canvas.
+
+        Raises:
+            CanvasNotFoundError: If canvas does not exist
+        """
         print(f"=== Permission Check Debug ===")
         print(f"Canvas ID: {canvas_id}")
         print(f"User ID: {user_id}")
         print(f"Permission type: {permission_type}")
-        
+
         canvas = self.get_canvas_by_id(canvas_id)
         if not canvas:
             print("Canvas not found in permission check")
-            return False
+            raise CanvasNotFoundError(f"Canvas {canvas_id} does not exist")
         
         print(f"Canvas owner ID: {canvas.owner_id}")
         print(f"Canvas is public: {canvas.is_public}")
