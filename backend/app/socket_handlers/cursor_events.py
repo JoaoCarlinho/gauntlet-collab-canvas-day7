@@ -11,6 +11,9 @@ from app.utils.socketio_config_optimizer import SocketIOConfigOptimizer
 from app.services.token_optimization_service import token_optimization_service
 import json
 
+# Use cache_client as redis_client for backward compatibility
+redis_client = cache_client
+
 def register_cursor_handlers(socketio):
     """Register cursor-related Socket.IO event handlers."""
     
