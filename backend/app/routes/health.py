@@ -79,6 +79,61 @@ def readiness_check():
             'timestamp': int(time.time())
         }), 503
 
+@health_bp.route('/database')
+def database_status():
+    """Detailed database status check."""
+    try:
+        from sqlalchemy import text
+        import time as time_module
+
+        start_time = time_module.time()
+
+        # Test database connection
+        with db.engine.connect() as connection:
+            connection.execute(text('SELECT 1'))
+
+        connection_time = (time_module.time() - start_time) * 1000  # Convert to ms
+
+        # Get database URL (masked for security)
+        db_url = current_app.config['SQLALCHEMY_DATABASE_URI']
+        db_type = 'unknown'
+        if 'postgresql' in db_url.lower():
+            db_type = 'PostgreSQL'
+        elif 'sqlite' in db_url.lower():
+            db_type = 'SQLite'
+        elif 'mysql' in db_url.lower():
+            db_type = 'MySQL'
+
+        # Mask the password in URL
+        masked_url = db_url
+        if '@' in masked_url:
+            parts = masked_url.split('@')
+            if '://' in parts[0]:
+                protocol_and_creds = parts[0].split('://')
+                if ':' in protocol_and_creds[1]:
+                    user = protocol_and_creds[1].split(':')[0]
+                    masked_url = f"{protocol_and_creds[0]}://{user}:***@{parts[1]}"
+
+        return jsonify({
+            'status': 'healthy',
+            'database_type': db_type,
+            'connection_url': masked_url,
+            'connection_time_ms': round(connection_time, 2),
+            'is_sqlite': 'sqlite' in db_url.lower(),
+            'warning': 'SQLite detected - objects will be lost on restart!' if 'sqlite' in db_url.lower() else None,
+            'timestamp': int(time.time())
+        }), 200
+
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'error_trace': traceback.format_exc(),
+            'warning': 'DATABASE CONNECTION FAILED - Objects cannot be saved!',
+            'timestamp': int(time.time())
+        }), 503
+
 @health_bp.route('/live')
 def liveness_check():
     """Liveness check - verifies the application is alive."""
