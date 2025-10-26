@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional, Callable
 from flask_socketio import emit
 from flask import request
 from app.services.auth_service import AuthService
-from app.services.canvas_service import CanvasService
+from app.services.canvas_service import CanvasService, CanvasNotFoundError
 from app.extensions import cache_client
 from app.schemas.socket_validation_schemas import validate_socket_event_data, get_socket_event_schema
 from app.utils.validators import ValidationError
@@ -444,22 +444,31 @@ def check_canvas_permission_decorator(permission: str = 'view'):
             try:
                 user = data.get('_authenticated_user')
                 canvas_id = data.get('canvas_id')
-                
+
                 if not user or not canvas_id:
-                    emit('error', {'message': 'User or canvas ID missing'})
+                    emit('error', {'message': 'User or canvas ID missing', 'type': 'validation_error'})
                     return
-                
+
                 # Check permission (handle both user object and user dict)
                 user_id = user.id if hasattr(user, 'id') else user.get('id')
                 if not check_canvas_permission(canvas_id, user_id, permission):
-                    emit('error', {'message': f'{permission.title()} permission required'})
+                    emit('error', {'message': f'{permission.title()} permission required', 'type': 'permission_error'})
                     return
-                
+
                 return func(data, *args, **kwargs)
-                
+
+            except CanvasNotFoundError as e:
+                security_logger.log_warning(f"Canvas not found: {str(e)}")
+                emit('error', {
+                    'message': 'Canvas not found',
+                    'type': 'canvas_not_found',
+                    'canvas_id': data.get('canvas_id'),
+                    'details': 'The canvas you are trying to access does not exist or has been deleted'
+                })
+                return
             except Exception as e:
                 security_logger.log_error(f"Permission check error: {str(e)}", e)
-                emit('error', {'message': 'Permission check failed'})
+                emit('error', {'message': 'Permission check failed', 'type': 'permission_error'})
                 return
         
         return wrapper

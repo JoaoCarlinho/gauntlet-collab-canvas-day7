@@ -179,25 +179,17 @@ class TokenOptimizationService {
       
       // Create optimized message
       const optimizedMessage = { ...message }
-      
-      // Apply token-specific optimizations
+
+      // Log token issues for debugging (don't send to backend)
       if (tokenValidation.hasIssues) {
-        optimizedMessage._tokenIssues = tokenValidation.issues
-        optimizedMessage._tokenOptimizationApplied = true
+        console.warn('Token validation issues detected:', tokenValidation.issues)
       }
-      
+
       // Ensure token is properly formatted in message
       if ('id_token' in optimizedMessage) {
         optimizedMessage.id_token = token
       }
-      
-      // Add token metadata for debugging
-      optimizedMessage._tokenMetadata = {
-        size: tokenValidation.tokenSize,
-        validatedAt: Date.now(),
-        hasIssues: tokenValidation.hasIssues
-      }
-      
+
       console.log('Socket message optimized for user:', userId)
       return optimizedMessage
       
