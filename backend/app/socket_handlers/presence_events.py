@@ -91,7 +91,7 @@ def register_presence_handlers(socketio):
                 return
             
             # Store user presence in Redis (if available)
-            if redis_client:
+            if cache_client:
                 presence_data = {
                     'user_id': user.id,
                     'user_name': user.name,
@@ -99,7 +99,7 @@ def register_presence_handlers(socketio):
                     'avatar_url': user.avatar_url,
                     'timestamp': data.get('timestamp')
                 }
-                redis_client.setex(
+                cache_client.set(
                     f'presence:{canvas_id}:{user.id}',
                     60,  # 60 seconds TTL
                     json.dumps(presence_data)
@@ -153,9 +153,9 @@ def register_presence_handlers(socketio):
                 return
             
             # Remove user presence from Redis
-            if redis_client:
-                redis_client.delete(f'presence:{canvas_id}:{user.id}')
-                redis_client.delete(f'cursor:{canvas_id}:{user.id}')
+            if cache_client:
+                cache_client.delete(f'presence:{canvas_id}:{user.id}')
+                cache_client.delete(f'cursor:{canvas_id}:{user.id}')
             
             # Leave the presence room
             leave_room(f'presence:{canvas_id}')
@@ -196,10 +196,10 @@ def register_presence_handlers(socketio):
             
             # Get all online users from Redis
             online_users = []
-            if redis_client:
-                presence_keys = redis_client.keys(f'presence:{canvas_id}:*')
+            if cache_client:
+                presence_keys = cache_client.keys(f'presence:{canvas_id}:*')
                 for key in presence_keys:
-                    presence_data = redis_client.get(key)
+                    presence_data = cache_client.get(key)
                     if presence_data:
                         try:
                             user_info = json.loads(presence_data)
@@ -241,7 +241,7 @@ def register_presence_handlers(socketio):
                 return
             
             # Update presence timestamp in Redis
-            if redis_client:
+            if cache_client:
                 presence_data = {
                     'user_id': user.id,
                     'user_name': user.name,
@@ -249,7 +249,7 @@ def register_presence_handlers(socketio):
                     'avatar_url': user.avatar_url,
                     'timestamp': data.get('timestamp')
                 }
-                redis_client.setex(
+                cache_client.set(
                     f'presence:{canvas_id}:{user.id}',
                     60,  # 60 seconds TTL
                     json.dumps(presence_data)
