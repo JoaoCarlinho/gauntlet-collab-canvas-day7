@@ -5,7 +5,7 @@ import { socketEventOptimizer } from '../utils/socketOptimizer'
 import { socketIOClientOptimizer } from '../utils/socketioClientOptimizer'
 import { canvasAPI } from './api'
 import { tokenOptimizationService } from './tokenOptimizationService'
-import { websocketCircuitBreaker } from './circuitBreakerService'
+// import { websocketCircuitBreaker } from './circuitBreakerService' // DISABLED: Prevents connections
 import { recordWebSocketError } from './errorRateMonitor'
 import { 
   SocketConfig, 
@@ -23,9 +23,7 @@ class SocketService {
   private connectionQuality: SocketConnectionQuality = 'unknown'
 
   connect(idToken?: string) {
-    // Use circuit breaker to prevent connection attempts when WebSocket is failing
-    return websocketCircuitBreaker.execute(async () => {
-      const API_URL = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000') as string
+    const API_URL = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000') as string
       
       // Update connection state
       this.connectionState = 'connecting'
@@ -350,7 +348,6 @@ class SocketService {
 
     // Register event listeners
     this.registerEventListeners()
-    })
   }
 
   disconnect() {
