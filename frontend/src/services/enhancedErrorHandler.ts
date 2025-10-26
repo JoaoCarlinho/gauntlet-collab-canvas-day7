@@ -393,7 +393,7 @@ class EnhancedErrorHandler {
     }
 
     const classification = this.handleError(error, fullContext, {
-      showToast: true,
+      showToast: false, // DISABLED: Don't show annoying toast messages for socket errors
       logError: true,
       retryable: true,
       userMessage: 'Real-time features temporarily unavailable. Some features may be limited.'
