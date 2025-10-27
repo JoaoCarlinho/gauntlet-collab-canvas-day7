@@ -86,9 +86,13 @@ def register_canvas_handlers(socketio):
             
             # Join the canvas room
             join_room(canvas_id)
-            
+
             # Prepare user data for broadcast (sanitized)
-            user_data = user.to_dict()
+            # Handle both user object and user dict
+            if hasattr(user, 'to_dict'):
+                user_data = user.to_dict()
+            else:
+                user_data = user  # Already a dict from fallback auth
             sanitized_user_data = sanitize_broadcast_data({'user': user_data})['user']
             
             # Store user info in session
@@ -116,11 +120,14 @@ def register_canvas_handlers(socketio):
             
             # Leave the canvas room
             leave_room(canvas_id)
-            
+
             # Notify others in the room (sanitized data)
+            # Handle both user object and user dict
+            user_id = user.id if hasattr(user, 'id') else user.get('id')
+            user_name = user.name if hasattr(user, 'name') else user.get('name', '')
             emit('user_left', {
-                'user_id': user.id,
-                'user_name': SanitizationService.sanitize_html(user.name or '')
+                'user_id': user_id,
+                'user_name': SanitizationService.sanitize_html(user_name or '')
             }, room=canvas_id, include_self=False)
             
         except Exception as e:

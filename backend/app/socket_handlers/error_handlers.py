@@ -33,7 +33,9 @@ def handle_socket_error(error, event_type=None, user_id=None, additional_data=No
             'additional_data': additional_data
         }
         
-        error_logger.log_error(f"Socket.IO error in {event_type}: {str(error)}", error, error_context)
+        # Log with context included in message
+        context_str = f" | Context: {json.dumps(error_context, default=str)}" if error_context else ""
+        error_logger.log_error(f"Socket.IO error in {event_type}: {str(error)}{context_str}", error)
         
         # Create structured error response
         error_response = {
