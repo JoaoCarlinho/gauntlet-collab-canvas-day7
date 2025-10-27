@@ -49,10 +49,10 @@ class SocketRateLimitError(SocketSecurityError):
 SOCKET_RATE_LIMITS = {
     'join_canvas': {'limit': 5, 'window': 60},      # 5 per minute
     'leave_canvas': {'limit': 10, 'window': 60},    # 10 per minute
-    'object_created': {'limit': 10, 'window': 60},  # 10 per minute
-    'object_updated': {'limit': 30, 'window': 60},  # 30 per minute
-    'object_deleted': {'limit': 5, 'window': 60},   # 5 per minute
-    'cursor_move': {'limit': 300, 'window': 60},    # 300 per minute (5 per second for smooth tracking)
+    'object_created': {'limit': 60, 'window': 60},  # 60 per minute (1 per second for normal drawing)
+    'object_updated': {'limit': 60, 'window': 60},  # 60 per minute (1 per second for normal editing)
+    'object_deleted': {'limit': 20, 'window': 60},  # 20 per minute
+    'cursor_move': {'limit': 600, 'window': 60},    # 600 per minute (10 per second for smooth tracking)
     'cursor_leave': {'limit': 10, 'window': 60},    # 10 per minute
     'user_online': {'limit': 5, 'window': 60},      # 5 per minute
     'user_offline': {'limit': 10, 'window': 60},    # 10 per minute

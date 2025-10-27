@@ -101,8 +101,8 @@ def register_presence_handlers(socketio):
                 }
                 cache_client.set(
                     f'presence:{canvas_id}:{user.id}',
-                    60,  # 60 seconds TTL
-                    json.dumps(presence_data)
+                    json.dumps(presence_data),
+                    ex=60  # 60 seconds TTL
                 )
             
             # Join the presence room
@@ -251,8 +251,8 @@ def register_presence_handlers(socketio):
                 }
                 cache_client.set(
                     f'presence:{canvas_id}:{user.id}',
-                    60,  # 60 seconds TTL
-                    json.dumps(presence_data)
+                    json.dumps(presence_data),
+                    ex=60  # 60 seconds TTL
                 )
             
         except Exception as e:
