@@ -40,7 +40,6 @@ import { useObjectDropShortcuts, useCanvasMousePosition, useZIndexShortcuts } fr
 import UpdateSuccessAnimation from './UpdateSuccessAnimation'
 import EnhancedLoadingIndicator from './EnhancedLoadingIndicator'
 import ConflictResolutionDialog from './ConflictResolutionDialog'
-import QueueManagementDialog from './QueueManagementDialog'
 import toast from 'react-hot-toast'
 import InviteCollaboratorModal from './InviteCollaboratorModal'
 // import PresenceIndicators from './PresenceIndicators'
@@ -204,7 +203,6 @@ const CanvasPage: React.FC = () => {
   // Update queue management
   // Note: queueStats is used internally for queue tracking, not displayed in UI
   const [_queueStats, setQueueStats] = useState<QueueStats>(updateQueueManager.getStats())
-  const [showQueueDialog, setShowQueueDialog] = useState(false)
   
   // Connection monitoring and offline mode state
   // const [connectionMetrics, setConnectionMetrics] = useState({
@@ -3044,12 +3042,6 @@ const CanvasPage: React.FC = () => {
         onClose={() => setShowConflictDialog(false)}
         onResolve={handleConflictResolution}
       />
-
-      {/* Queue Management Dialog */}
-      {/* <QueueManagementDialog
-        isOpen={showQueueDialog}
-        onClose={() => setShowQueueDialog(false)}
-      /> */}
 
       {/* AI Agent Components */}
       <AIAgentButton
