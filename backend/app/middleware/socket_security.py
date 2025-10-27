@@ -567,15 +567,19 @@ def secure_socket_event(event_type: str, permission: str = 'view'):
     def decorator(func: Callable) -> Callable:
         # Get schema for validation
         schema_class = get_socket_event_schema(event_type)
-        
-        # Apply all security decorators
+
+        # Apply all security decorators in correct order
+        # NOTE: Decorators are applied bottom-to-top, so execution order is REVERSE
+        # Desired execution: validate -> auth -> permission -> rate_limit -> handler
+        # So apply in reverse: rate_limit, permission, auth, validate
+
+        func = rate_limit_socket_event(event_type)(func)
+        func = check_canvas_permission_decorator(permission)(func)
+        func = require_socket_auth(func)
+
         if schema_class:
             func = validate_socket_input(schema_class)(func)
-        
-        func = require_socket_auth(func)
-        func = check_canvas_permission_decorator(permission)(func)
-        func = rate_limit_socket_event(event_type)(func)
-        
+
         return func
     
     return decorator
