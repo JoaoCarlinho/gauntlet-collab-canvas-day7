@@ -149,24 +149,27 @@ class TokenOptimizationService:
             
             # Create optimized message
             optimized_message = message.copy()
-            
-            # Apply token-specific optimizations
-            if token_validation['has_issues']:
-                # If token has issues, we might want to handle it differently
-                optimized_message['_token_issues'] = token_validation['issues']
-                optimized_message['_token_optimization_applied'] = True
-            
+
+            # TEMPORARY FIX: Disable token optimization fields until Railway deploys schema fixes
+            # if token_validation['has_issues']:
+            #     # If token has issues, we might want to handle it differently
+            #     optimized_message['_token_issues'] = token_validation['issues']
+            #     optimized_message['_token_optimization_applied'] = True
+
             # Ensure token is properly formatted in message
             if 'id_token' in optimized_message:
                 optimized_message['id_token'] = token
-            
-            # Add token metadata for debugging
-            optimized_message['_token_metadata'] = {
-                'size': token_validation['token_size'],
-                'validated_at': time.time(),
-                'has_issues': token_validation['has_issues']
-            }
-            
+
+            # TEMPORARY FIX: Disable token metadata until Railway deploys schema fixes
+            # Railway deployment pipeline is not updating - blocking object placement
+            # This metadata causes schema validation errors: {'_token_metadata': ['Unknown field.']}
+            # TODO: Re-enable after Railway successfully deploys commit 090aee6 with schema fixes
+            # optimized_message['_token_metadata'] = {
+            #     'size': token_validation['token_size'],
+            #     'validated_at': time.time(),
+            #     'has_issues': token_validation['has_issues']
+            # }
+
             railway_logger.log('token_optimization', 10, f"Socket message optimized for user: {user_id}")
             
             return optimized_message
