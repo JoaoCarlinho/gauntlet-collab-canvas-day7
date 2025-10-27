@@ -258,18 +258,34 @@ def check_anonymous_rate_limit(rate_limit_key: str, event_type: str) -> bool:
 def sanitize_socket_event_data(data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Sanitize Socket.IO event data to prevent XSS and injection attacks.
-    
+
     Args:
         data: Raw event data
-        
+
     Returns:
         Sanitized event data
     """
     try:
+        # Fields that should NOT be sanitized (authentication tokens, IDs, etc.)
+        SKIP_SANITIZATION_FIELDS = {
+            'id_token',  # Firebase JWT token - must not be modified
+            'canvas_id',  # UUID/ID fields already validated by schema
+            'object_id',
+            'user_id',
+            'invitation_id',
+            '_token_metadata',  # Metadata fields
+            '_authenticated_user',
+            '_token_issues',
+            '_token_optimization_applied'
+        }
+
         sanitized = {}
-        
+
         for key, value in data.items():
-            if isinstance(value, str):
+            # Skip sanitization for specific fields
+            if key in SKIP_SANITIZATION_FIELDS:
+                sanitized[key] = value
+            elif isinstance(value, str):
                 # Sanitize string values
                 sanitized[key] = SanitizationService.sanitize_html(value)
             elif isinstance(value, dict):
@@ -289,7 +305,7 @@ def sanitize_socket_event_data(data: Dict[str, Any]) -> Dict[str, Any]:
             else:
                 # Keep non-string values as-is
                 sanitized[key] = value
-        
+
         return sanitized
         
     except Exception as e:
