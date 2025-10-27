@@ -104,28 +104,36 @@ def authenticate_socket_user(id_token: str) -> Any:
 def check_canvas_permission(canvas_id: str, user_id: str, permission: str = 'view') -> bool:
     """
     Check if user has permission for canvas operation.
-    
+
     Args:
         canvas_id: Canvas identifier
         user_id: User identifier
         permission: Required permission level ('view' or 'edit')
-        
+
     Returns:
         True if user has permission, False otherwise
+
+    Raises:
+        CanvasNotFoundError: If canvas does not exist (caller should handle as 404)
     """
     try:
         canvas_service = CanvasService()
         has_permission = canvas_service.check_canvas_permission(canvas_id, user_id, permission)
-        
+
         if not has_permission:
             security_logger.log_security(
-                user_id, 
-                f"permission_denied_canvas_{permission}", 
+                user_id,
+                f"permission_denied_canvas_{permission}",
                 f"Canvas: {canvas_id}"
             )
-        
+
         return has_permission
-        
+
+    except CanvasNotFoundError:
+        # Re-raise CanvasNotFoundError so caller can return 404
+        # Don't treat as permission error (401)
+        security_logger.log_error(f"Canvas not found: {canvas_id}", None)
+        raise
     except Exception as e:
         security_logger.log_error(f"Permission check failed: {str(e)}", e)
         return False
