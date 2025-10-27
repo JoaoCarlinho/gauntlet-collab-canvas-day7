@@ -375,10 +375,11 @@ def require_socket_auth(func: Callable) -> Callable:
         try:
             from flask import session
             import time
-            
-            # Debug session information
+
+            # Debug session and data information
             security_logger.log_info(f"Socket event authentication check - Session keys: {list(session.keys())}")
             security_logger.log_info(f"Socket event authentication check - Data keys: {list(data.keys()) if data else 'None'}")
+            security_logger.log_info(f"Socket event authentication check - Has id_token: {'id_token' in data if data else False}")
             
             # Try session-based authentication first
             user_data = session.get('authenticated_user')
