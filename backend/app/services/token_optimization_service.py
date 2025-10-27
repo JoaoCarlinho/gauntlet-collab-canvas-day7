@@ -124,9 +124,11 @@ class TokenOptimizationService:
                 exp_time = payload.get('exp')
                 if exp_time:
                     current_time = time.time()
-                    if exp_time < current_time:
+                    # Convert exp_time to float to handle both string and numeric types
+                    exp_time_float = float(exp_time)
+                    if exp_time_float < current_time:
                         optimizations['recommendations'].append('Token has expired, refresh required')
-                    elif exp_time - current_time < 300:  # Less than 5 minutes
+                    elif exp_time_float - current_time < 300:  # Less than 5 minutes
                         optimizations['recommendations'].append('Token expires soon, consider refresh')
             
             # If we have specific recommendations, mark as optimization applied
