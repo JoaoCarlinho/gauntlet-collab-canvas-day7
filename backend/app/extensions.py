@@ -39,6 +39,8 @@ class CacheWrapper:
         """Set value in cache with optional expiration."""
         try:
             timeout = ex if ex else 300
+            # Ensure timeout is numeric (might be passed as string)
+            timeout = float(timeout) if timeout else 300
             # Decode bytes if needed
             if isinstance(value, bytes):
                 value = value.decode('utf-8')
