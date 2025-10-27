@@ -452,26 +452,37 @@ def get_canvas_objects(current_user, canvas_id):
     try:
         # Validate canvas ID format and length
         from app.utils.validators import InputValidator
+        from app.services.canvas_service import CanvasNotFoundError
+
         try:
             canvas_id = InputValidator.validate_canvas_id(canvas_id)
         except ValidationError as e:
             return jsonify({'error': f'Invalid canvas ID: {str(e)}'}), 400
-        
+
         # Validate user ID format
         try:
             user_id = InputValidator.validate_user_id(current_user.id)
         except ValidationError as e:
             return jsonify({'error': f'Invalid user ID: {str(e)}'}), 400
-        
-        # Check permission
-        if not canvas_service.check_canvas_permission(canvas_id, user_id):
-            return jsonify({'error': 'Access denied'}), 403
-        
+
+        # Check permission - handle CanvasNotFoundError separately
+        try:
+            if not canvas_service.check_canvas_permission(canvas_id, user_id):
+                return jsonify({'error': 'Access denied'}), 403
+        except CanvasNotFoundError:
+            # Return 404 for non-existent canvas (not 401/403)
+            return jsonify({
+                'error': 'Canvas not found',
+                'error_type': 'canvas_not_found',
+                'canvas_id': canvas_id,
+                'message': 'The canvas you are trying to access does not exist or has been deleted'
+            }), 404
+
         objects = canvas_service.get_canvas_objects(canvas_id)
         return jsonify({
             'objects': [obj.to_dict() for obj in objects]
         }), 200
-        
+
     except ValidationError as e:
         return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
     except Exception as e:

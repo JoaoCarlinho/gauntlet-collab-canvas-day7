@@ -83,22 +83,31 @@ class CanvasService:
         Raises:
             CanvasNotFoundError: If canvas does not exist
         """
-        print(f"=== Permission Check Debug ===")
-        print(f"Canvas ID: {canvas_id}")
-        print(f"User ID: {user_id}")
-        print(f"Permission type: {permission_type}")
+        import os
+        is_debug = os.environ.get('DEBUG', 'false').lower() == 'true' or \
+                   os.environ.get('FLASK_ENV') == 'development'
+
+        if is_debug:
+            print(f"=== Permission Check Debug ===")
+            print(f"Canvas ID: {canvas_id}")
+            print(f"User ID: {user_id}")
+            print(f"Permission type: {permission_type}")
 
         canvas = self.get_canvas_by_id(canvas_id)
         if not canvas:
-            print("Canvas not found in permission check")
+            # Don't log in production - CanvasNotFoundError will be handled by caller
+            if is_debug:
+                print("Canvas not found in permission check")
             raise CanvasNotFoundError(f"Canvas {canvas_id} does not exist")
-        
-        print(f"Canvas owner ID: {canvas.owner_id}")
-        print(f"Canvas is public: {canvas.is_public}")
-        
+
+        if is_debug:
+            print(f"Canvas owner ID: {canvas.owner_id}")
+            print(f"Canvas is public: {canvas.is_public}")
+
         # Owner has all permissions
         if canvas.owner_id == user_id:
-            print("User is owner - permission granted")
+            if is_debug:
+                print("User is owner - permission granted")
             return True
         
         # Check if canvas is public (view permission only)

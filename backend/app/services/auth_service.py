@@ -21,17 +21,23 @@ class AuthService:
                 # Check if Firebase is already initialized
                 try:
                     existing_app = firebase_admin.get_app()
-                    print("Firebase app already exists, using existing app")
+                    # App exists - no need to log (reduces noise)
                     return  # Use existing app instead of reinitializing
                 except ValueError:
-                    print("No existing Firebase app found, initializing new app")
-                
-                # Debug: Check Firebase environment variables
-                print("=== Firebase Initialization Debug ===")
-                print(f"FIREBASE_PROJECT_ID: {'SET' if os.environ.get('FIREBASE_PROJECT_ID') else 'NOT SET'}")
-                print(f"FIREBASE_CLIENT_EMAIL: {'SET' if os.environ.get('FIREBASE_CLIENT_EMAIL') else 'NOT SET'}")
-                private_key_raw = os.environ.get('FIREBASE_PRIVATE_KEY', '')
-                print(f"FIREBASE_PRIVATE_KEY: {'SET' if private_key_raw else 'NOT SET'}")
+                    # Only log first-time initialization
+                    pass
+
+                # Check environment for debug mode
+                is_debug = os.environ.get('DEBUG', 'false').lower() == 'true' or \
+                           os.environ.get('FLASK_ENV') == 'development'
+
+                # Debug: Check Firebase environment variables (only in debug mode)
+                if is_debug:
+                    print("=== Firebase Initialization Debug ===")
+                    print(f"FIREBASE_PROJECT_ID: {'SET' if os.environ.get('FIREBASE_PROJECT_ID') else 'NOT SET'}")
+                    print(f"FIREBASE_CLIENT_EMAIL: {'SET' if os.environ.get('FIREBASE_CLIENT_EMAIL') else 'NOT SET'}")
+                    private_key_raw = os.environ.get('FIREBASE_PRIVATE_KEY', '')
+                    print(f"FIREBASE_PRIVATE_KEY: {'SET' if private_key_raw else 'NOT SET'}")
                 
                 # Fix private key formatting - replace escaped newlines with actual newlines
                 private_key = os.environ.get('FIREBASE_PRIVATE_KEY', '')
@@ -88,17 +94,23 @@ class AuthService:
     
     def verify_token(self, id_token):
         """Verify Firebase ID token with enhanced error handling."""
+        # Check if we're in debug/development mode
+        is_debug = os.environ.get('DEBUG', 'false').lower() == 'true' or \
+                   os.environ.get('FLASK_ENV') == 'development'
+
         try:
-            # Enhanced token validation and logging
-            print(f"=== Token Verification Debug ===")
-            print(f"Token length: {len(id_token) if id_token else 0}")
-            print(f"Token type: {type(id_token)}")
-            print(f"Token starts with: {id_token[:50] if id_token else 'None'}...")
-            
+            # Only log debug info in development
+            if is_debug:
+                print(f"=== Token Verification Debug ===")
+                print(f"Token length: {len(id_token) if id_token else 0}")
+                print(f"Token type: {type(id_token)}")
+                # Don't log token content in any environment (security)
+
             # Allow development tokens when enabled
             allow_dev = os.environ.get('ALLOW_DEV_TOKENS', 'false').lower() == 'true'
             if allow_dev and isinstance(id_token, str) and id_token.startswith('dev.'):
-                print("Processing development token")
+                if is_debug:
+                    print("Processing development token")
                 # Expected format: dev.<b64header>.<b64payload>.<signature>
                 parts = id_token.split('.')
                 if len(parts) >= 4:
@@ -118,16 +130,19 @@ class AuthService:
                             'name': payload.get('name') or 'Development User',
                             'dev': True
                         }
-                        print(f"Development token verified for user: {result['uid']}")
+                        if is_debug:
+                            print(f"Development token verified for user: {result['uid']}")
                         return result
                     except Exception as e:
-                        print(f"Failed to decode dev token payload: {str(e)}")
+                        if is_debug:
+                            print(f"Failed to decode dev token payload: {str(e)}")
                         raise Exception(f'Invalid dev token: {str(e)}')
                 else:
                     raise Exception('Invalid dev token format - expected 4 parts')
 
             if hasattr(self, '_mock_firebase') and self._mock_firebase:
-                print("Using mock Firebase for token verification")
+                if is_debug:
+                    print("Using mock Firebase for token verification")
                 # Mock token verification for testing
                 if id_token == 'valid-token':
                     result = {
@@ -135,21 +150,27 @@ class AuthService:
                         'email': 'test@example.com',
                         'name': 'Test User'
                     }
-                    print(f"Mock token verified for user: {result['uid']}")
+                    if is_debug:
+                        print(f"Mock token verified for user: {result['uid']}")
                     return result
                 else:
                     raise Exception('Invalid mock token')
             else:
                 from firebase_admin import auth
-                print("Verifying token with Firebase Admin SDK")
+                if is_debug:
+                    print("Verifying token with Firebase Admin SDK")
                 decoded_token = auth.verify_id_token(id_token)
-                print(f"Firebase token verified successfully for user: {decoded_token.get('uid', 'unknown')}")
+                # Only log success in debug mode
+                if is_debug:
+                    print(f"Firebase token verified successfully for user: {decoded_token.get('uid', 'unknown')}")
                 return decoded_token
         except Exception as e:
-            print(f"=== Token Verification Failed ===")
-            print(f"Error: {str(e)}")
-            print(f"Error type: {type(e).__name__}")
-            print(f"Token length: {len(id_token) if id_token else 0}")
+            # Only log detailed errors in debug mode
+            if is_debug:
+                print(f"=== Token Verification Failed ===")
+                print(f"Error: {str(e)}")
+                print(f"Error type: {type(e).__name__}")
+                print(f"Token length: {len(id_token) if id_token else 0}")
             # Provide more specific error messages
             if 'expired' in str(e).lower():
                 raise Exception('Token has expired. Please refresh your authentication.')

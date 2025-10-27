@@ -79,18 +79,39 @@ api.interceptors.response.use(
       error.config.retryCount = error.config.retryCount || 0
       const maxRetries = 3
       
+      // Handle 404 errors - don't retry, resource doesn't exist
+      if (error.response?.status === 404) {
+        console.warn('Resource not found (404):', error.config?.url)
+        recordApiError(`404 Not Found: ${error.config?.url}`, error.config?.url)
+
+        // Check if it's a canvas not found error
+        const errorData = error.response?.data
+        if (errorData?.error_type === 'canvas_not_found' || errorData?.error === 'Canvas not found') {
+          console.error('Canvas not found - redirecting to dashboard')
+          // Emit custom event for canvas not found so CanvasPage can handle it
+          window.dispatchEvent(new CustomEvent('canvas-not-found', {
+            detail: {
+              canvasId: errorData.canvas_id,
+              message: errorData.message || 'Canvas not found or has been deleted'
+            }
+          }))
+        }
+
+        // Don't retry 404 errors - resource doesn't exist
+        return Promise.reject(error)
+      }
       // Handle authentication errors with circuit breaker protection
-      if (error.response?.status === 401) {
+      else if (error.response?.status === 401) {
         console.warn('Authentication error - attempting token refresh')
         recordAuthError(`401 Unauthorized: ${error.config?.url}`, error.config?.url)
-        
+
         // Don't retry on auth errors if we've already tried too many times
         if (error.config.retryCount >= maxRetries) {
           console.error('Max retry attempts reached for authentication')
           authService.clearAuth()
           return Promise.reject(error)
         }
-        
+
         try {
           // Use authentication circuit breaker for token refresh (not API circuit breaker)
           await authenticationCircuitBreaker.execute(async () => {

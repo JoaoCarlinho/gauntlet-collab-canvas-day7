@@ -247,6 +247,27 @@ const CanvasPage: React.FC = () => {
     }
   }, [stageContainer])
 
+  // Listen for canvas not found events from HTTP API (api.ts)
+  useEffect(() => {
+    const handleCanvasNotFound = (event: Event) => {
+      const customEvent = event as CustomEvent<{ canvasId: string; message: string }>
+      console.error('Canvas not found (HTTP):', customEvent.detail)
+
+      toast.error(customEvent.detail.message || 'Canvas not found or has been deleted', {
+        duration: 5000,
+        id: 'canvas-not-found'
+      })
+
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        navigate('/dashboard?error=canvas_not_found')
+      }, 2000)
+    }
+
+    window.addEventListener('canvas-not-found', handleCanvasNotFound)
+    return () => window.removeEventListener('canvas-not-found', handleCanvasNotFound)
+  }, [navigate])
+
   // Start editing when Enter is pressed and a single text object is selected
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -765,9 +786,25 @@ const CanvasPage: React.FC = () => {
 
     socketService.on('object_delete_failed', (data: { object_id: string; error: ErrorWithDetails; message?: string }) => {
       console.error('Object deletion failed:', data)
-      
+
       const errorMessage = data.message || 'Failed to delete object'
       toast.error(errorMessage, { duration: 4000 })
+    })
+
+    // Canvas not found error listener (from Socket.IO)
+    socketService.on('error', (data: { message: string; type: string; canvas_id?: string; details?: string }) => {
+      if (data.type === 'canvas_not_found') {
+        console.error('Canvas not found (Socket.IO):', data)
+        toast.error(data.details || 'Canvas not found or has been deleted', {
+          duration: 5000,
+          id: 'canvas-not-found'
+        })
+
+        // Redirect to dashboard after a short delay
+        setTimeout(() => {
+          navigate('/dashboard?error=canvas_not_found')
+        }, 2000)
+      }
     })
 
     // Reconnection event listeners
