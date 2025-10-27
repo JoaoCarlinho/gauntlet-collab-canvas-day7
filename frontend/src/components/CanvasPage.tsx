@@ -40,11 +40,6 @@ import { useObjectDropShortcuts, useCanvasMousePosition, useZIndexShortcuts } fr
 import UpdateSuccessAnimation from './UpdateSuccessAnimation'
 import EnhancedLoadingIndicator from './EnhancedLoadingIndicator'
 import ConflictResolutionDialog from './ConflictResolutionDialog'
-// import SyncStatusIndicator from './SyncStatusIndicator'
-// import QueueStatusIndicator from './QueueStatusIndicator'
-// import QueueManagementDialog from './QueueManagementDialog'
-// import ConnectionStatusIndicator from './ConnectionStatusIndicator'
-// import OfflineIndicator from './OfflineIndicator'
 import toast from 'react-hot-toast'
 import InviteCollaboratorModal from './InviteCollaboratorModal'
 // import PresenceIndicators from './PresenceIndicators'
@@ -195,10 +190,8 @@ const CanvasPage: React.FC = () => {
   // State synchronization and conflict management
   const [stateConflicts, setStateConflicts] = useState<StateConflict[]>([])
   const [showConflictDialog, setShowConflictDialog] = useState(false)
-  const [
-    // syncStatus,
-    // setSyncStatus
-  ] = useState({
+  // Note: syncStatus is used internally for state tracking, not displayed in UI
+  const [_syncStatus] = useState({
     isConnected: true,
     lastSyncTime: 0,
     syncInProgress: false,
@@ -206,13 +199,10 @@ const CanvasPage: React.FC = () => {
     conflictCount: 0,
     autoSyncActive: false
   })
-  
+
   // Update queue management
-  const [
-    // queueStats,
-    // setQueueStats
-  ] = useState<QueueStats>(updateQueueManager.getStats())
-  // const [showQueueDialog, setShowQueueDialog] = useState(false)
+  // Note: queueStats is used internally for queue tracking, not displayed in UI
+  const [_queueStats] = useState<QueueStats>(updateQueueManager.getStats())
   
   // Connection monitoring and offline mode state
   // const [connectionMetrics, setConnectionMetrics] = useState({
@@ -884,35 +874,6 @@ const CanvasPage: React.FC = () => {
   //   }))
   // }
 
-  // const handleManualSync = async () => {
-  //   if (!canvasId) return
-    
-  //   setSyncStatus(prev => ({ ...prev, syncInProgress: true }))
-    
-  //   try {
-  //     const result = await stateSyncManager.syncState(canvasId, objects, {
-  //       forceRefresh: true,
-  //       resolveConflicts: true,
-  //       conflictResolutionStrategy: 'server_wins'
-  //     })
-      
-  //     if (result.success) {
-  //       if (result.conflicts.length > 0) {
-  //         setStateConflicts(result.conflicts)
-  //         setShowConflictDialog(true)
-  //       } else {
-  //         toast.success('State synchronized successfully')
-  //       }
-  //     } else {
-  //       toast.error('Sync failed: ' + result.errors.join(', '))
-  //     }
-  //   } catch (error) {
-  //     console.error('Manual sync failed:', error)
-  //     toast.error('Failed to synchronize state')
-  //   } finally {
-  //     updateSyncStatus()
-  //   }
-  // }
 
   const handleConflictResolution = async (resolutions: any[]) => {
     try {
@@ -970,26 +931,6 @@ const CanvasPage: React.FC = () => {
   //   updateQueueManager.startAutoProcessing()
   // }
 
-  // const handleQueueAction = (action: string) => {
-  //   switch (action) {
-  //     case 'retry_failed': {
-  //       const failedUpdates = updateQueueManager.getFailedUpdates()
-  //       failedUpdates.forEach(update => {
-  //         updateQueueManager.retryFailedUpdate(update.id)
-  //       })
-  //       toast.success(`Retrying ${failedUpdates.length} failed updates`)
-  //       break
-  //     }
-  //     case 'clear_completed':
-  //       updateQueueManager.clearCompleted()
-  //       toast.success('Cleared completed updates')
-  //       break
-  //     case 'clear_failed':
-  //       updateQueueManager.clearFailed()
-  //       toast.success('Cleared failed updates')
-  //       break
-  //   }
-  // }
 
   // Connection monitoring functions
   const initializeConnectionMonitoring = () => {
@@ -2642,42 +2583,6 @@ const CanvasPage: React.FC = () => {
           /> */}
           
           <div className="flex items-center space-x-4">
-          {/* <div className="flex items-center space-x-2"> */}
-            {/* <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            <span className="text-sm text-gray-600">
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
-            </div> */}
-            
-            {/* Sync Status Indicator */}
-            {/* <SyncStatusIndicator
-              status={syncStatus}
-              onManualSync={handleManualSync}
-              onShowConflicts={() => setShowConflictDialog(true)}
-            /> */}
-
-            {/* Connection Status Indicator */}
-            {/* <ConnectionStatusIndicator
-              metrics={connectionMetrics}
-              isConnected={isConnected}
-            /> */}
-
-            {/* Offline Indicator */}
-            {/* <OfflineIndicator
-              isOffline={isOffline}
-              offlineData={offlineData}
-              onForceSync={() => offlineManager.forceSync()}
-              onClearCache={() => { offlineManager.clearCache() }}
-            /> */}
-            
-            {/* Queue Status Indicator */}
-            {/* <QueueStatusIndicator
-              stats={queueStats}
-              onShowQueue={() => setShowQueueDialog(true)}
-              onRetryFailed={() => handleQueueAction('retry_failed')}
-              onClearCompleted={() => handleQueueAction('clear_completed')}
-              onClearFailed={() => handleQueueAction('clear_failed')}
-            /> */}
           </div>
           
           {/* User Status */}
@@ -3137,12 +3042,6 @@ const CanvasPage: React.FC = () => {
         onClose={() => setShowConflictDialog(false)}
         onResolve={handleConflictResolution}
       />
-
-      {/* Queue Management Dialog */}
-      {/* <QueueManagementDialog
-        isOpen={showQueueDialog}
-        onClose={() => setShowQueueDialog(false)}
-      /> */}
 
       {/* AI Agent Components */}
       <AIAgentButton
