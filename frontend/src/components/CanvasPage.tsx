@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Rect, Circle, Text, Group, Line, RegularPolygon, Star } from 'react-konva'
-import { ArrowLeft, Users, Settings, UserPlus, BarChart3 } from 'lucide-react'
+import {
+  ArrowLeft,
+  // Users,
+  Settings,
+  // UserPlus,
+  BarChart3 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../hooks/useSocket'
 import { canvasAPI } from '../services/api'
@@ -21,7 +26,7 @@ import { updateQueueManager, QueueStats } from '../services/updateQueueManager'
 import { connectionMonitor } from '../services/connectionMonitor'
 import { offlineManager } from '../services/offlineManager'
 import { objectVisibilityRecoveryService } from '../services/objectVisibilityRecoveryService'
-import { connectionQualityMonitor } from '../services/connectionQualityMonitor'
+// import { connectionQualityMonitor } from '../services/connectionQualityMonitor'
 import ConnectionQualityDashboard from './ConnectionQualityDashboard'
 import { objectUpdateDebouncer } from '../utils/debounce'
 import { enhancedErrorHandler } from '../services/enhancedErrorHandler'
@@ -38,10 +43,10 @@ import ConflictResolutionDialog from './ConflictResolutionDialog'
 import QueueManagementDialog from './QueueManagementDialog'
 import toast from 'react-hot-toast'
 import InviteCollaboratorModal from './InviteCollaboratorModal'
-import PresenceIndicators from './PresenceIndicators'
-import UserStatus from './UserStatus'
+// import PresenceIndicators from './PresenceIndicators'
+// import UserStatus from './UserStatus'
 import CollaborationSidebar from './CollaborationSidebar'
-import NotificationCenter from './NotificationCenter'
+// import NotificationCenter from './NotificationCenter'
 import ZoomableCanvas from './ZoomableCanvas'
 import EditableText from './EditableText'
 import ResizeHandles from './ResizeHandles'
@@ -380,13 +385,13 @@ const CanvasPage: React.FC = () => {
     setupVisibilityMonitoring()
     
     // Set up connection quality monitoring
-    setupConnectionQualityMonitoring()
+    // setupConnectionQualityMonitoring()
 
       // Initialize state synchronization
-      initializeStateSync()
+      // initializeStateSync()
 
       // Initialize update queue
-      initializeUpdateQueue()
+      // initializeUpdateQueue()
 
       // Initialize connection monitoring
       initializeConnectionMonitoring()
@@ -838,38 +843,38 @@ const CanvasPage: React.FC = () => {
   }
 
   // State synchronization functions
-  const initializeStateSync = () => {
-    // Set up conflict callback
-    stateSyncManager.onConflict((conflicts) => {
-      setStateConflicts(conflicts)
-      setSyncStatus(prev => ({
-        ...prev,
-        hasConflicts: conflicts.length > 0,
-        conflictCount: conflicts.length
-      }))
+  // const initializeStateSync = () => {
+  //   // Set up conflict callback
+  //   stateSyncManager.onConflict((conflicts) => {
+  //     setStateConflicts(conflicts)
+  //     // setSyncStatus(prev => ({
+  //     //   ...prev,
+  //     //   hasConflicts: conflicts.length > 0,
+  //     //   conflictCount: conflicts.length
+  //     // }))
       
-      if (conflicts.length > 0) {
-        devToast.error(`${conflicts.length} state conflicts detected`)
-      }
-    })
+  //     if (conflicts.length > 0) {
+  //       devToast.error(`${conflicts.length} state conflicts detected`)
+  //     }
+  //   })
 
-    // Start auto sync every 30 seconds
-    stateSyncManager.startAutoSync(30000)
+  //   // Start auto sync every 30 seconds
+  //   stateSyncManager.startAutoSync(30000)
     
-    // Update sync status
-    updateSyncStatus()
-  }
+  //   // Update sync status
+  //   updateSyncStatus()
+  // }
 
-  const updateSyncStatus = () => {
-    const stats = stateSyncManager.getSyncStats()
-    setSyncStatus(prev => ({
-      ...prev,
-      isConnected: isConnected,
-      lastSyncTime: stats.lastSyncTime,
-      syncInProgress: stats.syncInProgress,
-      autoSyncActive: stats.autoSyncActive
-    }))
-  }
+  // const updateSyncStatus = () => {
+  //   const stats = stateSyncManager.getSyncStats()
+  //   setSyncStatus(prev => ({
+  //     ...prev,
+  //     isConnected: isConnected,
+  //     lastSyncTime: stats.lastSyncTime,
+  //     syncInProgress: stats.syncInProgress,
+  //     autoSyncActive: stats.autoSyncActive
+  //   }))
+  // }
 
 
   const handleConflictResolution = async (resolutions: any[]) => {
@@ -901,11 +906,11 @@ const CanvasPage: React.FC = () => {
       
       // Clear conflicts
       setStateConflicts([])
-      setSyncStatus(prev => ({
-        ...prev,
-        hasConflicts: false,
-        conflictCount: 0
-      }))
+      // setSyncStatus(prev => ({
+      //   ...prev,
+      //   hasConflicts: false,
+      //   conflictCount: 0
+      // }))
       
       toast.success('Conflicts resolved successfully')
     } catch (error) {
@@ -915,18 +920,18 @@ const CanvasPage: React.FC = () => {
   }
 
   // Update queue management functions
-  const initializeUpdateQueue = () => {
-    // Set up queue stats callback
-    updateQueueManager.onStatsChange((stats) => {
-      setQueueStats(stats)
-    })
+  // const initializeUpdateQueue = () => {
+  //   // Set up queue stats callback
+  //   updateQueueManager.onStatsChange((stats) => {
+  //     setQueueStats(stats)
+  //   })
 
-    // Set connection status for queue manager
-    updateQueueManager.setConnectionStatus(isConnected)
+  //   // Set connection status for queue manager
+  //   updateQueueManager.setConnectionStatus(isConnected)
 
-    // Start auto processing
-    updateQueueManager.startAutoProcessing()
-  }
+  //   // Start auto processing
+  //   updateQueueManager.startAutoProcessing()
+  // }
 
 
   // Connection monitoring functions
@@ -984,40 +989,40 @@ const CanvasPage: React.FC = () => {
   }
 
   // Set up connection quality monitoring
-  const setupConnectionQualityMonitoring = () => {
-    if (!canvasId) return
+  // const setupConnectionQualityMonitoring = () => {
+  //   if (!canvasId) return
 
-    console.log('Setting up connection quality monitoring')
+  //   console.log('Setting up connection quality monitoring')
 
-    // Start monitoring
-    connectionQualityMonitor.startMonitoring(30000) // 30 seconds
+  //   // Start monitoring
+  //   connectionQualityMonitor.startMonitoring(30000) // 30 seconds
 
-    // Listen for connection quality reports
-    const handleQualityReport = (data: Record<string, unknown>) => {
-      console.log('Connection quality report received:', data)
+  //   // Listen for connection quality reports
+  //   const handleQualityReport = (data: Record<string, unknown>) => {
+  //     console.log('Connection quality report received:', data)
       
-      // Connection quality monitoring - toast notifications suppressed
-      // Quality reports are still logged to console for debugging
-    }
+  //     // Connection quality monitoring - toast notifications suppressed
+  //     // Quality reports are still logged to console for debugging
+  //   }
     
-    // Listen for connection state changes
-    const handleConnectionStateChange = (data: Record<string, unknown>) => {
-      console.log('Connection state changed:', data)
+  //   // Listen for connection state changes
+  //   const handleConnectionStateChange = (data: Record<string, unknown>) => {
+  //     console.log('Connection state changed:', data)
       
-      // Connection state monitoring - toast notifications suppressed
-      // State changes are still logged to console for debugging
-    }
+  //     // Connection state monitoring - toast notifications suppressed
+  //     // State changes are still logged to console for debugging
+  //   }
     
-    socketService.on('connection_quality_report', handleQualityReport)
-    socketService.on('connection_state_changed', handleConnectionStateChange)
+  //   socketService.on('connection_quality_report', handleQualityReport)
+  //   socketService.on('connection_state_changed', handleConnectionStateChange)
 
-    // Cleanup function
-    return () => {
-      connectionQualityMonitor.stopMonitoring()
-      socketService.off('connection_quality_report', handleQualityReport)
-      socketService.off('connection_state_changed', handleConnectionStateChange)
-    }
-  }
+  //   // Cleanup function
+  //   return () => {
+  //     connectionQualityMonitor.stopMonitoring()
+  //     socketService.off('connection_quality_report', handleQualityReport)
+  //     socketService.off('connection_state_changed', handleConnectionStateChange)
+  //   }
+  // }
 
   // Set up visibility monitoring
   const setupVisibilityMonitoring = () => {
@@ -2573,35 +2578,35 @@ const CanvasPage: React.FC = () => {
         
         <div className="flex items-center space-x-4">
           {/* Presence Indicators */}
-          <PresenceIndicators 
+          {/* <PresenceIndicators 
             canvasId={canvasId!} 
             currentUserId={user?.id || ''} 
             maxVisible={3}
-          />
+          /> */}
           
           <div className="flex items-center space-x-4">
           </div>
           
           {/* User Status */}
-          {user && (
+          {/* {user && (
             <UserStatus 
               compact={true}
             />
-          )}
+          )} */}
           
           {/* Collaboration buttons - only show for canvas owner */}
           {canvas && user && canvas.owner_id === user.id && (
             <>
-              <button
+              {/* <button
                 onClick={() => setShowInviteModal(true)}
                 className="flex items-center space-x-2 px-3 py-1.5 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
                 title="Invite collaborators"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>Invite</span>
-              </button>
+              </button> */}
               
-              <button
+              {/* <button
                 onClick={() => setShowCollaborationSidebar(!showCollaborationSidebar)}
                 className={`p-2 rounded-lg transition-colors ${
                   showCollaborationSidebar 
@@ -2611,12 +2616,12 @@ const CanvasPage: React.FC = () => {
                 title="Collaboration panel"
               >
                 <Users className="w-5 h-5" />
-              </button>
+              </button> */}
             </>
           )}
           
           {/* Notification Center */}
-          <NotificationCenter />
+          {/* <NotificationCenter /> */}
           
           <button className="p-2 hover:bg-gray-100 rounded-lg">
             <Settings className="w-5 h-5" />
@@ -3041,10 +3046,10 @@ const CanvasPage: React.FC = () => {
       />
 
       {/* Queue Management Dialog */}
-      <QueueManagementDialog
+      {/* <QueueManagementDialog
         isOpen={showQueueDialog}
         onClose={() => setShowQueueDialog(false)}
-      />
+      /> */}
 
       {/* AI Agent Components */}
       <AIAgentButton

@@ -127,3 +127,5 @@ frontend/cypress/screenshots/
 # testing
 test-results/
 test-screenshots*/
+playwright-report/
+playwright*.*
