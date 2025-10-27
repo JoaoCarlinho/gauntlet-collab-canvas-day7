@@ -159,10 +159,10 @@ class TokenOptimizationService {
         user_id: userId
       })
 
-      if (response.data.status === 'success') {
+      if (response?.data?.status === 'success') {
         return response.data.validation
       } else {
-        throw new Error(response.data.message || 'Backend validation failed')
+        throw new Error(response?.data?.message || 'Backend validation failed')
       }
     } catch (error) {
       throw new Error(`Backend validation error: ${error}`)

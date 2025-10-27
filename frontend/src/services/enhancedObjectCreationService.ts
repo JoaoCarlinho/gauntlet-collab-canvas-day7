@@ -24,7 +24,7 @@ export interface EnhancedCreationOptions {
   retryOptions?: any
   onProgress?: (attempt: number, method: string, status: string) => void
   fallbackToRest?: boolean
-  requireConfirmation?: boolean
+  requireConfirmation?: boolean // Default: false. Set to true to verify object creation via GET request
   timeout?: number
   maxRetries?: number
 }
@@ -207,7 +207,7 @@ class EnhancedObjectCreationService {
     creationId: string,
     startTime: number
   ): Promise<EnhancedCreationResult> {
-    const requireConfirmation = options.requireConfirmation !== false
+    const requireConfirmation = options.requireConfirmation === true
 
     try {
       // Validate authentication and object data
