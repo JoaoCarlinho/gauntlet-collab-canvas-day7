@@ -5,6 +5,7 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flasgger import Swagger
 import time
+import os
 from .config import Config
 from .extensions import db, socketio, cors, migrate
 try:
@@ -157,9 +158,6 @@ def create_app(config_class=Config):
     @app.before_request
     def log_request_info():
         """Log incoming request details including IP address."""
-        import os
-        from flask import request
-
         # Only log in debug mode or when explicitly enabled
         is_debug = os.environ.get('DEBUG', 'false').lower() == 'true' or \
                    os.environ.get('FLASK_ENV') == 'development' or \
