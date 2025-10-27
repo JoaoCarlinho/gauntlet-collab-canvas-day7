@@ -529,11 +529,13 @@ def rate_limit_socket_event(event_type: str):
                         return
                 else:
                     # Check rate limit for authenticated users
-                    if not check_socket_rate_limit(user.id, event_type):
+                    # Handle both user object and user dict
+                    user_id = user.id if hasattr(user, 'id') else user.get('id')
+                    if not check_socket_rate_limit(user_id, event_type):
                         rate_config = SOCKET_RATE_LIMITS.get(event_type, {})
                         limit = rate_config.get('limit', 'unknown')
                         window = rate_config.get('window', 'unknown')
-                        security_logger.log_warning(f"Rate limit exceeded for user {user.id} on event {event_type}")
+                        security_logger.log_warning(f"Rate limit exceeded for user {user_id} on event {event_type}")
                         emit('error', {
                             'message': f'Rate limit exceeded. Limit: {limit} requests per {window} seconds',
                             'type': 'rate_limit_error',
