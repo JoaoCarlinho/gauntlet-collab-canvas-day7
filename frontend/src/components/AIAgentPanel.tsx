@@ -6,7 +6,7 @@ import { socketService } from '../services/socket';
 interface AIAgentPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (canvasId: string) => void;
+  onSuccess?: (canvasId: string, objects?: any[]) => void;
   currentCanvasId?: string;
 }
 
@@ -48,13 +48,13 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
           title: 'AI Canvas Created',
           message: `Successfully created ${data.object_count} objects!`
         });
-        
+
         // Close panel and reset form
         handleClose();
-        
-        // Call success callback
+
+        // Call success callback with canvas_id and objects
         if (onSuccess && data.canvas_id) {
-          onSuccess(data.canvas_id);
+          onSuccess(data.canvas_id, data.objects);
         }
       }
     };
@@ -158,23 +158,23 @@ export const AIAgentPanel: React.FC<AIAgentPanelProps> = ({
         
         if (job.status === 'completed') {
           setGenerationStatus('receiving');
-          
+
           // Get the job result
           const resultResponse = await getJobResult(jobId);
           const result = resultResponse.result;
-          
+
           addNotification({
             type: 'success',
             title: 'AI Canvas Created',
             message: `Successfully created canvas with ${result.objects?.length || 0} objects!`
           });
-          
+
           // Close panel and reset form
           handleClose();
-          
-          // Call success callback
+
+          // Call success callback with canvas_id and objects
           if (onSuccess && result.canvas_id) {
-            onSuccess(result.canvas_id);
+            onSuccess(result.canvas_id, result.objects);
           }
           
         } else if (job.status === 'failed') {

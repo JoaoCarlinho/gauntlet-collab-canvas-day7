@@ -679,13 +679,44 @@ const CanvasPage: React.FC = () => {
     })
 
     socketService.on('object_updated', (data: { object: CanvasObject }) => {
-      setObjects(prev => prev.map(obj => 
+      setObjects(prev => prev.map(obj =>
         obj.id === data.object.id ? data.object : obj
       ))
     })
 
     socketService.on('object_deleted', (data: { object_id: string }) => {
       setObjects(prev => prev.filter(obj => obj.id !== data.object_id))
+    })
+
+    // AI Generation events - WebSocket fallback for real-time updates
+    socketService.on('ai_generation_completed', (data: any) => {
+      console.log('AI Generation completed via WebSocket:', data);
+
+      // Check if AI created objects on THIS canvas
+      if (data.canvas_id === canvasId && data.objects && data.objects.length > 0) {
+        console.log(`AI added ${data.objects.length} objects to current canvas via WebSocket`);
+
+        // Add objects to state
+        setObjects(prev => [...prev, ...data.objects]);
+
+        // Show success notification
+        toast.success(`AI added ${data.objects.length} objects to canvas!`);
+
+        // Clear selection
+        multiSelectionActions.clearSelection();
+
+        // Save for undo
+        saveStateForUndo('ai_generation', 'AI generated canvas content via WebSocket');
+      }
+    })
+
+    socketService.on('ai_generation_failed', (data: any) => {
+      console.error('AI Generation failed via WebSocket:', data);
+
+      // Only show error if it's for this canvas
+      if (data.canvas_id === canvasId) {
+        toast.error(`AI generation failed: ${data.error_message || 'Unknown error'}`);
+      }
     })
 
     // Cursor events
@@ -3090,12 +3121,36 @@ const CanvasPage: React.FC = () => {
       <AIAgentPanel
         isOpen={showAIPanel}
         onClose={() => setShowAIPanel(false)}
-        onSuccess={(canvasId) => {
-          console.log('AI canvas created successfully:', canvasId);
-          // Clear any existing selection when AI creates new content
-          multiSelectionActions.clearSelection()
-          // Save state for undo/redo
-          saveStateForUndo('ai_generation', 'AI generated canvas content')
+        onSuccess={async (aiCanvasId, aiObjects) => {
+          console.log('AI canvas created successfully:', aiCanvasId, 'with', aiObjects?.length, 'objects');
+
+          try {
+            if (aiCanvasId === canvasId) {
+              // AI generated objects on current canvas
+              if (aiObjects && aiObjects.length > 0) {
+                // Directly add objects to state (fastest method)
+                setObjects(prev => [...prev, ...aiObjects]);
+                toast.success(`AI added ${aiObjects.length} objects to canvas!`);
+              } else {
+                // Fallback: reload objects from API if objects not provided
+                await loadObjects();
+                toast.success('AI canvas objects loaded successfully!');
+              }
+            } else {
+              // AI created new canvas, navigate to it
+              toast.success('AI created a new canvas! Navigating...');
+              navigate(`/canvas/${aiCanvasId}`);
+            }
+
+            // Clear any existing selection when AI creates new content
+            multiSelectionActions.clearSelection();
+
+            // Save state for undo/redo
+            saveStateForUndo('ai_generation', 'AI generated canvas content');
+          } catch (error) {
+            console.error('Failed to load AI-generated objects:', error);
+            toast.error('AI generation succeeded but failed to display objects. Please refresh.');
+          }
         }}
         currentCanvasId={canvasId}
       />
