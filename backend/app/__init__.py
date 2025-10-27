@@ -530,7 +530,7 @@ def create_app(config_class=Config):
     
     @app.route('/api/health')
     def api_health_check():
-        return {'status': 'healthy', 'message': 'CollabCanvas API is running'}, 200
+        return {'status': 'healthy', 'message': 'Collab Canvas API is running'}, 200
     
     @app.route('/test-firebase')
     def test_firebase():
