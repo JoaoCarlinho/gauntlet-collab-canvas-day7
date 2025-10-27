@@ -196,6 +196,13 @@ export const websocketCircuitBreaker = new CircuitBreaker('websocket', {
   halfOpenMaxCalls: 2
 });
 
+export const canvasCircuitBreaker = new CircuitBreaker('canvas', {
+  failureThreshold: 3, // Allow 3 failed attempts before opening
+  recoveryTimeout: 60000, // 60 seconds before allowing retry
+  monitoringPeriod: 120000, // 2 minutes monitoring window
+  halfOpenMaxCalls: 1 // Only allow 1 retry in half-open state
+});
+
 // Circuit breaker manager for monitoring and control
 export class CircuitBreakerManager {
   private circuitBreakers: Map<string, CircuitBreaker> = new Map();
@@ -204,6 +211,7 @@ export class CircuitBreakerManager {
     this.registerCircuitBreaker('authentication', authenticationCircuitBreaker);
     this.registerCircuitBreaker('api', apiCircuitBreaker);
     this.registerCircuitBreaker('websocket', websocketCircuitBreaker);
+    this.registerCircuitBreaker('canvas', canvasCircuitBreaker);
   }
 
   registerCircuitBreaker(name: string, circuitBreaker: CircuitBreaker): void {
