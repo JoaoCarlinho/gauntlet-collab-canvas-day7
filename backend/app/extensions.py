@@ -38,9 +38,19 @@ class CacheWrapper:
     def set(self, key, value, ex=None):
         """Set value in cache with optional expiration."""
         try:
-            timeout = ex if ex else 300
-            # Ensure timeout is numeric (might be passed as string)
-            timeout = float(timeout) if timeout else 300
+            # Validate and convert timeout
+            if ex is None:
+                timeout = 300
+            elif isinstance(ex, (int, float)):
+                timeout = float(ex)
+            elif isinstance(ex, str) and ex.replace('.', '').isdigit():
+                # Only convert if it's a numeric string
+                timeout = float(ex)
+            else:
+                # Invalid timeout, use default
+                print(f"Cache set warning: Invalid timeout type {type(ex)}, using default")
+                timeout = 300
+
             # Decode bytes if needed
             if isinstance(value, bytes):
                 value = value.decode('utf-8')
