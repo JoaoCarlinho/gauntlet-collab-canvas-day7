@@ -552,7 +552,7 @@ def create_app(config_class=Config):
     def root():
         from datetime import datetime
         return {
-            'message': 'CollabCanvas API', 
+            'message': 'Collab Canvas API', 
             'version': '1.0.0',
             'branch': 'forpk',
             'timestamp': str(datetime.utcnow()),
