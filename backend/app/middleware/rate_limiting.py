@@ -223,16 +223,16 @@ class SocketRateLimiter:
                     current_count = self.cache_client.get(key)
                     if current_count is None:
                         # First request in this period
-                        self.cache_client.set(key, 1, timeout=period_seconds)
+                        self.cache_client.set(key, 1, ex=period_seconds)
                         return True
-                    
+
                     current_count = int(current_count)
                     if current_count >= limit_count:
                         # Rate limit exceeded
                         return False
-                    
+
                     # Increment counter
-                    self.cache_client.set(key, current_count + 1, timeout=period_seconds)
+                    self.cache_client.set(key, current_count + 1, ex=period_seconds)
                     return True
                 except Exception as e:
                     logger.warning(f"Cache error in socket rate limiting: {str(e)}")
