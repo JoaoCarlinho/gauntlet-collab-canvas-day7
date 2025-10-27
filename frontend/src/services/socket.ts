@@ -241,6 +241,14 @@ class SocketService {
       let errorType = 'connection_error'
       if (error.message.includes('CORS')) {
         errorType = 'cors_error'
+      } else if (error.message.includes('authentication') || error.message.includes('unauthorized') || error.message.includes('token') || error.message.includes('401')) {
+        errorType = 'authentication_error'
+        console.error('Authentication error detected - token may be expired or invalid')
+        // Emit authentication error for application-level handling
+        this.emit('authentication_error', {
+          error: error.message,
+          timestamp: Date.now()
+        })
       } else if (error.message.includes('xhr poll error')) {
         errorType = 'polling_error'
       } else if (error.message.includes('timeout')) {

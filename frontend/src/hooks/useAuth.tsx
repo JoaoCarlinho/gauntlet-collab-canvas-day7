@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
-import { 
-  auth, 
-  signInWithGoogle, 
-  signOutUser, 
+import {
+  auth,
+  signInWithGoogle,
+  signOutUser,
   getGoogleRedirectResult,
   AuthenticationError,
   refreshFirebaseToken,
@@ -16,6 +16,7 @@ import {
   reauthenticateWithEmailAndPassword
 } from '../services/firebase'
 import { authAPI } from '../services/api'
+import { authService } from '../services/authService'
 import { User, AuthState } from '../types'
 import toast from 'react-hot-toast'
 
@@ -58,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const handleRedirectResult = async () => {
       console.log('=== App initialization - checking auth state ===')
-      
+
       // In development mode, skip Firebase initialization
       if (isDevelopment) {
         console.log('Development mode: Skipping Firebase authentication')
@@ -71,10 +72,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false)
         return
       }
-      
+
       // Initialize auth persistence first
       console.log('Initializing Firebase auth persistence...')
       await initializeAuthPersistence()
+
+      // CRITICAL: Validate token on page load BEFORE any other operations
+      // This ensures stale tokens from background tabs are refreshed immediately
+      console.log('Validating token on page load...')
+      const tokenInStorage = localStorage.getItem('idToken')
+      if (tokenInStorage && isUserAuthenticated()) {
+        try {
+          const validation = await authService.validateAndRefreshToken()
+          if (validation.isValid && validation.token) {
+            localStorage.setItem('idToken', validation.token)
+            console.log('Token validated and refreshed on page load')
+          } else {
+            console.warn('Token validation failed on page load - clearing auth state')
+            localStorage.removeItem('idToken')
+            authService.clearAuth()
+          }
+        } catch (error) {
+          console.error('Token validation error on page load:', error)
+          // Don't block initialization on validation errors
+        }
+      }
       
       console.log('Current Firebase user:', auth.currentUser ? 'Present' : 'Null')
       console.log('Local storage token:', localStorage.getItem('idToken') ? 'Present' : 'Missing')

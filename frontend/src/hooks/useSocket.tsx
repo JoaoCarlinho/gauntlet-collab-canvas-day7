@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { socketService } from '../services/socket'
+import { authService } from '../services/authService'
 import { useAuth } from './useAuth'
+import toast from 'react-hot-toast'
 
 interface SocketContextType {
   isConnected: boolean
-  connect: () => void
+  connect: () => Promise<void>
   disconnect: () => void
 }
 
@@ -30,17 +32,50 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                        window.location.hostname === 'localhost' ||
                        window.location.hostname === '127.0.0.1'
 
-  const connect = () => {
+  const connect = async () => {
     if (isDevelopment) {
       // In development mode, skip socket connection entirely
       console.log('Development mode: Skipping socket connection')
       setIsConnected(false) // Set to false to prevent socket operations
-    } else {
-      const idToken = localStorage.getItem('idToken')
-      if (idToken && isAuthenticated) {
-        socketService.connect(idToken)
+      return
+    }
+
+    try {
+      console.log('Validating token before Socket.IO connection...')
+
+      // CRITICAL: Validate and refresh token BEFORE Socket.IO connection
+      // This prevents Socket.IO from connecting with stale/expired tokens
+      const validation = await authService.validateAndRefreshToken()
+
+      if (!validation.isValid || !validation.token) {
+        console.error('Cannot connect to socket: token validation failed')
+
+        // Show user-friendly error message
+        toast.error('Your session has expired. Please log in again.', {
+          duration: 5000,
+          id: 'socket-auth-error' // Prevent duplicate toasts
+        })
+
+        // Clear auth state and redirect to login
+        authService.clearAuth()
+        setIsConnected(false)
+        return
+      }
+
+      console.log('Token validated successfully, connecting to socket...')
+
+      // Connect with validated/refreshed token
+      if (isAuthenticated) {
+        socketService.connect(validation.token)
         setIsConnected(true)
       }
+    } catch (error) {
+      console.error('Failed to validate token for socket connection:', error)
+      toast.error('Connection failed. Please refresh the page.', {
+        duration: 5000,
+        id: 'socket-connection-error'
+      })
+      setIsConnected(false)
     }
   }
 
@@ -76,12 +111,34 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const handleConnect = () => setIsConnected(true)
     const handleDisconnect = () => setIsConnected(false)
 
+    // Handle authentication errors from Socket.IO
+    const handleAuthError = (data: { error: string; timestamp: number }) => {
+      console.error('Socket authentication error:', data)
+
+      // Show user-friendly error message
+      toast.error('Your session has expired. Please log in again.', {
+        duration: 5000,
+        id: 'socket-auth-error'
+      })
+
+      // Clear auth state and disconnect
+      authService.clearAuth()
+      disconnect()
+
+      // Redirect to login page after a short delay
+      setTimeout(() => {
+        window.location.href = '/login?reason=session_expired'
+      }, 2000)
+    }
+
     socketService.on('connect', handleConnect)
     socketService.on('disconnect', handleDisconnect)
+    socketService.on('authentication_error', handleAuthError)
 
     return () => {
       socketService.off('connect', handleConnect)
       socketService.off('disconnect', handleDisconnect)
+      socketService.off('authentication_error', handleAuthError)
     }
   }, [isDevelopment])
 
