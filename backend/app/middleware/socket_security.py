@@ -52,7 +52,7 @@ SOCKET_RATE_LIMITS = {
     'object_created': {'limit': 10, 'window': 60},  # 10 per minute
     'object_updated': {'limit': 30, 'window': 60},  # 30 per minute
     'object_deleted': {'limit': 5, 'window': 60},   # 5 per minute
-    'cursor_move': {'limit': 60, 'window': 60},     # 60 per minute
+    'cursor_move': {'limit': 300, 'window': 60},    # 300 per minute (5 per second for smooth tracking)
     'cursor_leave': {'limit': 10, 'window': 60},    # 10 per minute
     'user_online': {'limit': 5, 'window': 60},      # 5 per minute
     'user_offline': {'limit': 10, 'window': 60},    # 10 per minute
