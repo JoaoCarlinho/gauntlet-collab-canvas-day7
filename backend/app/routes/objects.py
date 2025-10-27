@@ -195,7 +195,7 @@ def get_object(current_user, object_id):
         # Validate object ID format and length
         from app.utils.validators import InputValidator
         try:
-            object_id = InputValidator.validate_string_length(object_id, 'object_id', 1, 100)
+            object_id = InputValidator.validate_string_length(object_id, 'object_id', 100, 1)
         except ValidationError as e:
             return jsonify({'error': f'Invalid object ID: {str(e)}'}), 400
         
@@ -247,7 +247,7 @@ def update_object(current_user, object_id):
         from app.utils.validators import InputValidator
         try:
             object_id = InputValidator.validate_string_length(
-                object_id, 'object_id', 255, 1
+                object_id, 'object_id', 100, 1
             )
         except ValidationError as e:
             return jsonify({'error': f'Invalid object ID: {str(e)}'}), 400
@@ -301,7 +301,7 @@ def delete_object(current_user, object_id):
         # Validate object ID format and length
         from app.utils.validators import InputValidator
         try:
-            object_id = InputValidator.validate_string_length(object_id, 'object_id', 1, 100)
+            object_id = InputValidator.validate_string_length(object_id, 'object_id', 100, 1)
         except ValidationError as e:
             return jsonify({'error': f'Invalid object ID: {str(e)}'}), 400
         

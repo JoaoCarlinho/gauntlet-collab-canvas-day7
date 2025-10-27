@@ -530,7 +530,8 @@ def create_app(config_class=Config):
     
     @app.route('/api/health')
     def api_health_check():
-        return {'status': 'healthy', 'message': 'Collab Canvas API is running'}, 200
+        # Deployment marker: 9bf6de2 - Force Railway rebuild with all remaining fixes
+        return {'status': 'healthy', 'message': 'CollabCanvas API is running', 'version': '9bf6de2'}, 200
     
     @app.route('/test-firebase')
     def test_firebase():
