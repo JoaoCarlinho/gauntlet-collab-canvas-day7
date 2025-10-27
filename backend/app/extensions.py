@@ -85,7 +85,7 @@ class CacheWrapper:
         try:
             # Clean up expired keys
             current_time = time.time()
-            expired = [k for k, exp_time in self._key_tracker.items() if exp_time < current_time]
+            expired = [k for k, exp_time in self._key_tracker.items() if float(exp_time) < current_time]
             for k in expired:
                 del self._key_tracker[k]
 
