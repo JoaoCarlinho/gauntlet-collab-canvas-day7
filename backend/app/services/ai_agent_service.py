@@ -265,26 +265,120 @@ class AIAgentService:
         style_guidance = self._get_style_guidance(style, color_scheme)
         
         system_prompt = """
-You are an expert product manager and Figma power user.
-Your task is to generate a JSON specification of a design canvas.
+You are an expert UI/UX designer and diagramming specialist with deep knowledge of visual design principles.
+Your task is to generate a well-structured JSON specification for an interactive canvas.
 
-Available object types:
-- rectangle: For boxes, containers, buttons
-- circle: For decision points, highlights
-- diamond: For decision points, conditions
-- text: For labels, descriptions
-- arrow: For connections, flow direction
-- line: For separators, connections
+CANVAS COORDINATE SYSTEM:
+- Origin (0,0) is at the top-left corner
+- X-axis: 0 (left) to 1000 (right)
+- Y-axis: 0 (top) to 1000 (bottom)
+- Canvas center: approximately (500, 400)
+- Keep important content 50px from edges
 
-Guidelines:
-- Use coordinates between 0 and 1000
-- Make objects appropriately sized (width: 50-200, height: 30-100)
-- Use clear, readable text (fontSize: 12-18)
-- Choose appropriate colors (hex format)
-- Position objects logically with proper spacing
-- Include arrows to show relationships between objects
+AVAILABLE OBJECT TYPES:
 
-Return ONLY valid JSON in the specified format.
+1. rectangle - Boxes, containers, buttons, panels
+   - Position (x, y) is the top-left corner
+   - Properties: x, y, width, height, fill (interior color), stroke (border color), strokeWidth
+   - Use for: Process steps, UI components, containers, labels
+
+2. circle - Rounded shapes, decision points, avatars
+   - Position (x, y) is the CENTER of the circle
+   - Properties: x, y, radius (NOT width/height), fill, stroke, strokeWidth
+   - Use for: Start/end points, highlights, decorative elements
+
+3. diamond - Decision points, gateways
+   - Position (x, y) is the CENTER
+   - Properties: x, y, width, height, fill, stroke, strokeWidth
+   - Use for: Flowchart decisions, conditional branches
+
+4. star - Highlights, ratings, emphasis
+   - Position (x, y) is the CENTER
+   - Properties: x, y, width, height, fill, stroke, strokeWidth
+
+5. heart - Love, favorites, special markers
+   - Position (x, y) is the CENTER
+   - Properties: x, y, width, height, fill, stroke, strokeWidth
+
+6. text - Labels, headings, descriptions
+   - Position (x, y) is the top-left corner
+   - Properties: x, y, text (string content), fontSize, color
+   - Users can edit text by double-clicking
+   - Keep text concise and readable
+
+7. arrow - Directional connections showing flow/relationships
+   - Position (x, y) is the starting point
+   - Properties: x, y, points [0, 0, endX, endY], stroke, strokeWidth
+   - Points are RELATIVE to (x, y) position
+   - Arrow head appears at the end point
+
+8. line - Separators, non-directional connections
+   - Same as arrow but without arrow head
+   - Properties: x, y, points [0, 0, endX, endY], stroke, strokeWidth
+
+VISUAL DESIGN PRINCIPLES:
+
+Typography & Hierarchy:
+- Titles/headers: fontSize 16-18, bold or emphasized
+- Body text/labels: fontSize 12-14 for readability
+- Small annotations: fontSize 10-12
+
+Colors & Contrast:
+- Use fill for interior color, stroke for borders
+- Provide good contrast: light fills (#E8F4FF, #F0F9FF) with darker strokes (#2563EB, #1E40AF)
+- strokeWidth: 2-3 for emphasis, 1 for subtle borders
+- Text color should contrast with background (dark text on light background)
+
+Spacing & Whitespace:
+- Minimum 30-50px between unrelated objects
+- Consistent spacing between related objects (20-30px)
+- Leave breathing room - don't pack objects tightly
+
+Alignment & Structure:
+- Align objects to implicit grid (use multiples of 10 or 20 for x, y)
+- Align edges of related objects
+- Use consistent sizing for similar objects
+
+LAYOUT PATTERNS:
+
+Flowcharts:
+- Rectangles for process steps (width: 120-180, height: 60-80)
+- Diamonds for decisions (width: 100-120, height: 80-100)
+- Vertical spacing: 80-120px between steps
+- Arrows flowing top-to-bottom or left-to-right
+- Connect arrows to edge midpoints, not corners
+
+Hierarchical Diagrams:
+- Parent objects centered above children
+- 100-150px vertical spacing between levels
+- Horizontal spacing: 120-180px between siblings
+- Top-down tree structure
+
+Timelines:
+- Horizontal sequence with equal spacing (150-200px)
+- Consistent object sizes for uniformity
+- Left-to-right flow
+
+Mind Maps:
+- Central object at canvas center (~500, 400)
+- Branch objects radially with 150-200px distance
+- Use lines/arrows to connect branches to center
+
+CONNECTION BEST PRACTICES:
+- Arrows should be 80-300px in length
+- Connect to object edges/midpoints, not centers (unless intentional)
+- For rectangles: Connect to middle of edges (top, bottom, left, right)
+- Avoid crossing arrows when possible
+- Maintain consistent flow direction
+
+IMPORTANT NOTES:
+- All objects are interactive (draggable, resizable, editable)
+- Users will add more objects later - leave room for expansion
+- Ensure click targets are at least 30x30px
+- Objects can be layered (z-index) for depth
+- Design for clarity and usability
+
+Return ONLY valid JSON in the exact schema specified.
 """
         
         prompt = f"""
@@ -297,24 +391,49 @@ Return a JSON object with this exact structure:
     "title": "Descriptive title for the canvas",
     "objects": [
         {{
-            "type": "rectangle|circle|diamond|text|arrow|line",
-            "label": "Object label or text content",
+            "type": "rectangle|circle|diamond|star|heart|text|arrow|line",
+
+            // Common properties for all types:
             "x": number (0-1000),
             "y": number (0-1000),
-            "width": number (10-500),
-            "height": number (10-500),
-            "color": "hex color code",
-            "fontSize": number (8-24, for text objects)
+
+            // For rectangles, diamonds, stars, hearts:
+            "width": number (30-500),
+            "height": number (30-500),
+
+            // For circles only (use instead of width/height):
+            "radius": number (15-250),
+
+            // For arrows and lines (RELATIVE to x, y):
+            "points": [0, 0, endX, endY],  // e.g., [0, 0, 150, 0] for horizontal line
+
+            // Visual styling:
+            "fill": "hex color code (interior color)",
+            "stroke": "hex color code (border color)",
+            "strokeWidth": number (1-4),
+
+            // For text objects:
+            "text": "string content",
+            "fontSize": number (10-18),
+            "color": "hex color code"
         }}
     ]
 }}
 
-Guidelines:
-- Use logical positioning and spacing
-- Include arrows to show relationships
-- Use appropriate colors for the style
-- Make text readable and concise
-- Ensure objects don't overlap unnecessarily
+IMPORTANT SCHEMA RULES:
+- Rectangles, diamonds, stars, hearts: MUST have x, y, width, height, fill, stroke, strokeWidth
+- Circles: MUST have x, y, radius, fill, stroke, strokeWidth (NOT width/height)
+- Text: MUST have x, y, text, fontSize, color
+- Arrows/Lines: MUST have x, y, points, stroke, strokeWidth
+
+DESIGN GUIDELINES:
+- Apply visual hierarchy: vary sizes and strokeWidth for emphasis
+- Use consistent alignment: position objects on a grid (multiples of 10 or 20)
+- Provide adequate spacing: minimum 30-50px between unrelated objects
+- Choose harmonious colors: lighter fills with darker strokes for contrast
+- Connect with purpose: arrows should clearly show relationships and flow
+- Consider interactivity: leave room for users to add more content
+- Balance the layout: distribute objects evenly across the canvas
 """
         
         response = self.openai_client.chat.completions.create(
@@ -336,16 +455,22 @@ Guidelines:
                                 "items": {
                                     "type": "object",
                                     "properties": {
-                                        "type": {"type": "string", "enum": ["rectangle", "circle", "diamond", "text", "arrow", "line"]},
+                                        "type": {"type": "string", "enum": ["rectangle", "circle", "diamond", "star", "heart", "text", "arrow", "line"]},
                                         "label": {"type": "string"},
                                         "x": {"type": "number", "minimum": 0, "maximum": 1000},
                                         "y": {"type": "number", "minimum": 0, "maximum": 1000},
                                         "width": {"type": "number", "minimum": 10, "maximum": 500},
                                         "height": {"type": "number", "minimum": 10, "maximum": 500},
+                                        "radius": {"type": "number", "minimum": 10, "maximum": 250},
+                                        "fill": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+                                        "stroke": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+                                        "strokeWidth": {"type": "number", "minimum": 1, "maximum": 5},
+                                        "points": {"type": "array", "items": {"type": "number"}},
+                                        "text": {"type": "string"},
                                         "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
                                         "fontSize": {"type": "number", "minimum": 8, "maximum": 24}
                                     },
-                                    "required": ["type", "x", "y", "width", "height"]
+                                    "required": ["type", "x", "y"]
                                 }
                             }
                         },
@@ -404,39 +529,92 @@ Guidelines:
     
     def _validate_object(self, obj: Dict[str, Any]) -> bool:
         """Validate object structure and values."""
-        required_fields = ['type', 'x', 'y', 'width', 'height']
-        
-        # Check required fields
-        if not all(field in obj for field in required_fields):
+        # All objects require type, x, y
+        if 'type' not in obj or 'x' not in obj or 'y' not in obj:
             return False
-        
-        # Validate coordinates and dimensions
+
+        # Validate coordinates
         if not (0 <= obj['x'] <= 1000 and 0 <= obj['y'] <= 1000):
             return False
-        
-        if not (10 <= obj['width'] <= 500 and 10 <= obj['height'] <= 500):
-            return False
-        
+
         # Validate object type
-        valid_types = ['rectangle', 'circle', 'diamond', 'text', 'arrow', 'line']
+        valid_types = ['rectangle', 'circle', 'diamond', 'star', 'heart', 'text', 'arrow', 'line']
         if obj['type'] not in valid_types:
             return False
-        
+
+        # Type-specific validation
+        obj_type = obj['type']
+
+        # Rectangles, diamonds, stars, hearts require width and height
+        if obj_type in ['rectangle', 'diamond', 'star', 'heart']:
+            if 'width' not in obj or 'height' not in obj:
+                return False
+            if not (10 <= obj['width'] <= 500 and 10 <= obj['height'] <= 500):
+                return False
+
+        # Circles require radius
+        elif obj_type == 'circle':
+            if 'radius' not in obj:
+                return False
+            if not (10 <= obj['radius'] <= 250):
+                return False
+
+        # Text requires text content
+        elif obj_type == 'text':
+            if 'text' not in obj or not isinstance(obj['text'], str):
+                return False
+
+        # Arrows and lines require points array
+        elif obj_type in ['arrow', 'line']:
+            if 'points' not in obj or not isinstance(obj['points'], list):
+                return False
+            if len(obj['points']) < 4 or not all(isinstance(p, (int, float)) for p in obj['points']):
+                return False
+
         return True
     
     def _clean_object(self, obj: Dict[str, Any]) -> Dict[str, Any]:
         """Clean and standardize object data."""
+        obj_type = obj['type']
+
+        # Base properties for all objects
         cleaned = {
-            'type': obj['type'],
+            'type': obj_type,
             'x': float(obj['x']),
-            'y': float(obj['y']),
-            'width': float(obj['width']),
-            'height': float(obj['height']),
-            'color': obj.get('color', '#3B82F6'),
-            'text': obj.get('label', ''),
-            'fontSize': obj.get('fontSize', 14)
+            'y': float(obj['y'])
         }
-        
+
+        # Type-specific properties
+        if obj_type in ['rectangle', 'diamond', 'star', 'heart']:
+            # Shapes with width and height
+            cleaned['width'] = float(obj['width'])
+            cleaned['height'] = float(obj['height'])
+            cleaned['fill'] = obj.get('fill', '#E8F4FF')
+            cleaned['stroke'] = obj.get('stroke', '#2563EB')
+            cleaned['strokeWidth'] = float(obj.get('strokeWidth', 2))
+
+        elif obj_type == 'circle':
+            # Circle with radius
+            cleaned['radius'] = float(obj['radius'])
+            cleaned['fill'] = obj.get('fill', '#E8F4FF')
+            cleaned['stroke'] = obj.get('stroke', '#2563EB')
+            cleaned['strokeWidth'] = float(obj.get('strokeWidth', 2))
+
+        elif obj_type == 'text':
+            # Text object
+            cleaned['text'] = obj.get('text', obj.get('label', ''))
+            cleaned['fontSize'] = float(obj.get('fontSize', 14))
+            cleaned['color'] = obj.get('color', '#000000')
+            # Add width and height for text bounds (optional, can be calculated by frontend)
+            cleaned['width'] = float(obj.get('width', 100))
+            cleaned['height'] = float(obj.get('height', 30))
+
+        elif obj_type in ['arrow', 'line']:
+            # Lines and arrows with points
+            cleaned['points'] = obj.get('points', [0, 0, 100, 0])
+            cleaned['stroke'] = obj.get('stroke', '#2563EB')
+            cleaned['strokeWidth'] = float(obj.get('strokeWidth', 2))
+
         return cleaned
     
     def _create_new_canvas(self, user_id: str, query: str, prompt_id: Optional[str] = None) -> Canvas:
@@ -455,26 +633,19 @@ Guidelines:
         return canvas
     
     def _save_objects_to_canvas(
-        self, 
-        objects_data: List[Dict[str, Any]], 
-        canvas_id: str, 
+        self,
+        objects_data: List[Dict[str, Any]],
+        canvas_id: str,
         user_id: str
     ) -> List[CanvasObject]:
         """Save AI-generated objects to the canvas."""
         saved_objects = []
-        
+
         for obj_data in objects_data:
-            # Create properties dictionary
-            properties = {
-                'x': obj_data['x'],
-                'y': obj_data['y'],
-                'width': obj_data['width'],
-                'height': obj_data['height'],
-                'color': obj_data['color'],
-                'text': obj_data['text'],
-                'fontSize': obj_data['fontSize']
-            }
-            
+            # Create properties dictionary with all available properties
+            # The cleaned object already has the correct structure
+            properties = {k: v for k, v in obj_data.items() if k not in ['type']}
+
             canvas_object = CanvasObject(
                 id=str(uuid.uuid4()),
                 canvas_id=canvas_id,
@@ -482,10 +653,10 @@ Guidelines:
                 properties=json.dumps(properties),
                 created_by=user_id
             )
-            
+
             db.session.add(canvas_object)
             saved_objects.append(canvas_object)
-        
+
         db.session.commit()
-        
+
         return saved_objects
