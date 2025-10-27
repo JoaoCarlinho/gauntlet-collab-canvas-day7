@@ -13,7 +13,9 @@ class SmartLogger:
             'cursor_move': 5.0,  # Log cursor moves max once per 5 seconds
             'auth': 10.0,        # Log auth max once per 10 seconds
             'error': 0.0,        # Always log errors
-            'info': 1.0          # Log info max once per second
+            'info': 1.0,         # Log info max once per second
+            'security': 5.0,     # Log security events max once per 5 seconds
+            'warning': 1.0       # Log warnings max once per second
         }
     
     def should_log(self, event_type: str) -> bool:
@@ -52,4 +54,12 @@ class SmartLogger:
     def log_warning(self, message: str):
         """Log warning with rate limiting."""
         if self.should_log('warning'):
+            self.logger.warning(message)
+
+    def log_security(self, user_id: str, event: str, details: str = ''):
+        """Log security-related events."""
+        if self.should_log('security'):
+            message = f"Security: {event} for user {user_id}"
+            if details:
+                message += f" - {details}"
             self.logger.warning(message)
