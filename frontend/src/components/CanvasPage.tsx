@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../hooks/useSocket'
 import { canvasAPI } from '../services/api'
 import { socketService } from '../services/socket'
+import { canvasAccessService } from '../services/canvasAccessService'
 import { Canvas, CanvasObject, CursorData } from '../types'
 import { ErrorWithDetails, FailedUpdate as FailedUpdateType } from '../types/common'
 // Using any for Konva events for now to avoid type compatibility issues
@@ -588,15 +589,33 @@ const CanvasPage: React.FC = () => {
         setCanvas(mockCanvas)
         console.log('Development mode: Using mock canvas data')
       } else {
-        // In production, use real API
+        // In production, use canvas access service with circuit breaker protection
         if (!canvasId) return
-        const response = await canvasAPI.getCanvas(canvasId)
-        setCanvas(response.canvas)
+
+        const result = await canvasAccessService.loadCanvas(canvasId)
+
+        if (result.success && result.canvas) {
+          setCanvas(result.canvas)
+        } else {
+          // Handle failure with appropriate user feedback
+          const errorMessage = result.error || 'Failed to load canvas'
+          console.error('Canvas load failed:', errorMessage)
+          devToast.error(errorMessage)
+
+          // Redirect if recommended by the service
+          if (result.shouldRedirect && result.redirectPath) {
+            navigate(result.redirectPath)
+          } else {
+            // Default redirect to dashboard
+            navigate('/dashboard?error=canvas_load_failed')
+          }
+          return
+        }
       }
     } catch (error) {
-      console.error('Failed to load canvas:', error)
-      devToast.error('Failed to load canvas')
-      navigate('/')
+      console.error('Unexpected error loading canvas:', error)
+      devToast.error('An unexpected error occurred')
+      navigate('/dashboard?error=unexpected')
     }
   }
 
@@ -608,14 +627,24 @@ const CanvasPage: React.FC = () => {
         setObjects([])
         console.log('Development mode: Using empty objects array')
       } else {
-        // In production, use real API
+        // In production, use canvas access service
         if (!canvasId) return
-        const response = await canvasAPI.getCanvasObjects(canvasId)
-        setObjects(response.objects)
+
+        const result = await canvasAccessService.loadCanvasObjects(canvasId)
+
+        if (result.success && result.objects) {
+          setObjects(result.objects)
+        } else {
+          console.error('Failed to load objects:', result.error)
+          devToast.error(result.error || 'Failed to load objects')
+          // Don't redirect on object load failure, canvas is already loaded
+          setObjects([]) // Set empty array to allow user to work with canvas
+        }
       }
     } catch (error) {
-      console.error('Failed to load objects:', error)
+      console.error('Unexpected error loading objects:', error)
       devToast.error('Failed to load objects')
+      setObjects([])
     } finally {
       setIsLoading(false)
     }
