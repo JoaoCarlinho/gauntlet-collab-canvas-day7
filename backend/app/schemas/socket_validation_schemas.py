@@ -49,6 +49,8 @@ class ObjectCreateEventSchema(BaseSocketEventSchema):
     ])
     id_token = fields.Str(required=True, validate=validate.Length(min=10, max=2000))
     object = fields.Dict(required=True)
+    _token_metadata = fields.Dict(required=False)  # Token optimization metadata
+    _authenticated_user = fields.Dict(required=False)  # Authenticated user data
     
     @validates_schema
     def validate_object_data(self, data, **kwargs):
@@ -82,6 +84,8 @@ class ObjectUpdateEventSchema(BaseSocketEventSchema):
     id_token = fields.Str(required=True, validate=validate.Length(min=10, max=2000))
     object_id = fields.Str(required=True, validate=validate.Length(min=1, max=255))
     updates = fields.Dict(required=True)
+    _token_metadata = fields.Dict(required=False)  # Token optimization metadata
+    _authenticated_user = fields.Dict(required=False)  # Authenticated user data
     
     @validates_schema
     def validate_updates(self, data, **kwargs):
@@ -107,6 +111,8 @@ class ObjectDeleteEventSchema(BaseSocketEventSchema):
     ])
     id_token = fields.Str(required=True, validate=validate.Length(min=10, max=2000))
     object_id = fields.Str(required=True, validate=validate.Length(min=1, max=255))
+    _token_metadata = fields.Dict(required=False)  # Token optimization metadata
+    _authenticated_user = fields.Dict(required=False)  # Authenticated user data
 
 
 class CursorMoveEventSchema(BaseSocketEventSchema):
@@ -118,6 +124,8 @@ class CursorMoveEventSchema(BaseSocketEventSchema):
     id_token = fields.Str(required=True, validate=validate.Length(min=10, max=2000))
     position = fields.Dict(required=True)
     timestamp = fields.Float(required=False, validate=validate.Range(min=0))
+    _token_metadata = fields.Dict(required=False)  # Token optimization metadata
+    _authenticated_user = fields.Dict(required=False)  # Authenticated user data
     
     @validates_schema
     def validate_position(self, data, **kwargs):
