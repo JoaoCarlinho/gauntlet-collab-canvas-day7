@@ -191,7 +191,7 @@ const CanvasPage: React.FC = () => {
   const [stateConflicts, setStateConflicts] = useState<StateConflict[]>([])
   const [showConflictDialog, setShowConflictDialog] = useState(false)
   // Note: syncStatus is used internally for state tracking, not displayed in UI
-  const [_syncStatus, setSyncStatus] = useState({
+  const [_syncStatus] = useState({
     isConnected: true,
     lastSyncTime: 0,
     syncInProgress: false,
@@ -202,7 +202,7 @@ const CanvasPage: React.FC = () => {
 
   // Update queue management
   // Note: queueStats is used internally for queue tracking, not displayed in UI
-  const [_queueStats, setQueueStats] = useState<QueueStats>(updateQueueManager.getStats())
+  const [_queueStats] = useState<QueueStats>(updateQueueManager.getStats())
   
   // Connection monitoring and offline mode state
   // const [connectionMetrics, setConnectionMetrics] = useState({
