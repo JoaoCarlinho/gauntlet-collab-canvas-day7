@@ -42,7 +42,8 @@ class CacheWrapper:
             # Decode bytes if needed
             if isinstance(value, bytes):
                 value = value.decode('utf-8')
-            self.cache.set(key, value, timeout=timeout)
+            # Flask-Caching uses positional argument for timeout, not keyword
+            self.cache.set(key, value, timeout)
             self._key_tracker[key] = time.time() + timeout
             return True
         except Exception as e:

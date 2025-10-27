@@ -152,7 +152,51 @@ def create_app(config_class=Config):
         """Handle CORS preflight requests globally."""
         from .middleware.cors_middleware import handle_preflight
         return handle_preflight()
-    
+
+    # Log incoming requests with IP address
+    @app.before_request
+    def log_request_info():
+        """Log incoming request details including IP address."""
+        import os
+        from flask import request
+
+        # Only log in debug mode or when explicitly enabled
+        is_debug = os.environ.get('DEBUG', 'false').lower() == 'true' or \
+                   os.environ.get('FLASK_ENV') == 'development' or \
+                   os.environ.get('LOG_IP_ADDRESSES', 'false').lower() == 'true'
+
+        if is_debug:
+            # Get real IP address (handles proxies, load balancers)
+            def get_real_ip():
+                # Check X-Forwarded-For header (set by proxies/load balancers)
+                if request.headers.get('X-Forwarded-For'):
+                    # X-Forwarded-For can contain multiple IPs, first one is the client
+                    return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+                # Check X-Real-IP header (set by some proxies)
+                elif request.headers.get('X-Real-IP'):
+                    return request.headers.get('X-Real-IP')
+                # Fallback to remote_addr
+                else:
+                    return request.remote_addr or 'unknown'
+
+            ip_address = get_real_ip()
+            method = request.method
+            path = request.path
+            user_agent = request.headers.get('User-Agent', 'unknown')
+
+            # Skip logging for health checks and static files
+            if path in ['/health', '/health/', '/api/health'] or path.startswith('/static/'):
+                return None
+
+            # Log request info
+            print(f"=== Incoming Request ===")
+            print(f"IP Address: {ip_address}")
+            print(f"Method: {method}")
+            print(f"Path: {path}")
+            print(f"User Agent: {user_agent[:100]}...")  # Truncate long user agents
+
+        return None
+
     # Initialize Socket.IO with optimized configuration
     from .utils.socketio_config_optimizer import SocketIOConfigOptimizer
     socketio_config = SocketIOConfigOptimizer.get_optimized_config(app)
@@ -324,13 +368,35 @@ def create_app(config_class=Config):
             session.permanent = True
             session.modified = True
             
+            # Get client IP address
+            def get_socket_ip():
+                """Get real IP address from Socket.IO request."""
+                # Check X-Forwarded-For header (set by proxies/load balancers)
+                if request.headers.get('X-Forwarded-For'):
+                    return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+                # Check X-Real-IP header
+                elif request.headers.get('X-Real-IP'):
+                    return request.headers.get('X-Real-IP')
+                # Fallback to environ
+                elif request.environ.get('REMOTE_ADDR'):
+                    return request.environ.get('REMOTE_ADDR')
+                else:
+                    return 'unknown'
+
+            client_ip = get_socket_ip()
+
             # Store connection metadata
             session['connection_time'] = time.time()
             session['socket_id'] = request.sid
-            
-            # Only log in development mode
-            if app.config.get('DEBUG', False):
+            session['client_ip'] = client_ip
+
+            # Log in development mode or when LOG_IP_ADDRESSES is enabled
+            is_debug = app.config.get('DEBUG', False) or \
+                       os.environ.get('LOG_IP_ADDRESSES', 'false').lower() == 'true'
+
+            if is_debug:
                 print("=== Socket.IO Connection Attempt ===")
+                print(f"Client IP: {client_ip}")
                 print(f"Auth data: {auth}")
                 print(f"Session ID: {session.get('_id', 'No session ID')}")
                 print(f"Socket ID: {request.sid}")
@@ -387,10 +453,12 @@ def create_app(config_class=Config):
                     'socket_id': request.sid,
                     'auth_method': 'firebase',
                     'user_agent': request.headers.get('User-Agent', 'Unknown'),
-                    'token_verified': True
+                    'token_verified': True,
+                    'client_ip': client_ip
                 }
 
                 print(f"Socket.IO connection authenticated for user: {user.email}")
+                print(f"Client IP: {client_ip}")
                 print(f"Session stored with keys: {list(session.keys())}")
                 print(f"User ID: {user.id}, Token UID: {decoded_token.get('uid')}")
                 
