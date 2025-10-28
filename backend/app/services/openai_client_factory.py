@@ -9,7 +9,7 @@ import os
 from typing import Optional, Dict, Any
 from app.utils.logger import SmartLogger
 
-logger = SmartLogger('openai_client_factory', 'WARNING')
+logger = SmartLogger('openai_client_factory', 'INFO')
 
 
 class OpenAIClientFactory:
