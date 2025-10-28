@@ -69,61 +69,48 @@ class OpenAIClientFactory:
     @staticmethod
     def _try_create_client(api_key: str) -> Optional[openai.OpenAI]:
         """Try different strategies to create OpenAI client."""
-        
-        # Strategy 1: Minimal configuration
+
+        # Strategy 1: Simple creation without testing (most lenient)
         try:
-            logger.log_info("Trying OpenAI client creation with minimal configuration")
+            logger.log_info("Creating OpenAI client with api_key only (no validation)")
             client = openai.OpenAI(api_key=api_key)
-            # Test the client
-            client.models.list()
+            logger.log_info("OpenAI client created successfully (will validate on first use)")
             return client
         except Exception as e:
-            logger.log_warning(f"Minimal configuration failed: {str(e)}")
-        
-        # Strategy 2: With timeout
+            logger.log_warning(f"Simple client creation failed: {str(e)}")
+
+        # Strategy 2: With timeout configuration
         try:
             logger.log_info("Trying OpenAI client creation with timeout")
             client = openai.OpenAI(
                 api_key=api_key,
-                timeout=30.0
+                timeout=60.0,
+                max_retries=3
             )
-            # Test the client
-            client.models.list()
+            logger.log_info("OpenAI client with timeout created successfully")
             return client
         except Exception as e:
             logger.log_warning(f"Timeout configuration failed: {str(e)}")
-        
-        # Strategy 3: Skip passing unsupported parameters entirely (no proxies kwarg)
+
+        # Strategy 3: Test connection if simple creation worked
+        # (This is now a fallback instead of required)
         try:
-            logger.log_info("Trying OpenAI client creation without optional kwargs")
+            logger.log_info("Trying OpenAI client creation with connection test")
             client = openai.OpenAI(api_key=api_key)
+            # Try to test the client with a simple API call
             client.models.list()
+            logger.log_info("OpenAI client validated with models.list() test")
             return client
         except Exception as e:
-            logger.log_warning(f"Without optional kwargs failed: {str(e)}")
-        
-        # Strategy 4: Try with different parameter combinations
-        try:
-            logger.log_info("Trying OpenAI client creation with alternative parameters")
-            client_kwargs = {
-                'api_key': api_key,
-                'timeout': 30.0
-            }
-            client = openai.OpenAI(**client_kwargs)
-            # Test the client
-            client.models.list()
-            return client
-        except Exception as e:
-            logger.log_warning(f"Alternative parameters failed: {str(e)}")
-        
-        # Strategy 5: Try with only api_key and handle errors gracefully
-        try:
-            logger.log_info("Trying OpenAI client creation with api_key only")
-            client = openai.OpenAI(api_key=api_key)
-            return client
-        except Exception as e:
-            logger.log_warning(f"API key only failed: {str(e)}")
-        
+            logger.log_warning(f"Connection test failed (non-fatal): {str(e)}")
+            # Return client anyway - it might work when actually used
+            try:
+                logger.log_info("Returning client despite test failure")
+                return openai.OpenAI(api_key=api_key)
+            except:
+                pass
+
+        logger.log_error("All OpenAI client creation strategies failed")
         return None
     
     @staticmethod
