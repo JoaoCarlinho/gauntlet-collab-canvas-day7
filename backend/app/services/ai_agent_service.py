@@ -18,8 +18,8 @@ class AIAgentService:
     """Service for AI-powered canvas creation."""
     
     def __init__(self):
-        # Use WARNING level to reduce log volume on Railway
-        self.logger = SmartLogger('ai_agent_service', 'WARNING')
+        # Use INFO level for visibility during debugging
+        self.logger = SmartLogger('ai_agent_service', 'INFO')
         
         # Check OpenAI API key
         api_key = os.environ.get('OPENAI_API_KEY')
@@ -32,9 +32,7 @@ class AIAgentService:
             self.openai_client = OpenAIClientFactory.create_client(api_key)
             if not self.openai_client:
                 raise RuntimeError("Failed to initialize OpenAI client")
-            # Only log success in development
-            if os.environ.get('FLASK_ENV') == 'development':
-                self.logger.log_info("OpenAI client initialized successfully")
+            self.logger.log_info("OpenAI client initialized successfully")
         except Exception as e:
             self.logger.log_error(f"Failed to initialize OpenAI client: {str(e)}", e)
             raise
@@ -44,9 +42,7 @@ class AIAgentService:
             self.performance_service = AIPerformanceService()
             self.security_service = AISecurityService()
             self.prompt_service = PromptService()
-            # Only log success in development
-            if os.environ.get('FLASK_ENV') == 'development':
-                self.logger.log_info("AI Agent Service dependencies initialized successfully")
+            self.logger.log_info("AI Agent Service dependencies initialized successfully")
         except Exception as e:
             self.logger.log_error(f"Failed to initialize AI Agent Service dependencies: {str(e)}", e)
             raise
@@ -66,19 +62,16 @@ class AIAgentService:
             request_id = str(uuid.uuid4())
         
         try:
-            # Only log detailed info in development
-            if os.environ.get('FLASK_ENV') == 'development':
-                self.logger.log_info(f"Starting AI canvas creation for user {user_id} with query: {query[:100]}...")
-            
+            self.logger.log_info(f"Starting AI canvas creation for user {user_id} with query: {query[:100]}...")
+
             # Validate input parameters
             if not query or not query.strip():
                 raise ValueError("Query cannot be empty")
             if not user_id or not user_id.strip():
                 raise ValueError("User ID cannot be empty")
-            
+
             # Sanitize and validate user query
-            if os.environ.get('FLASK_ENV') == 'development':
-                self.logger.log_info("Sanitizing user query...")
+            self.logger.log_info("Sanitizing user query...")
             sanitized_query = self.security_service.sanitize_user_query(query)
             
             # Create Prompt record to track this generation

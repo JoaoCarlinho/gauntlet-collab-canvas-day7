@@ -17,7 +17,7 @@ class JobProcessor:
         self.thread = None
         self.job_service = AIJobService()
         self.config = job_config
-        self.logger = SmartLogger('job_processor', 'WARNING')
+        self.logger = SmartLogger('job_processor', 'INFO')
         
         # Set up signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)

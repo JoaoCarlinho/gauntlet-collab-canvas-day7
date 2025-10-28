@@ -10,7 +10,7 @@ class AIJobService:
     """Service for managing AI background jobs using PostgreSQL."""
     
     def __init__(self):
-        self.logger = SmartLogger('ai_job_service', 'WARNING')
+        self.logger = SmartLogger('ai_job_service', 'INFO')
         self.config = job_config
     
     def create_canvas_job(self, user_id: str, request_data: dict, priority: int = 0) -> str:
