@@ -40,5 +40,13 @@ export const validateEnvironment = () => {
 };
 
 export const getApiUrl = () => {
-  return validateEnvironment();
+  let apiUrl = validateEnvironment();
+
+  // Force HTTPS in production to prevent mixed content errors
+  if (import.meta.env.PROD && apiUrl.startsWith('http://')) {
+    console.warn('Converting HTTP to HTTPS in production mode to prevent mixed content errors');
+    apiUrl = apiUrl.replace('http://', 'https://');
+  }
+
+  return apiUrl;
 };

@@ -279,7 +279,7 @@ export const canvasAPI = {
 // Objects API
 export const objectsAPI = {
   createObject: async (data: { canvas_id: string; object_type: string; properties: Record<string, any>; z_index_behavior?: string }): Promise<{ object: CanvasObject }> => {
-    const response = await api.post('/objects', data)
+    const response = await api.post('/objects/', data)
     return response.data
   },
   
