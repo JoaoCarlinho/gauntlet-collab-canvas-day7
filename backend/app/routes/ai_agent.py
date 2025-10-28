@@ -754,7 +754,7 @@ def delete_prompt(current_user, prompt_id):
 def get_prompt_stats(current_user):
     """
     Get statistics about user's prompts.
-    
+
     ---
     tags:
       - AI Agent
@@ -771,16 +771,109 @@ def get_prompt_stats(current_user):
     try:
         prompt_service = PromptService()
         stats = prompt_service.get_prompts_stats(current_user.id)
-        
+
         return jsonify({
             'success': True,
             'stats': stats
         }), 200
-        
+
     except Exception as e:
         logger.log_error(f"Failed to get prompt stats: {str(e)}", e)
         return jsonify({
             'success': False,
             'error': 'Failed to get statistics',
             'message': str(e)
+        }), 500
+
+@ai_agent_bp.route('/debug/environment', methods=['GET'])
+@ai_rate_limit('health')
+def debug_environment():
+    """
+    Debug endpoint to check environment configuration for AI services.
+
+    ---
+    tags:
+      - AI Agent
+    responses:
+      200:
+        description: Environment configuration status
+        schema:
+          type: object
+          properties:
+            openai_api_key:
+              type: string
+              description: Status of OPENAI_API_KEY
+            openai_model:
+              type: string
+              description: Current model configuration
+            flask_env:
+              type: string
+              description: Flask environment
+            job_processor:
+              type: object
+              description: Job processor status
+            recent_jobs:
+              type: array
+              description: Last 5 AI jobs
+    """
+    try:
+        # Check OPENAI_API_KEY
+        api_key = os.environ.get('OPENAI_API_KEY')
+        api_key_status = 'SET' if api_key else 'MISSING'
+        api_key_length = len(api_key) if api_key else 0
+
+        # Check model configuration
+        model = os.environ.get('OPENAI_MODEL', 'gpt-4')
+
+        # Check Flask environment
+        flask_env = os.environ.get('FLASK_ENV', 'production')
+
+        # Check job processor
+        from app.services.job_processor import job_processor
+        processor_status = job_processor.get_status()
+
+        # Get recent jobs
+        recent_jobs = AIJob.query.order_by(AIJob.created_at.desc()).limit(5).all()
+        recent_jobs_data = [{
+            'id': job.id,
+            'status': job.status,
+            'created_at': job.created_at.isoformat() if job.created_at else None,
+            'started_at': job.started_at.isoformat() if job.started_at else None,
+            'completed_at': job.completed_at.isoformat() if job.completed_at else None,
+            'error_message': job.error_message,
+            'retry_count': job.retry_count
+        } for job in recent_jobs]
+
+        # Try to initialize AI service
+        ai_service_status = 'UNKNOWN'
+        ai_service_error = None
+        try:
+            test_service = AIAgentService()
+            ai_service_status = 'INITIALIZED'
+        except Exception as e:
+            ai_service_status = 'FAILED'
+            ai_service_error = str(e)
+
+        return jsonify({
+            'success': True,
+            'environment': {
+                'openai_api_key': api_key_status,
+                'api_key_length': api_key_length,
+                'openai_model': model,
+                'flask_env': flask_env
+            },
+            'ai_service': {
+                'status': ai_service_status,
+                'error': ai_service_error
+            },
+            'job_processor': processor_status,
+            'recent_jobs': recent_jobs_data,
+            'timestamp': datetime.utcnow().isoformat()
+        }), 200
+
+    except Exception as e:
+        logger.log_error(f"Debug endpoint failed: {str(e)}", e)
+        return jsonify({
+            'success': False,
+            'error': str(e)
         }), 500
